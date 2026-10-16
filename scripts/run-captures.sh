@@ -130,7 +130,8 @@ for appearance, background in required:
     entries = [e for e in parts if e['scenario'] == 'nsswitch' and e['size'] == 'regular'
                and e['state'] == 'on' and e['appearance'] == appearance
                and e['background'] == background and e['accent'] == 'default'
-               and e['phase'] in phases and e['success']]
+               and e['phase'] in phases and e['success']
+               and e.get('tracking_duration_ms', 0) >= 800 and e.get('window_is_key')]
     got = {e['phase'] for e in entries}
     if got != phases:
         missing.append(f'{appearance}/{background}: missing {sorted(phases - got)}')

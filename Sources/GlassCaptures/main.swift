@@ -84,6 +84,11 @@ final class BackgroundView: NSView {
     }
 }
 
+final class CaptureWindow: NSWindow {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { true }
+}
+
 struct SwitchView: View {
     @State var isOn: Bool
     var body: some View { Toggle("", isOn: $isOn).toggleStyle(.switch).labelsHidden() }
@@ -216,6 +221,7 @@ final class CaptureSession {
     var results: [[String: Any]] = []
     var mouseDownTime: Date?
     var mouseUpTime: Date?
+    var trackingDurationMS = 0
     var sckFailure: String?
     var sckUnavailable = false
 
@@ -226,7 +232,7 @@ final class CaptureSession {
             .appendingPathComponent("\(options.appearance)-\(options.accent)-\(options.size)-\(options.state)-\(options.interaction)")
             .appendingPathComponent(options.background)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        let w = NSWindow(contentRect: CGRect(x: 100, y: 100, width: 480, height: 300),
+        let w = CaptureWindow(contentRect: CGRect(x: 100, y: 100, width: 480, height: 300),
                          styleMask: [.borderless], backing: .buffered, defer: false)
         w.isReleasedWhenClosed = false
         w.backgroundColor = .windowBackgroundColor
@@ -369,6 +375,7 @@ final class CaptureSession {
             "knob_frame_window_points": knob.map { rectJSON($0) } as Any? ?? NSNull(),
             "knob_frame_window_pixels": knob.map { rectJSON($0.applying(CGAffineTransform(scaleX: scale, y: scale))) } as Any? ?? NSNull(),
             "backing_scale": scale, "capture_method": method, "success": method != "none",
+            "window_is_key": window.isKeyWindow,
             "error": error as Any? ?? NSNull(), "image": method == "none" ? NSNull() : url.path as Any,
             "crop": cropPath as Any? ?? NSNull(), "sck_error": sckFailure as Any? ?? NSNull()
         ]
@@ -377,6 +384,7 @@ final class CaptureSession {
     }
 
     func saveManifest() throws {
+        for i in results.indices { results[i]["tracking_duration_ms"] = trackingDurationMS }
         try writeJSON(results, to: folder.appendingPathComponent("manifest-part.json"))
     }
 
@@ -411,9 +419,11 @@ final class CaptureSession {
     }
 
     func run() throws {
+        window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
         NSApp.activate(ignoringOtherApps: true)
         RunLoop.main.run(until: Date().addingTimeInterval(1.2))
+        record("window key=\(window.isKeyWindow) main=\(window.isMainWindow) appActive=\(NSApp.isActive)")
         capture("idle")
         if options.interaction == "idle" { try saveManifest(); return }
         let f = control.convert(control.bounds, to: window.contentView)
@@ -443,7 +453,8 @@ final class CaptureSession {
             timers.append(timer)
         }
         send(.leftMouseDown, at: start)
-        record("mouseDown sendEvent returned t_ms=\(Int(Date().timeIntervalSince(mouseDownTime!) * 1000))")
+        trackingDurationMS = Int(Date().timeIntervalSince(mouseDownTime!) * 1000)
+        record("mouseDown sendEvent returned t_ms=\(trackingDurationMS)")
         // A control that does not enter tracking may return before the timers. Keep the
         // event loop live so its failure is visible in the images and manifest.
         if mouseUpTime == nil { RunLoop.main.run(until: Date().addingTimeInterval(1.5)) }
@@ -459,6 +470,9 @@ final class CaptureSession {
             capture(phase)
         }
         try saveManifest()
+        if trackingDurationMS < 800 {
+            throw NSError(domain: "GlassCaptures", code: 6, userInfo: [NSLocalizedDescriptionKey: "control did not enter mouse tracking"])
+        }
         _ = timers
     }
 }
@@ -469,6 +483,7 @@ if let i = CommandLine.arguments.firstIndex(of: "--env-out"), i + 1 < CommandLin
 }
 let options = Options()
 NSApplication.shared.setActivationPolicy(.regular)
+NSApp.finishLaunching()
 NSApp.appearance = NSAppearance(named: options.appearance == "dark" ? .darkAqua : .aqua)
 record("preflight screen capture access=\(CGPreflightScreenCaptureAccess())")
 do {
