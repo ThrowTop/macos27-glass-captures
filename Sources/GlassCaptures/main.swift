@@ -132,13 +132,13 @@ func layerJSON(_ layer: CALayer, depth: Int = 0) -> [String: Any] {
                           t.m31,t.m32,t.m33,t.m34,t.m41,t.m42,t.m43,t.m44]
     }
     for key in ["compositingFilter", "filters", "backgroundFilters"] {
-        if let value = SafeValueForKey(layer, key as NSString) { d[key] = filterJSON(value) }
+        if let value = SafeValueForKey(layer, key) { d[key] = filterJSON(value) }
     }
     let cls = NSStringFromClass(type(of: layer))
     if ["Backdrop", "Portal", "SDF"].contains(where: cls.contains) {
         for key in ["scale", "groupName", "marginWidth", "captureOnly", "windowServerAware",
                     "sourceLayer", "hidesSourceLayer", "matchesPosition"] {
-            if let value = SafeValueForKey(layer, key as NSString) {
+            if let value = SafeValueForKey(layer, key) {
                 d[key] = safeDescription(value)
             }
         }
@@ -151,11 +151,11 @@ func filterJSON(_ value: Any) -> Any {
     let obj = value as AnyObject
     var d: [String: Any] = ["class": NSStringFromClass(type(of: obj)), "description": String(describing: value)]
     for key in ["name", "inputAmount", "inputRadius", "inputColorMatrix"] {
-        if let v = SafeValueForKey(obj, key as NSString) { d[key] = safeDescription(v) }
+        if let v = SafeValueForKey(obj, key) { d[key] = safeDescription(v) }
     }
-    if let keys = SafeValueForKey(obj, "inputKeys" as NSString) as? [String] {
+    if let keys = SafeValueForKey(obj, "inputKeys") as? [String] {
         for key in keys where d[key] == nil {
-            if let v = SafeValueForKey(obj, key as NSString) { d[key] = safeDescription(v) }
+            if let v = SafeValueForKey(obj, key) { d[key] = safeDescription(v) }
         }
     }
     return d
