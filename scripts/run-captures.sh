@@ -58,26 +58,11 @@ contains_filter() {
 
 run_case() {
   local scenario="$1" appearance="$2" background="$3" size="$4" state="$5" interaction="$6" accent="$7"
-  if (( SECONDS - START >= MAX_SECONDS )); then
-    echo "time budget reached; skipped $*" >> out/log.txt
-    return 0
-  fi
-  case "$accent" in
-    default) defaults delete -g AppleAccentColor >/dev/null 2>&1 || true ;;
-    green) defaults write -g AppleAccentColor -int 3 ;;
-    graphite) defaults write -g AppleAccentColor -int -1 ;;
-  esac
-  echo "CASE $* accent_value=$(defaults read -g AppleAccentColor 2>&1 || true)" >> out/log.txt
-  local status="$ROOT/out/$scenario/$appearance-$accent-$size-$state-$interaction/$background/status.txt"
-  rm -f "$status"
-  if ! perl -e 'alarm shift; exec @ARGV' 65 /usr/bin/open -W -n -a "$APP" --args \
-      --scenario "$scenario" --appearance "$appearance" --background "$background" \
-      --size "$size" --state "$state" --interaction "$interaction" --accent "$accent" \
-      --out "$ROOT/out" >> out/log.txt 2>&1 || [[ ! -f "$status" ]] || ! grep -q '^SUCCESS' "$status"; then
-    FAILURES=$((FAILURES + 1))
-    echo "CASE FAILED $*" >> out/log.txt
-  fi
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+    "$scenario" "$appearance" "$background" "$size" "$state" "$interaction" "$accent" >> out/cases.tsv
 }
+
+: > out/cases.tsv
 
 # Completion gate first: regular on switches in both appearances and both backgrounds.
 for appearance in light dark; do
@@ -124,6 +109,31 @@ if [[ "$FILTER" != smoke ]]; then
     fi
   done
 fi
+
+for accent in default green graphite; do
+  python3 - "$accent" "$ROOT/out" <<'PY' > "out/batch-$accent.json"
+import csv, json, sys
+accent, out = sys.argv[1:]
+keys = ['scenario', 'appearance', 'background', 'size', 'state', 'interaction', 'accent']
+with open('out/cases.tsv', newline='') as f:
+    cases = [dict(zip(keys, row), out=out) for row in csv.reader(f, delimiter='\t') if row[-1] == accent]
+json.dump(cases, sys.stdout)
+PY
+  count="$(python3 -c 'import json,sys; print(len(json.load(open(sys.argv[1]))))' "out/batch-$accent.json")"
+  if [[ "$count" == 0 ]]; then continue; fi
+  case "$accent" in
+    default) defaults delete -g AppleAccentColor >/dev/null 2>&1 || true ;;
+    green) defaults write -g AppleAccentColor -int 3 ;;
+    graphite) defaults write -g AppleAccentColor -int -1 ;;
+  esac
+  echo "BATCH accent=$accent cases=$count accent_value=$(defaults read -g AppleAccentColor 2>&1 || true)" >> out/log.txt
+  sleep 2
+  if ! perl -e 'alarm shift; exec @ARGV' 1450 /usr/bin/open -W -n -a "$APP" --args \
+      --batch "$ROOT/out/batch-$accent.json" --out "$ROOT/out" >> out/log.txt 2>&1; then
+    FAILURES=$((FAILURES + 1))
+    echo "BATCH FAILED accent=$accent" >> out/log.txt
+  fi
+done
 
 python3 - <<'PY'
 import glob, json, os

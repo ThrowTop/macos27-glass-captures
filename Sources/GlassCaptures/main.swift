@@ -37,6 +37,17 @@ struct Options {
             i += 2
         }
     }
+
+    init(_ values: [String: String]) {
+        scenario = values["scenario"] ?? scenario
+        appearance = values["appearance"] ?? appearance
+        background = values["background"] ?? background
+        size = values["size"] ?? size
+        state = values["state"] ?? state
+        interaction = values["interaction"] ?? interaction
+        accent = values["accent"] ?? accent
+        out = values["out"] ?? out
+    }
 }
 
 func record(_ message: String) {
@@ -437,6 +448,7 @@ final class CaptureSession {
     }
 
     func run() throws {
+        NSApp.appearance = NSAppearance(named: options.appearance == "dark" ? .darkAqua : .aqua)
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
         NSApp.activate(ignoringOtherApps: true)
@@ -520,21 +532,32 @@ NSApplication.shared.setActivationPolicy(.regular)
 NSApp.appearance = NSAppearance(named: options.appearance == "dark" ? .darkAqua : .aqua)
 record("preflight screen capture access=\(CGPreflightScreenCaptureAccess())")
 DispatchQueue.main.async {
-    do {
-        let session = try CaptureSession(options: options)
-        try session.run()
-        let failures = session.results.filter { ($0["success"] as? Bool) != true }
-        try? (failures.isEmpty ? "SUCCESS" : "FAIL").write(to: session.folder.appendingPathComponent("status.txt"), atomically: true, encoding: .utf8)
-        exit(failures.isEmpty ? 0 : 1)
-    } catch {
-        record("fatal: \(error)")
-        let root = URL(fileURLWithPath: options.out, isDirectory: true)
-        let folder = root.appendingPathComponent(options.scenario)
-            .appendingPathComponent("\(options.appearance)-\(options.accent)-\(options.size)-\(options.state)-\(options.interaction)")
-            .appendingPathComponent(options.background)
-        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        try? "FAIL: \(error)".write(to: folder.appendingPathComponent("status.txt"), atomically: true, encoding: .utf8)
-        exit(1)
+    var batch: [Options] = [options]
+    if let i = CommandLine.arguments.firstIndex(of: "--batch"), i + 1 < CommandLine.arguments.count {
+        do {
+            let data = try Data(contentsOf: URL(fileURLWithPath: CommandLine.arguments[i + 1]))
+            let rows = try JSONSerialization.jsonObject(with: data) as? [[String: String]] ?? []
+            batch = rows.map(Options.init)
+        } catch { record("batch parse failed: \(error)"); exit(1) }
     }
+    var failures = 0
+    for item in batch {
+        do {
+            let session = try CaptureSession(options: item)
+            do {
+                try session.run()
+                let imageFailures = session.results.filter { ($0["success"] as? Bool) != true }
+                try? (imageFailures.isEmpty ? "SUCCESS" : "FAIL").write(to: session.folder.appendingPathComponent("status.txt"), atomically: true, encoding: .utf8)
+                if !imageFailures.isEmpty { failures += 1 }
+            } catch {
+                record("fatal case \(item.scenario) \(item.appearance) \(item.background): \(error)")
+                try? "FAIL: \(error)".write(to: session.folder.appendingPathComponent("status.txt"), atomically: true, encoding: .utf8)
+                failures += 1
+            }
+            session.window.close()
+        } catch { record("case setup failed: \(error)"); failures += 1 }
+    }
+    record("batch finished cases=\(batch.count) failures=\(failures)")
+    exit(failures == 0 ? 0 : 1)
 }
 NSApp.run()
