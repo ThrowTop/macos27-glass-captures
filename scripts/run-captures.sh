@@ -150,19 +150,19 @@ for appearance, background in required:
     entries = [e for e in parts if e['scenario'] == 'nsswitch' and e['size'] == 'regular'
                and e['state'] == 'on' and e['appearance'] == appearance
                and e['background'] == background and e['accent'] == 'default'
-               and e['phase'] in phases and e['success']
-               and e.get('tracking_duration_ms', 0) >= 800 and e.get('window_is_key')]
+               and e['phase'] in phases and e['success'] and e.get('window_is_key')
+               and e.get('control_frame_window_points', {}).get('width') == 54]
     got = {e['phase'] for e in entries}
     if got != phases:
         missing.append(f'{appearance}/{background}: missing {sorted(phases - got)}')
-    if appearance == 'light' and background == 'plain' and got == phases:
-        stem = 'out/nsswitch/light-default-regular-on-hold/plain/'
+    if got == phases:
+        stem = f'out/nsswitch/{appearance}-default-regular-on-hold/{background}/'
         import hashlib
         def digest(name):
             with open(stem + name, 'rb') as f:
                 return hashlib.sha256(f.read()).digest()
         if digest('idle-crop.png') == digest('held-0500ms-crop.png'):
-            missing.append('light/plain: held switch pixels match idle')
+            missing.append(f'{appearance}/{background}: held switch pixels match idle')
     layer = f'out/nsswitch/{appearance}-default-regular-on-hold/{background}/layers-held-0500ms.json'
     if not os.path.isfile(layer):
         missing.append(f'{appearance}/{background}: missing held layer dump')

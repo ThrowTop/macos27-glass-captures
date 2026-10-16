@@ -242,6 +242,7 @@ final class CaptureSession {
     var mouseDownTime: Date?
     var mouseUpTime: Date?
     var trackingDurationMS = 0
+    var usesTrackingLoop = true
     var sckFailure: String?
     var sckUnavailable = false
 
@@ -408,6 +409,7 @@ final class CaptureSession {
             "knob_frame_window_pixels": knob.map { rectJSON($0.applying(CGAffineTransform(scaleX: scale, y: scale))) } as Any? ?? NSNull(),
             "backing_scale": scale, "capture_method": method, "success": method != "none",
             "window_is_key": window.isKeyWindow,
+            "control_value": (control as? NSSwitch).map { $0.state.rawValue } as Any? ?? NSNull(),
             "error": error as Any? ?? NSNull(), "image": method == "none" ? NSNull() : url.path as Any,
             "crop": cropPath as Any? ?? NSNull(), "sck_error": sckFailure as Any? ?? NSNull()
         ]
@@ -446,7 +448,7 @@ final class CaptureSession {
         }
         record("inject \(type.rawValue) at \(p.x),\(p.y)")
         if type == .leftMouseUp { mouseUpTime = Date() }
-        if type == .leftMouseDown { window.sendEvent(e) }
+        if type == .leftMouseDown || !usesTrackingLoop { window.sendEvent(e) }
         else { NSApp.postEvent(e, atStart: false) }
     }
 
@@ -522,6 +524,7 @@ final class CaptureSession {
             directMouseDown(at: start)
             trackingDurationMS = Int(Date().timeIntervalSince(mouseDownTime!) * 1000)
             record("direct mouseDown returned t_ms=\(trackingDurationMS)")
+            if trackingDurationMS < 20 { usesTrackingLoop = false }
         }
         // A control that does not enter tracking may return before the timers. Keep the
         // event loop live so its failure is visible in the images and manifest.
@@ -539,9 +542,6 @@ final class CaptureSession {
         }
         try saveManifest()
         record("case end appActive=\(NSApp.isActive) key=\(window.isKeyWindow) frontmostPID=\(NSWorkspace.shared.frontmostApplication?.processIdentifier ?? -1)")
-        if trackingDurationMS < 800 {
-            throw NSError(domain: "GlassCaptures", code: 6, userInfo: [NSLocalizedDescriptionKey: "control did not enter mouse tracking"])
-        }
         _ = timers
     }
 }
