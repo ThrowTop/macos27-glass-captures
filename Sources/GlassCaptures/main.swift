@@ -422,6 +422,8 @@ final class CaptureSession {
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
         NSApp.activate(ignoringOtherApps: true)
+        _ = NSRunningApplication.current.activate(options: [.activateAllWindows])
+        window.makeKey()
         RunLoop.main.run(until: Date().addingTimeInterval(1.2))
         record("window key=\(window.isKeyWindow) main=\(window.isMainWindow) appActive=\(NSApp.isActive)")
         capture("idle")
@@ -483,15 +485,17 @@ if let i = CommandLine.arguments.firstIndex(of: "--env-out"), i + 1 < CommandLin
 }
 let options = Options()
 NSApplication.shared.setActivationPolicy(.regular)
-NSApp.finishLaunching()
 NSApp.appearance = NSAppearance(named: options.appearance == "dark" ? .darkAqua : .aqua)
 record("preflight screen capture access=\(CGPreflightScreenCaptureAccess())")
-do {
-    let session = try CaptureSession(options: options)
-    try session.run()
-    let failures = session.results.filter { ($0["success"] as? Bool) != true }
-    exit(failures.isEmpty ? 0 : 1)
-} catch {
-    record("fatal: \(error)")
-    exit(1)
+DispatchQueue.main.async {
+    do {
+        let session = try CaptureSession(options: options)
+        try session.run()
+        let failures = session.results.filter { ($0["success"] as? Bool) != true }
+        exit(failures.isEmpty ? 0 : 1)
+    } catch {
+        record("fatal: \(error)")
+        exit(1)
+    }
 }
+NSApp.run()
