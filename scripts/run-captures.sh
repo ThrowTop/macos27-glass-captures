@@ -70,6 +70,13 @@ for appearance in light dark; do
 done
 
 if [[ "$FILTER" != smoke ]]; then
+  if [[ "$FILTER" == accent-smoke ]]; then
+    for accent in green graphite; do
+      for state in off on; do
+        run_case nsswitch light grid regular "$state" hold "$accent"
+      done
+    done
+  fi
   if contains_filter nsswitch; then
     for appearance in light dark; do
       for background in plain grid hstripes rainbow black white; do
@@ -115,6 +122,13 @@ accent, out = sys.argv[1:]
 keys = ['scenario', 'appearance', 'background', 'size', 'state', 'interaction', 'accent']
 with open('out/cases.tsv', newline='') as f:
     cases = [dict(zip(keys, row), out=out) for row in csv.reader(f, delimiter='\t') if row[-1] == accent]
+if accent != 'default' and cases:
+    # A fresh accent process can show a WindowServer consent overlay during its
+    # first window. Keep that real attempt in the artifact, then capture the
+    # scheduled cases after the app has settled.
+    warmup = dict(cases[0])
+    warmup['out'] = out + '/warmup-' + accent
+    cases.insert(0, warmup)
 json.dump(cases, sys.stdout)
 PY
   count="$(python3 -c 'import json,sys; print(len(json.load(open(sys.argv[1]))))' "out/batch-$accent.json")"
@@ -145,6 +159,8 @@ python3 - <<'PY'
 import csv, glob, json, os
 parts = []
 for path in glob.glob('out/**/manifest-part.json', recursive=True):
+    if '/warmup-' in path:
+        continue
     with open(path) as f:
         parts.extend(json.load(f))
 keys = ['scenario', 'appearance', 'background', 'size', 'state', 'interaction', 'accent']
