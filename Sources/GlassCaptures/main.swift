@@ -41,6 +41,14 @@ struct Options {
 func record(_ message: String) {
     let line = "\(ISO8601DateFormatter().string(from: Date())) \(message)\n"
     FileHandle.standardError.write(Data(line.utf8))
+    if let i = CommandLine.arguments.firstIndex(of: "--out"), i + 1 < CommandLine.arguments.count {
+        let log = URL(fileURLWithPath: CommandLine.arguments[i + 1]).appendingPathComponent("log.txt")
+        if let handle = try? FileHandle(forWritingTo: log) {
+            handle.seekToEndOfFile()
+            handle.write(Data(line.utf8))
+            try? handle.close()
+        }
+    }
 }
 
 func pointJSON(_ p: CGPoint) -> [String: CGFloat] { ["x": p.x, "y": p.y] }
@@ -426,6 +434,7 @@ final class CaptureSession {
         window.makeKey()
         RunLoop.main.run(until: Date().addingTimeInterval(1.2))
         record("window key=\(window.isKeyWindow) main=\(window.isMainWindow) appActive=\(NSApp.isActive)")
+        record("frontmost=\(NSWorkspace.shared.frontmostApplication?.localizedName ?? "nil") current=\(NSRunningApplication.current.localizedName ?? "nil") visible=\(window.isVisible)")
         capture("idle")
         if options.interaction == "idle" { try saveManifest(); return }
         let f = control.convert(control.bounds, to: window.contentView)
@@ -492,9 +501,16 @@ DispatchQueue.main.async {
         let session = try CaptureSession(options: options)
         try session.run()
         let failures = session.results.filter { ($0["success"] as? Bool) != true }
+        try? (failures.isEmpty ? "SUCCESS" : "FAIL").write(to: session.folder.appendingPathComponent("status.txt"), atomically: true, encoding: .utf8)
         exit(failures.isEmpty ? 0 : 1)
     } catch {
         record("fatal: \(error)")
+        let root = URL(fileURLWithPath: options.out, isDirectory: true)
+        let folder = root.appendingPathComponent(options.scenario)
+            .appendingPathComponent("\(options.appearance)-\(options.accent)-\(options.size)-\(options.state)-\(options.interaction)")
+            .appendingPathComponent(options.background)
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try? "FAIL: \(error)".write(to: folder.appendingPathComponent("status.txt"), atomically: true, encoding: .utf8)
         exit(1)
     }
 }

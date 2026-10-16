@@ -10,7 +10,13 @@ FILTER="${1:-all}"
 START=$SECONDS
 MAX_SECONDS=1380
 EXE="$ROOT/.build/release/GlassCaptures"
+APP="$ROOT/GlassCaptures.app"
 FAILURES=0
+
+mkdir -p "$APP/Contents/MacOS"
+cp "$ROOT/App/Info.plist" "$APP/Contents/Info.plist"
+cp "$EXE" "$APP/Contents/MacOS/GlassCaptures"
+chmod +x "$APP/Contents/MacOS/GlassCaptures"
 
 # Hosted images currently boot with these accessibility options enabled. Capture
 # the normal animated/translucent appearance, and record both original and set values.
@@ -60,10 +66,12 @@ run_case() {
     graphite) defaults write -g AppleAccentColor -int -1 ;;
   esac
   echo "CASE $* accent_value=$(defaults read -g AppleAccentColor 2>&1 || true)" >> out/log.txt
-  if ! perl -e 'alarm shift; exec @ARGV' 65 "$EXE" \
+  local status="$ROOT/out/$scenario/$appearance-$accent-$size-$state-$interaction/$background/status.txt"
+  rm -f "$status"
+  if ! perl -e 'alarm shift; exec @ARGV' 65 /usr/bin/open -W -n -a "$APP" --args \
       --scenario "$scenario" --appearance "$appearance" --background "$background" \
       --size "$size" --state "$state" --interaction "$interaction" --accent "$accent" \
-      --out "$ROOT/out" >> out/log.txt 2>&1; then
+      --out "$ROOT/out" >> out/log.txt 2>&1 || [[ ! -f "$status" ]] || ! grep -q '^SUCCESS' "$status"; then
     FAILURES=$((FAILURES + 1))
     echo "CASE FAILED $*" >> out/log.txt
   fi
