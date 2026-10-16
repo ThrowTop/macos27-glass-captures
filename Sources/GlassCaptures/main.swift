@@ -541,6 +541,7 @@ DispatchQueue.main.async {
         } catch { record("batch parse failed: \(error)"); exit(1) }
     }
     var failures = 0
+    var previousWindow: NSWindow?
     for item in batch {
         do {
             let session = try CaptureSession(options: item)
@@ -554,7 +555,10 @@ DispatchQueue.main.async {
                 try? "FAIL: \(error)".write(to: session.folder.appendingPathComponent("status.txt"), atomically: true, encoding: .utf8)
                 failures += 1
             }
-            session.window.close()
+            // Keep one window alive while the next case activates. On hosted
+            // WindowServer, closing the last window deactivates this app.
+            previousWindow?.close()
+            previousWindow = session.window
         } catch { record("case setup failed: \(error)"); failures += 1 }
     }
     record("batch finished cases=\(batch.count) failures=\(failures)")
