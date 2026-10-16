@@ -139,7 +139,7 @@ func safeDescription(_ value: Any?) -> Any? {
     return String(describing: value)
 }
 
-func layerJSON(_ layer: CALayer, depth: Int = 0) -> [String: Any] {
+func layerJSON(_ layer: CALayer, depth: Int = 0, includePrivate: Bool = true) -> [String: Any] {
     if depth > 100 { return ["error": "layer depth limit"] }
     var d: [String: Any] = [
         "class": NSStringFromClass(type(of: layer)),
@@ -149,22 +149,24 @@ func layerJSON(_ layer: CALayer, depth: Int = 0) -> [String: Any] {
         "opacity": layer.opacity, "isHidden": layer.isHidden,
         "masksToBounds": layer.masksToBounds, "cornerRadius": layer.cornerRadius,
         "cornerCurve": layer.cornerCurve.rawValue,
-        "sublayers": (layer.sublayers ?? []).map { layerJSON($0, depth: depth + 1) }
+        "sublayers": (layer.sublayers ?? []).map { layerJSON($0, depth: depth + 1, includePrivate: includePrivate) }
     ]
     if !CATransform3DIsIdentity(layer.transform) {
         let t = layer.transform
         d["transform"] = [t.m11,t.m12,t.m13,t.m14,t.m21,t.m22,t.m23,t.m24,
                           t.m31,t.m32,t.m33,t.m34,t.m41,t.m42,t.m43,t.m44]
     }
-    for key in ["compositingFilter", "filters", "backgroundFilters"] {
-        if let value = SafeValueForKey(layer, key) { d[key] = filterJSON(value) }
-    }
-    let cls = NSStringFromClass(type(of: layer))
-    if ["Backdrop", "Portal", "SDF"].contains(where: cls.contains) {
-        for key in ["scale", "groupName", "marginWidth", "captureOnly", "windowServerAware",
-                    "sourceLayer", "hidesSourceLayer", "matchesPosition"] {
-            if let value = SafeValueForKey(layer, key) {
-                d[key] = safeDescription(value)
+    if includePrivate {
+        for key in ["compositingFilter", "filters", "backgroundFilters"] {
+            if let value = SafeValueForKey(layer, key) { d[key] = filterJSON(value) }
+        }
+        let cls = NSStringFromClass(type(of: layer))
+        if ["Backdrop", "Portal", "SDF"].contains(where: cls.contains) {
+            for key in ["scale", "groupName", "marginWidth", "captureOnly", "windowServerAware",
+                        "sourceLayer", "hidesSourceLayer", "matchesPosition"] {
+                if let value = SafeValueForKey(layer, key) {
+                    d[key] = safeDescription(value)
+                }
             }
         }
     }
@@ -398,14 +400,18 @@ final class CaptureSession {
             let layerURL = folder.appendingPathComponent("layers-\(phase).json")
             do {
                 if let layer = window.contentView?.superview?.layer {
-                    try writeJSON(layerJSON(layer), to: layerURL)
+                    let includePrivate = options.scenario != "swiftui-glass-interactive" || phase == "idle"
+                    var tree = layerJSON(layer, includePrivate: includePrivate)
+                    if !includePrivate { tree["private_fields_omitted"] = "held interactive glass layer introspection terminated earlier runs" }
+                    try writeJSON(tree, to: layerURL)
                 } else { try writeJSON(["error": "frame view has no layer"], to: layerURL) }
             } catch { record("layer dump failed \(phase): \(error)") }
         }
         let t = mouseDownTime.map { Int(Date().timeIntervalSince($0) * 1000) }
         let entry: [String: Any] = [
             "scenario": options.scenario, "control": NSStringFromClass(type(of: control)),
-            "size": options.size, "state": options.state, "appearance": options.appearance,
+            "size": options.size, "state": options.state, "interaction": options.interaction,
+            "appearance": options.appearance,
             "accent": options.accent, "background": options.background, "phase": phase,
             "t_ms_since_mouse_down": t as Any? ?? NSNull(), "control_frame_window_points": rectJSON(frame),
             "control_frame_window_pixels": rectJSON(frame.applying(CGAffineTransform(scaleX: scale, y: scale))),
@@ -440,6 +446,7 @@ final class CaptureSession {
     func recordFailure(_ error: Error) {
         results.append([
             "scenario": options.scenario, "size": options.size, "state": options.state,
+            "interaction": options.interaction,
             "appearance": options.appearance, "accent": options.accent,
             "background": options.background, "phase": "error", "success": false,
             "capture_method": "none", "error": String(describing: error)
@@ -645,6 +652,7 @@ DispatchQueue.main.async {
                 .appendingPathComponent(item.background)
             try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             try? writeJSON([["scenario": item.scenario, "size": item.size, "state": item.state,
+                             "interaction": item.interaction,
                              "appearance": item.appearance, "accent": item.accent,
                              "background": item.background, "phase": "setup-error", "success": false,
                              "capture_method": "none", "error": String(describing: error)]],

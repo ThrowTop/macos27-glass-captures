@@ -134,10 +134,12 @@ PY
 done
 
 mkdir -p out/crashes
-if [[ -d "$HOME/Library/Logs/DiagnosticReports" ]]; then
-  find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 1 -type f -name 'GlassCaptures*' \
-    -exec cp {} out/crashes/ \;
-fi
+for crash_dir in "$HOME/Library/Logs/DiagnosticReports" /Library/Logs/DiagnosticReports; do
+  if [[ -d "$crash_dir" ]]; then
+    find "$crash_dir" -maxdepth 1 -type f -name 'GlassCaptures*' \
+      -exec cp {} out/crashes/ \;
+  fi
+done
 
 python3 - <<'PY'
 import csv, glob, json, os
@@ -197,6 +199,12 @@ with open('out/gate.txt', 'w') as f:
 print(open('out/gate.txt').read())
 print(f'scheduled cases: {len(scheduled)}; incomplete cases: {len(incomplete)}')
 PY
+
+if [[ -s out/incomplete.txt ]]; then
+  log show --last 10m --style compact \
+    --predicate 'process == "GlassCaptures" OR process == "ReportCrash" OR eventMessage CONTAINS[c] "GlassCaptures"' \
+    2>&1 | tail -n 500 > out/system-log.txt || true
+fi
 
 echo "case failures: $FAILURES" >> out/env.txt
 echo "capture finished: $(date -u +%FT%TZ)" >> out/env.txt
