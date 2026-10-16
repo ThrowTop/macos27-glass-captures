@@ -455,9 +455,18 @@ final class CaptureSession {
         _ = NSRunningApplication.current.activate(options: [.activateAllWindows])
         window.makeKey()
         let activationDeadline = Date().addingTimeInterval(4)
+        var askedLaunchServices = false
         repeat {
             RunLoop.main.run(until: Date().addingTimeInterval(0.15))
             if NSApp.isActive && window.isKeyWindow { break }
+            if !askedLaunchServices {
+                askedLaunchServices = true
+                let launcher = Process()
+                launcher.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+                launcher.arguments = ["-a", Bundle.main.bundleURL.path]
+                do { try launcher.run(); launcher.waitUntilExit(); record("reactivate via open exit=\(launcher.terminationStatus)") }
+                catch { record("reactivate via open failed: \(error)") }
+            }
             NSApp.unhide(nil)
             NSApp.activate(ignoringOtherApps: true)
             _ = NSRunningApplication.current.activate(options: [.activateAllWindows])
