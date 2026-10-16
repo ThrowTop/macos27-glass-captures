@@ -553,7 +553,12 @@ DispatchQueue.main.async {
     }
     var failures = 0
     var previousWindow: NSWindow?
-    for item in batch {
+    func advance(_ index: Int) {
+        if index == batch.count {
+            record("batch finished cases=\(batch.count) failures=\(failures)")
+            exit(failures == 0 ? 0 : 1)
+        }
+        let item = batch[index]
         do {
             let session = try CaptureSession(options: item)
             do {
@@ -571,8 +576,8 @@ DispatchQueue.main.async {
             previousWindow?.close()
             previousWindow = session.window
         } catch { record("case setup failed: \(error)"); failures += 1 }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { advance(index + 1) }
     }
-    record("batch finished cases=\(batch.count) failures=\(failures)")
-    exit(failures == 0 ? 0 : 1)
+    advance(0)
 }
 NSApp.run()
