@@ -318,25 +318,37 @@ final class CaptureSession {
         let semaphore = DispatchSemaphore(value: 0)
         var image: CGImage?
         var errorText: String?
-        let wid = CGWindowID(window.windowNumber)
-        let targetScale = scale
+        let windowFrame = window.frame
+        let screenFrame = (window.screen ?? NSScreen.main)?.frame ?? CGRect(x: 0, y: 0, width: 1024, height: 768)
         Task.detached {
             do {
                 let content = try await SCShareableContent.current
-                guard let scWindow = content.windows.first(where: { $0.windowID == wid }) else {
-                    throw NSError(domain: "GlassCaptures", code: 4, userInfo: [NSLocalizedDescriptionKey: "window absent from ScreenCaptureKit list"])
+                guard let display = content.displays.first else {
+                    throw NSError(domain: "GlassCaptures", code: 4, userInfo: [NSLocalizedDescriptionKey: "display absent from ScreenCaptureKit list"])
                 }
-                let filter = SCContentFilter(desktopIndependentWindow: scWindow)
+                // AppKit's liftedPresentation puts a pressed switch in a separate
+                // overlay window. A window-only filter drops that overlay, so take
+                // the display composite and crop the unchanged test window bounds.
+                let filter = SCContentFilter(display: display, excludingWindows: [])
                 let config = SCStreamConfiguration()
-                config.width = Int(scWindow.frame.width * targetScale)
-                config.height = Int(scWindow.frame.height * targetScale)
+                config.width = display.width
+                config.height = display.height
                 config.showsCursor = false
-                image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
+                let full = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
+                let pixelScale = CGFloat(full.width) / screenFrame.width
+                let crop = CGRect(x: floor((windowFrame.minX - screenFrame.minX) * pixelScale),
+                                  y: floor((screenFrame.maxY - windowFrame.maxY) * pixelScale),
+                                  width: ceil(windowFrame.width * pixelScale),
+                                  height: ceil(windowFrame.height * pixelScale))
+                guard let clipped = full.cropping(to: crop) else {
+                    throw NSError(domain: "GlassCaptures", code: 7, userInfo: [NSLocalizedDescriptionKey: "display composite crop outside image: \(crop)"])
+                }
+                image = clipped
             } catch { errorText = String(describing: error) }
             semaphore.signal()
         }
         if semaphore.wait(timeout: .now() + 8) == .success, let image, writePNG(image, to: url) {
-            return ("ScreenCaptureKit", nil)
+            return ("ScreenCaptureKit-display", nil)
         }
         sckFailure = errorText ?? "ScreenCaptureKit timed out or failed to write PNG"
         sckUnavailable = true
