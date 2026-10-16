@@ -243,6 +243,7 @@ final class CaptureSession {
     var mouseUpTime: Date?
     var trackingDurationMS = 0
     var usesTrackingLoop = true
+    var usedDirectFallback = false
     var sckFailure: String?
     var sckUnavailable = false
 
@@ -421,7 +422,18 @@ final class CaptureSession {
     }
 
     func saveManifest() throws {
-        for i in results.indices { results[i]["tracking_duration_ms"] = trackingDurationMS }
+        let heldName = options.interaction == "drag" ? "drag-held-0500ms" : "held-0500ms"
+        let idle = try? Data(contentsOf: folder.appendingPathComponent("idle-crop.png"))
+        let held = try? Data(contentsOf: folder.appendingPathComponent("\(heldName)-crop.png"))
+        for i in results.indices {
+            results[i]["tracking_duration_ms"] = trackingDurationMS
+            results[i]["event_delivery"] = usedDirectFallback
+                ? (usesTrackingLoop ? "control.mouseDown-tracking" : "window-and-control-asynchronous")
+                : "window.sendEvent"
+            if options.interaction != "idle", let idle, let held {
+                results[i]["held_differs_from_idle"] = idle != held
+            }
+        }
         try writeJSON(results, to: folder.appendingPathComponent("manifest-part.json"))
     }
 
@@ -556,6 +568,7 @@ final class CaptureSession {
         trackingDurationMS = Int(Date().timeIntervalSince(mouseDownTime!) * 1000)
         record("mouseDown sendEvent returned t_ms=\(trackingDurationMS)")
         if trackingDurationMS < 20 {
+            usedDirectFallback = true
             directMouseDown(at: start)
             trackingDurationMS = Int(Date().timeIntervalSince(mouseDownTime!) * 1000)
             record("direct mouseDown returned t_ms=\(trackingDurationMS)")

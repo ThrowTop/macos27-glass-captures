@@ -7,8 +7,6 @@ cd "$ROOT" || exit 1
 mkdir -p out
 : > out/log.txt
 FILTER="${1:-all}"
-START=$SECONDS
-MAX_SECONDS=1380
 EXE="$ROOT/.build/release/GlassCaptures"
 APP="$ROOT/GlassCaptures.app"
 FAILURES=0
@@ -44,7 +42,7 @@ killall cfprefsd >/dev/null 2>&1 || true
   echo '--- accent ---'; defaults read -g AppleAccentColor 2>&1 || true
   echo '--- screen capture access ---'
   echo 'The app records CGPreflightScreenCaptureAccess in display.json and each app run.'
-  echo 'No TCC database grant attempted initially; failures are retained in log and manifest.'
+  echo 'TCC database grant attempt and outcome are recorded below.'
 } > out/env.txt
 
 python3 scripts/grant-screen-capture.py com.throwtop.glasscaptures "$APP/Contents/MacOS/GlassCaptures" >> out/env.txt 2>&1
