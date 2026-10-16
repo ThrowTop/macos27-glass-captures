@@ -12,6 +12,18 @@ MAX_SECONDS=1380
 EXE="$ROOT/.build/release/GlassCaptures"
 FAILURES=0
 
+# Hosted images currently boot with these accessibility options enabled. Capture
+# the normal animated/translucent appearance, and record both original and set values.
+{
+  echo "original reduceTransparency=$(defaults read com.apple.universalaccess reduceTransparency 2>&1 || true)"
+  echo "original reduceMotion=$(defaults read com.apple.universalaccess reduceMotion 2>&1 || true)"
+  echo "original increaseContrast=$(defaults read com.apple.universalaccess increaseContrast 2>&1 || true)"
+} >> out/log.txt
+defaults write com.apple.universalaccess reduceTransparency -bool false
+defaults write com.apple.universalaccess reduceMotion -bool false
+defaults write com.apple.universalaccess increaseContrast -bool false
+killall cfprefsd >/dev/null 2>&1 || true
+
 {
   echo "capture started: $(date -u +%FT%TZ)"
   echo "filter: $FILTER"

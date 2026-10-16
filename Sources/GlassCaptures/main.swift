@@ -335,6 +335,7 @@ final class CaptureSession {
         let url = folder.appendingPathComponent("\(phase).png")
         let (method, error) = screenshot(url)
         let frame = control.convert(control.bounds, to: window.contentView)
+        let knob = knobFrame()
         var cropPath: String? = nil
         if method != "none", let source = CGImageSourceCreateWithURL(url as CFURL, nil),
            let image = CGImageSourceCreateImageAtIndex(source, 0, nil) {
@@ -365,7 +366,8 @@ final class CaptureSession {
             "accent": options.accent, "background": options.background, "phase": phase,
             "t_ms_since_mouse_down": t as Any? ?? NSNull(), "control_frame_window_points": rectJSON(frame),
             "control_frame_window_pixels": rectJSON(frame.applying(CGAffineTransform(scaleX: scale, y: scale))),
-            "knob_frame_window_points": NSNull(), "knob_frame_window_pixels": NSNull(),
+            "knob_frame_window_points": knob.map { rectJSON($0) } as Any? ?? NSNull(),
+            "knob_frame_window_pixels": knob.map { rectJSON($0.applying(CGAffineTransform(scaleX: scale, y: scale))) } as Any? ?? NSNull(),
             "backing_scale": scale, "capture_method": method, "success": method != "none",
             "error": error as Any? ?? NSNull(), "image": method == "none" ? NSNull() : url.path as Any,
             "crop": cropPath as Any? ?? NSNull(), "sck_error": sckFailure as Any? ?? NSNull()
@@ -376,6 +378,23 @@ final class CaptureSession {
 
     func saveManifest() throws {
         try writeJSON(results, to: folder.appendingPathComponent("manifest-part.json"))
+    }
+
+    func knobFrame() -> CGRect? {
+        guard options.scenario == "nsswitch" else { return nil }
+        var candidates: [CGRect] = []
+        func visit(_ view: NSView) {
+            for child in view.subviews {
+                let r = child.convert(child.bounds, to: window.contentView)
+                if r.width > 8 && r.width < control.bounds.width - 5 && r.height > 8 {
+                    candidates.append(r)
+                }
+                visit(child)
+            }
+        }
+        visit(control)
+        return options.state == "on" ? candidates.max(by: { $0.midX < $1.midX })
+                                     : candidates.min(by: { $0.midX < $1.midX })
     }
 
     func send(_ type: NSEvent.EventType, at p: CGPoint) {
@@ -398,7 +417,8 @@ final class CaptureSession {
         capture("idle")
         if options.interaction == "idle" { try saveManifest(); return }
         let f = control.convert(control.bounds, to: window.contentView)
-        let start = CGPoint(x: f.midX, y: f.midY)
+        let start = knobFrame().map { CGPoint(x: $0.midX, y: $0.midY) }
+            ?? CGPoint(x: f.midX, y: f.midY)
         let direction: CGFloat = options.state == "on" ? -1 : 1
         let dragPoint = CGPoint(x: start.x + 8 * direction, y: start.y)
         let isDrag = options.interaction == "drag"
@@ -423,6 +443,7 @@ final class CaptureSession {
             timers.append(timer)
         }
         send(.leftMouseDown, at: start)
+        record("mouseDown sendEvent returned t_ms=\(Int(Date().timeIntervalSince(mouseDownTime!) * 1000))")
         // A control that does not enter tracking may return before the timers. Keep the
         // event loop live so its failure is visible in the images and manifest.
         if mouseUpTime == nil { RunLoop.main.run(until: Date().addingTimeInterval(1.5)) }
