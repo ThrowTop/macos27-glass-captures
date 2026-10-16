@@ -133,12 +133,40 @@ PY
   fi
 done
 
+mkdir -p out/crashes
+if [[ -d "$HOME/Library/Logs/DiagnosticReports" ]]; then
+  find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 1 -type f -name 'GlassCaptures*' \
+    -exec cp {} out/crashes/ \;
+fi
+
 python3 - <<'PY'
-import glob, json, os
+import csv, glob, json, os
 parts = []
 for path in glob.glob('out/**/manifest-part.json', recursive=True):
     with open(path) as f:
         parts.extend(json.load(f))
+keys = ['scenario', 'appearance', 'background', 'size', 'state', 'interaction', 'accent']
+with open('out/cases.tsv', newline='') as f:
+    scheduled = [dict(zip(keys, row)) for row in csv.reader(f, delimiter='\t')]
+incomplete = []
+for case in scheduled:
+    matching = [e for e in parts if all(e.get(key) == case[key] for key in keys)]
+    expected = {'idle'} if case['interaction'] == 'idle' else {
+        'idle', 'held-0100ms', 'held-0250ms', 'held-1000ms',
+        'released-0050ms', 'released-0100ms', 'released-0200ms',
+        'released-0350ms', 'released-0600ms',
+        'drag-held-0500ms' if case['interaction'] == 'drag' else 'held-0500ms'
+    }
+    got = {e['phase'] for e in matching if e.get('success')}
+    missing_phases = sorted(expected - got)
+    if missing_phases:
+        label = '/'.join(case[key] for key in keys)
+        incomplete.append(f'{label}: missing {missing_phases}')
+        parts.append({**case, 'phase': 'incomplete', 'success': False,
+                      'missing_phases': missing_phases,
+                      'error': 'scheduled case did not finish'})
+with open('out/incomplete.txt', 'w') as f:
+    f.write('\n'.join(incomplete) + ('\n' if incomplete else ''))
 with open('out/manifest.json', 'w') as f:
     json.dump(parts, f, indent=2, sort_keys=True)
 required = {(a, b) for a in ('light', 'dark') for b in ('plain', 'grid')}
@@ -167,6 +195,7 @@ for appearance, background in required:
 with open('out/gate.txt', 'w') as f:
     f.write('PASS\n' if not missing else 'FAIL\n' + '\n'.join(missing) + '\n')
 print(open('out/gate.txt').read())
+print(f'scheduled cases: {len(scheduled)}; incomplete cases: {len(incomplete)}')
 PY
 
 echo "case failures: $FAILURES" >> out/env.txt
