@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "GlassCaptures",
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS(.v26)],
     targets: [
         .target(name: "SafeKVC", path: "Sources/SafeKVC", publicHeadersPath: "include"),
         .executableTarget(name: "GlassCaptures", dependencies: ["SafeKVC"], path: "Sources/GlassCaptures")
