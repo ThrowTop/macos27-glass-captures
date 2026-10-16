@@ -442,7 +442,15 @@ final class CaptureSession {
         NSApp.activate(ignoringOtherApps: true)
         _ = NSRunningApplication.current.activate(options: [.activateAllWindows])
         window.makeKey()
-        RunLoop.main.run(until: Date().addingTimeInterval(1.2))
+        let activationDeadline = Date().addingTimeInterval(4)
+        repeat {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.15))
+            if NSApp.isActive && window.isKeyWindow { break }
+            NSApp.activate(ignoringOtherApps: true)
+            _ = NSRunningApplication.current.activate(options: [.activateAllWindows])
+            window.makeKeyAndOrderFront(nil)
+        } while Date() < activationDeadline
+        RunLoop.main.run(until: Date().addingTimeInterval(1.1))
         record("window key=\(window.isKeyWindow) main=\(window.isMainWindow) appActive=\(NSApp.isActive)")
         record("frontmost=\(NSWorkspace.shared.frontmostApplication?.localizedName ?? "nil") current=\(NSRunningApplication.current.localizedName ?? "nil") visible=\(window.isVisible)")
         capture("idle")

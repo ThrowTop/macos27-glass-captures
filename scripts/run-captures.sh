@@ -145,6 +145,14 @@ for appearance, background in required:
     got = {e['phase'] for e in entries}
     if got != phases:
         missing.append(f'{appearance}/{background}: missing {sorted(phases - got)}')
+    if appearance == 'light' and background == 'plain' and got == phases:
+        stem = 'out/nsswitch/light-default-regular-on-hold/plain/'
+        import hashlib
+        def digest(name):
+            with open(stem + name, 'rb') as f:
+                return hashlib.sha256(f.read()).digest()
+        if digest('idle-crop.png') == digest('held-0500ms-crop.png'):
+            missing.append('light/plain: held switch pixels match idle')
     layer = f'out/nsswitch/{appearance}-default-regular-on-hold/{background}/layers-held-0500ms.json'
     if not os.path.isfile(layer):
         missing.append(f'{appearance}/{background}: missing held layer dump')
