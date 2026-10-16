@@ -169,6 +169,19 @@ for case in scheduled:
                       'error': 'scheduled case did not finish'})
 with open('out/incomplete.txt', 'w') as f:
     f.write('\n'.join(incomplete) + ('\n' if incomplete else ''))
+quality_warnings = []
+for case in scheduled:
+    if case['interaction'] == 'idle':
+        continue
+    matching = [e for e in parts if all(e.get(key) == case[key] for key in keys)]
+    idle = next((e for e in matching if e.get('phase') == 'idle'), None)
+    if idle is not None and idle.get('held_differs_from_idle') is False:
+        label = '/'.join(case[key] for key in keys)
+        quality_warnings.append(f'{label}: held crop matches idle')
+        parts.append({**case, 'phase': 'quality-warning', 'success': False,
+                      'error': 'held crop matches idle'})
+with open('out/quality-warnings.txt', 'w') as f:
+    f.write('\n'.join(quality_warnings) + ('\n' if quality_warnings else ''))
 with open('out/manifest.json', 'w') as f:
     json.dump(parts, f, indent=2, sort_keys=True)
 required = {(a, b) for a in ('light', 'dark') for b in ('plain', 'grid')}
@@ -198,6 +211,7 @@ with open('out/gate.txt', 'w') as f:
     f.write('PASS\n' if not missing else 'FAIL\n' + '\n'.join(missing) + '\n')
 print(open('out/gate.txt').read())
 print(f'scheduled cases: {len(scheduled)}; incomplete cases: {len(incomplete)}')
+print(f'held-crop quality warnings: {len(quality_warnings)}')
 PY
 
 if [[ -s out/incomplete.txt ]]; then
