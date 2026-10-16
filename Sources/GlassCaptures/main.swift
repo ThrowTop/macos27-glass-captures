@@ -458,13 +458,14 @@ final class CaptureSession {
         repeat {
             RunLoop.main.run(until: Date().addingTimeInterval(0.15))
             if NSApp.isActive && window.isKeyWindow { break }
+            NSApp.unhide(nil)
             NSApp.activate(ignoringOtherApps: true)
             _ = NSRunningApplication.current.activate(options: [.activateAllWindows])
             window.makeKeyAndOrderFront(nil)
         } while Date() < activationDeadline
         RunLoop.main.run(until: Date().addingTimeInterval(1.1))
         record("window key=\(window.isKeyWindow) main=\(window.isMainWindow) appActive=\(NSApp.isActive)")
-        record("frontmost=\(NSWorkspace.shared.frontmostApplication?.localizedName ?? "nil") current=\(NSRunningApplication.current.localizedName ?? "nil") visible=\(window.isVisible)")
+        record("frontmost=\(NSWorkspace.shared.frontmostApplication?.localizedName ?? "nil") frontmostPID=\(NSWorkspace.shared.frontmostApplication?.processIdentifier ?? -1) current=\(NSRunningApplication.current.localizedName ?? "nil") currentPID=\(ProcessInfo.processInfo.processIdentifier) visible=\(window.isVisible)")
         capture("idle")
         if options.interaction == "idle" { try saveManifest(); return }
         let f = control.convert(control.bounds, to: window.contentView)
@@ -516,6 +517,7 @@ final class CaptureSession {
             capture(phase)
         }
         try saveManifest()
+        record("case end appActive=\(NSApp.isActive) key=\(window.isKeyWindow) frontmostPID=\(NSWorkspace.shared.frontmostApplication?.processIdentifier ?? -1)")
         if trackingDurationMS < 800 {
             throw NSError(domain: "GlassCaptures", code: 6, userInfo: [NSLocalizedDescriptionKey: "control did not enter mouse tracking"])
         }
