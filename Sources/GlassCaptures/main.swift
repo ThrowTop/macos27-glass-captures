@@ -189,7 +189,24 @@ func filterJSON(_ value: Any) -> Any {
 }
 
 func writeJSON(_ object: Any, to url: URL) throws {
-    let data = try JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys, .fragmentsAllowed])
+    func finiteJSON(_ value: Any) -> Any {
+        if let array = value as? [Any] { return array.map(finiteJSON) }
+        if let object = value as? [String: Any] { return object.mapValues(finiteJSON) }
+        if let number = value as? NSNumber {
+            return number.doubleValue.isFinite ? number : NSNull()
+        }
+        if let number = value as? CGFloat {
+            return number.isFinite ? number : NSNull()
+        }
+        if let number = value as? Double {
+            return number.isFinite ? number : NSNull()
+        }
+        if let number = value as? Float {
+            return number.isFinite ? number : NSNull()
+        }
+        return value
+    }
+    let data = try JSONSerialization.data(withJSONObject: finiteJSON(object), options: [.prettyPrinted, .sortedKeys, .fragmentsAllowed])
     try data.write(to: url, options: .atomic)
 }
 
