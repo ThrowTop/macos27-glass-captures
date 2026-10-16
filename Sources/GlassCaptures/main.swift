@@ -359,12 +359,15 @@ final class CaptureSession {
     func screenshotWithCLI(_ url: URL) -> (String, String?) {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
-        process.arguments = ["-x", "-o", "-l", "\(window.windowNumber)", url.path]
+        let screen = (window.screen ?? NSScreen.main)?.frame ?? CGRect(x: 0, y: 0, width: 1024, height: 768)
+        let rect = window.frame
+        let region = "\(Int(rect.minX - screen.minX)),\(Int(screen.maxY - rect.maxY)),\(Int(rect.width)),\(Int(rect.height))"
+        process.arguments = ["-x", "-o", "-R", region, url.path]
         do {
             try process.run()
             process.waitUntilExit()
             if process.terminationStatus == 0, FileManager.default.fileExists(atPath: url.path) {
-                return ("screencapture", nil)
+                return ("screencapture-region", nil)
             }
             return ("none", "ScreenCaptureKit: \(sckFailure ?? "unknown"); screencapture exit \(process.terminationStatus)")
         } catch { return ("none", "ScreenCaptureKit: \(sckFailure ?? "unknown"); screencapture: \(error)") }
@@ -422,8 +425,40 @@ final class CaptureSession {
         try writeJSON(results, to: folder.appendingPathComponent("manifest-part.json"))
     }
 
+    func recordFailure(_ error: Error) {
+        results.append([
+            "scenario": options.scenario, "size": options.size, "state": options.state,
+            "appearance": options.appearance, "accent": options.accent,
+            "background": options.background, "phase": "error", "success": false,
+            "capture_method": "none", "error": String(describing: error)
+        ])
+        try? saveManifest()
+    }
+
     func knobFrame() -> CGRect? {
         guard options.scenario == "nsswitch" else { return nil }
+        if let root = window.contentView?.superview?.layer {
+            func first(_ layer: CALayer, matching predicate: (CALayer) -> Bool) -> CALayer? {
+                if predicate(layer) { return layer }
+                for child in layer.sublayers ?? [] {
+                    if let found = first(child, matching: predicate) { return found }
+                }
+                return nil
+            }
+            if let switchLayer = first(root, matching: {
+                $0.name == "NSSwitch" && abs($0.bounds.width - control.bounds.width) < 0.5
+            }) {
+                let lifted = first(switchLayer, matching: { $0.name == "LiftLayer" })
+                let opaque = first(switchLayer, matching: {
+                    $0.cornerCurve == .continuous && $0.cornerRadius > 0 &&
+                    $0.bounds.width > 8 && $0.bounds.width < control.bounds.width - 5 &&
+                    $0.bounds.height < control.bounds.height
+                })
+                if let knob = lifted ?? opaque {
+                    return knob.convert(knob.bounds, to: root)
+                }
+            }
+        }
         var candidates: [CGRect] = []
         func visit(_ view: NSView) {
             for child in view.subviews {
@@ -572,6 +607,7 @@ DispatchQueue.main.async {
         }
         let item = batch[index]
         do {
+            NSApp.appearance = NSAppearance(named: item.appearance == "dark" ? .darkAqua : .aqua)
             let session = try CaptureSession(options: item)
             do {
                 try session.run()
@@ -580,6 +616,7 @@ DispatchQueue.main.async {
                 if !imageFailures.isEmpty { failures += 1 }
             } catch {
                 record("fatal case \(item.scenario) \(item.appearance) \(item.background): \(error)")
+                session.recordFailure(error)
                 try? "FAIL: \(error)".write(to: session.folder.appendingPathComponent("status.txt"), atomically: true, encoding: .utf8)
                 failures += 1
             }
@@ -587,7 +624,20 @@ DispatchQueue.main.async {
             // WindowServer, closing the last window deactivates this app.
             previousWindow?.close()
             previousWindow = session.window
-        } catch { record("case setup failed: \(error)"); failures += 1 }
+        } catch {
+            record("case setup failed: \(error)")
+            let folder = URL(fileURLWithPath: item.out, isDirectory: true)
+                .appendingPathComponent(item.scenario)
+                .appendingPathComponent("\(item.appearance)-\(item.accent)-\(item.size)-\(item.state)-\(item.interaction)")
+                .appendingPathComponent(item.background)
+            try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            try? writeJSON([["scenario": item.scenario, "size": item.size, "state": item.state,
+                             "appearance": item.appearance, "accent": item.accent,
+                             "background": item.background, "phase": "setup-error", "success": false,
+                             "capture_method": "none", "error": String(describing: error)]],
+                           to: folder.appendingPathComponent("manifest-part.json"))
+            failures += 1
+        }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { advance(index + 1) }
     }
     advance(0)
