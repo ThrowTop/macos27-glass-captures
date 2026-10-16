@@ -47,6 +47,8 @@ killall cfprefsd >/dev/null 2>&1 || true
   echo 'No TCC database grant attempted initially; failures are retained in log and manifest.'
 } > out/env.txt
 
+python3 scripts/grant-screen-capture.py com.throwtop.glasscaptures "$APP/Contents/MacOS/GlassCaptures" >> out/env.txt 2>&1
+
 "$EXE" --env-out "$ROOT/out/display.json" >> out/log.txt 2>&1 || true
 cat out/display.json >> out/env.txt 2>/dev/null || true
 

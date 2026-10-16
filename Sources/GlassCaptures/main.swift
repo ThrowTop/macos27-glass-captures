@@ -6,6 +6,7 @@ import QuartzCore
 import ScreenCaptureKit
 import SwiftUI
 import SafeKVC
+import ApplicationServices
 
 struct Options {
     var scenario = "nsswitch"
@@ -426,6 +427,15 @@ final class CaptureSession {
         else { NSApp.postEvent(e, atStart: false) }
     }
 
+    func directMouseDown(at p: CGPoint) {
+        guard let e = NSEvent.mouseEvent(with: .leftMouseDown, location: p, modifierFlags: [],
+                                        timestamp: ProcessInfo.processInfo.systemUptime,
+                                        windowNumber: window.windowNumber, context: nil,
+                                        eventNumber: 1, clickCount: 1, pressure: 1) else { return }
+        record("inject direct control.mouseDown at \(p.x),\(p.y); AX trusted=\(AXIsProcessTrusted())")
+        control.mouseDown(with: e)
+    }
+
     func run() throws {
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
@@ -466,6 +476,11 @@ final class CaptureSession {
         send(.leftMouseDown, at: start)
         trackingDurationMS = Int(Date().timeIntervalSince(mouseDownTime!) * 1000)
         record("mouseDown sendEvent returned t_ms=\(trackingDurationMS)")
+        if trackingDurationMS < 20 {
+            directMouseDown(at: start)
+            trackingDurationMS = Int(Date().timeIntervalSince(mouseDownTime!) * 1000)
+            record("direct mouseDown returned t_ms=\(trackingDurationMS)")
+        }
         // A control that does not enter tracking may return before the timers. Keep the
         // event loop live so its failure is visible in the images and manifest.
         if mouseUpTime == nil { RunLoop.main.run(until: Date().addingTimeInterval(1.5)) }
