@@ -954,6 +954,14 @@ final class CaptureSession {
         apply("abl-background-no-face", hide: highlight + portal, inputs: ["inputFaceOpacity": 0])
         apply("abl-background-raw", hide: highlight + portal,
               inputs: fill.merging(["inputFaceOpacity": 0, "inputBlurRadius": 0]) { $1 })
+        // Native `wide` readout: normal fill 1 and face 0 make glass_background output the
+        // two-tap fill sample at glassLod(1.6 * scale * radius) over the core.
+        for radius in [2.5, 5, 8, 10] {
+            apply("abl-wide-r\(radius)", hide: highlight + portal,
+                  inputs: ["inputBlurFillDarkenOpacity": 0, "inputBlurFillLightenOpacity": 0,
+                           "inputBlurFillNormalOpacity": 1, "inputFaceOpacity": 0,
+                           "inputBlurFillBlurRadius": radius])
+        }
         capture("abl-restored")
     }
 
