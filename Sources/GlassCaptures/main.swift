@@ -239,7 +239,8 @@ func safeDescription(_ value: Any?, depth: Int = 0) -> Any? {
     if value is NSNull { return NSNull() }
     if let s = value as? String { return s }
     if let n = value as? NSNumber { return n }
-    if let color = value as? CGColor {
+    if CFGetTypeID(value as CFTypeRef) == CGColor.typeID {
+        let color = value as! CGColor
         return ["components": color.components?.map(Double.init) ?? [],
                 "color_space": color.colorSpace.map { String(describing: $0.name) } ?? "unknown"] as [String: Any]
     }
