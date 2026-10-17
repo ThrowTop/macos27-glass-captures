@@ -20,6 +20,8 @@ struct Options {
     var accent = "default"
     var accessibility = "default"
     var out = "out"
+    // Native layer ablations after the idle capture (SwiftUI glass scenarios only).
+    var ablate = false
 
     init() {
         let a = CommandLine.arguments
@@ -52,6 +54,7 @@ struct Options {
         accent = values["accent"] ?? accent
         accessibility = values["accessibility"] ?? accessibility
         out = values["out"] ?? out
+        ablate = values["ablate"] == "1"
     }
 }
 
@@ -809,7 +812,7 @@ final class CaptureSession {
                 if writePNG(sub, to: cropURL) { cropPath = cropURL.path }
             }
         }
-        if phase == "idle" || phase == "held-0500ms" || phase == "drag-held-0500ms" {
+        if phase == "idle" || phase == "held-0500ms" || phase == "drag-held-0500ms" || phase.hasPrefix("abl-") {
             let layerURL = folder.appendingPathComponent("layers-\(phase).json")
             do {
                 if let layer = window.contentView?.superview?.layer {
@@ -898,6 +901,60 @@ final class CaptureSession {
             "capture_method": "none", "error": String(describing: error)
         ])
         try? saveManifest()
+    }
+
+    // Isolate native glass stages: hide the SDF highlight (@2) and/or portal (@1) layers, or
+    // override glassBackground inputs on a copied filter, capture, then restore. The layer dump
+    // of each phase records what was in effect.
+    func nativeAblations() {
+        guard let root = window.contentView?.superview?.layer else { record("ablation: no root layer"); return }
+        func all(_ l: CALayer) -> [CALayer] { [l] + (l.sublayers ?? []).flatMap(all) }
+        func cls(_ l: CALayer) -> String { NSStringFromClass(type(of: l)) }
+        let layers = all(root).filter { cls($0) == "SwiftUI.SDFLayer" }.flatMap(all)
+        let portal = layers.filter { cls($0).contains("SDFPortalLayer") && $0.name == "@1" }
+        let highlight = layers.filter { cls($0) == "CASDFLayer" && $0.name == "@2" }
+        let backdrop = layers.filter { cls($0) == "CABackdropLayer" }
+        record("ablation layers portal=\(portal.count) highlight=\(highlight.count) backdrop=\(backdrop.count)")
+        func apply(_ phase: String, hide: [CALayer], inputs: [String: Any] = [:]) {
+            let hidden = hide.map { ($0, $0.isHidden) }
+            var filters: [(CALayer, [Any]?)] = []
+            CATransaction.begin(); CATransaction.setDisableActions(true)
+            for layer in hide { layer.isHidden = true }
+            if !inputs.isEmpty {
+                for layer in backdrop {
+                    filters.append((layer, layer.filters))
+                    layer.filters = (layer.filters ?? []).map { filter -> Any in
+                        guard let object = filter as? NSObject,
+                              SafeValueForKey(object, "name") as? String == "glassBackground",
+                              object.responds(to: #selector(NSCopying.copy(with:))),
+                              let copy = object.copy() as? NSObject else { return filter }
+                        for (key, value) in inputs where !SafeSetValueForKey(copy, value, key) {
+                            record("ablation \(phase): cannot set \(key)")
+                        }
+                        return copy
+                    }
+                }
+            }
+            CATransaction.commit(); CATransaction.flush()
+            RunLoop.main.run(until: Date().addingTimeInterval(0.4))
+            capture(phase)
+            CATransaction.begin(); CATransaction.setDisableActions(true)
+            for (layer, wasHidden) in hidden { layer.isHidden = wasHidden }
+            for (layer, original) in filters { layer.filters = original }
+            CATransaction.commit(); CATransaction.flush()
+            RunLoop.main.run(until: Date().addingTimeInterval(0.4))
+        }
+        let fill: [String: Any] = ["inputBlurFillDarkenOpacity": 0, "inputBlurFillLightenOpacity": 0,
+                                   "inputBlurFillNormalOpacity": 0]
+        apply("abl-no-highlight", hide: highlight)
+        apply("abl-no-portal", hide: portal)
+        apply("abl-background", hide: highlight + portal)
+        apply("abl-background-no-darken", hide: highlight + portal, inputs: ["inputBlurFillDarkenOpacity": 0])
+        apply("abl-background-no-fill", hide: highlight + portal, inputs: fill)
+        apply("abl-background-no-face", hide: highlight + portal, inputs: ["inputFaceOpacity": 0])
+        apply("abl-background-raw", hide: highlight + portal,
+              inputs: fill.merging(["inputFaceOpacity": 0, "inputBlurRadius": 0]) { $1 })
+        capture("abl-restored")
     }
 
     func knobFrame() -> CGRect? {
@@ -1036,6 +1093,7 @@ final class CaptureSession {
             return
         }
         capture("idle")
+        if options.ablate && options.scenario.hasPrefix("swiftui-glass") { nativeAblations() }
         if options.interaction == "idle" { try saveManifest(); return }
         let f = control.convert(control.bounds, to: window.contentView)
         let start = knobFrame().map { CGPoint(x: $0.midX, y: $0.midY) }

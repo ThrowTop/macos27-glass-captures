@@ -154,6 +154,19 @@ for style in regular clear identity blue red50 interactive; do
   fi
 done
 
+# Native stage isolation: idle capture plus layer/filter ablations (see nativeAblations).
+if [[ "$FILTER" == ablate ]]; then
+  for style in regular clear; do
+    for appearance in light dark; do
+      for background in grid photo; do
+        for size in h20 h44; do
+          run_case "swiftui-glass-$style" "$appearance" "$background" "$size" on idle default
+        done
+      done
+    done
+  done
+fi
+
 if [[ "$FILTER" == nsglass-matrix || "$FILTER" == core ]]; then
   for scenario in nsglass-regular nsglass-clear nsglass-blue; do
     for appearance in light dark; do
@@ -212,13 +225,16 @@ fi
 for batch_key in default-default green-default graphite-default default-contrast default-transparency; do
   accent="${batch_key%-*}"
   accessibility="${batch_key#*-}"
-  python3 - "$accent" "$accessibility" "$ROOT/out" <<'PY' > "out/batch-$batch_key.json"
+  python3 - "$accent" "$accessibility" "$ROOT/out" "$FILTER" <<'PY' > "out/batch-$batch_key.json"
 import csv, json, sys
-accent, accessibility, out = sys.argv[1:]
+accent, accessibility, out, filter_name = sys.argv[1:]
 keys = ['scenario', 'appearance', 'background', 'size', 'state', 'interaction', 'accent', 'accessibility']
 with open('out/cases.tsv', newline='') as f:
     cases = [dict(zip(keys, row), out=out) for row in csv.reader(f, delimiter='\t')
              if row[6] == accent and row[7] == accessibility]
+if filter_name == 'ablate':
+    for case in cases:
+        case['ablate'] = '1'
 if accent != 'default' and cases:
     # A fresh accent process can show a WindowServer consent overlay during its
     # first window. Keep that real attempt in the artifact, then capture the
