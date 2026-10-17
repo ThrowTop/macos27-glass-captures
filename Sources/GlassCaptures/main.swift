@@ -7,6 +7,8 @@ import ScreenCaptureKit
 import SwiftUI
 import SafeKVC
 import ApplicationServices
+import ObjectiveC.runtime
+import Darwin
 
 struct Options {
     var scenario = "nsswitch"
@@ -16,6 +18,7 @@ struct Options {
     var state = "on"
     var interaction = "hold"
     var accent = "default"
+    var accessibility = "default"
     var out = "out"
 
     init() {
@@ -31,6 +34,7 @@ struct Options {
             case "--state": state = value
             case "--interaction": interaction = value
             case "--accent": accent = value
+            case "--accessibility": accessibility = value
             case "--out": out = value
             default: break
             }
@@ -46,6 +50,7 @@ struct Options {
         state = values["state"] ?? state
         interaction = values["interaction"] ?? interaction
         accent = values["accent"] ?? accent
+        accessibility = values["accessibility"] ?? accessibility
         out = values["out"] ?? out
     }
 }
@@ -83,6 +88,32 @@ final class BackgroundView: NSView {
             for y in stride(from: CGFloat(0), to: r.height, by: 2) {
                 CGRect(x: 0, y: y, width: r.width, height: 1).fill()
             }
+        case "vstripes":
+            NSColor.white.setFill(); r.fill()
+            NSColor.black.setFill()
+            for x in stride(from: CGFloat(0), to: r.width, by: 2) {
+                CGRect(x: x, y: 0, width: 1, height: r.height).fill()
+            }
+        case "checker8":
+            NSColor.white.setFill(); r.fill()
+            NSColor.black.setFill()
+            for y in stride(from: CGFloat(0), to: r.height, by: 8) {
+                for x in stride(from: CGFloat(0), to: r.width, by: 8) where
+                    (Int(x / 8) + Int(y / 8)) % 2 == 0 {
+                    CGRect(x: x, y: y, width: 8, height: 8).fill()
+                }
+            }
+        case "photo":
+            if let url = Bundle.main.url(forResource: "photo", withExtension: "png"),
+               let image = NSImage(contentsOf: url) {
+                let source = image.size
+                let ratio = max(r.width / source.width, r.height / source.height)
+                let used = CGSize(width: r.width / ratio, height: r.height / ratio)
+                let crop = CGRect(x: (source.width - used.width) / 2,
+                                  y: (source.height - used.height) / 2,
+                                  width: used.width, height: used.height)
+                image.draw(in: r, from: crop, operation: .copy, fraction: 1)
+            } else { NSColor.windowBackgroundColor.setFill(); r.fill() }
         case "grid":
             NSColor.white.setFill(); r.fill()
             NSColor.darkGray.setFill()
@@ -109,33 +140,136 @@ final class CaptureWindow: NSWindow {
     override var canBecomeMain: Bool { true }
 }
 
+final class CaptureToolbarItems: NSObject, NSToolbarDelegate {
+    private let names = ["First", "Second", "Third"]
+    private let ids = (0..<3).map { NSToolbarItem.Identifier("capture-button-\($0)") }
+    private let segmentID = NSToolbarItem.Identifier("capture-segments")
+
+    func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        ids + [segmentID, .flexibleSpace]
+    }
+    func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        [ids[0], ids[1], .flexibleSpace, segmentID, .flexibleSpace, ids[2]]
+    }
+    func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier id: NSToolbarItem.Identifier,
+                 willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
+        let item = NSToolbarItem(itemIdentifier: id)
+        if id == segmentID {
+            let segmented = NSSegmentedControl(labels: ["One", "Two", "Three"],
+                trackingMode: .selectOne, target: nil, action: nil)
+            segmented.selectedSegment = 0
+            segmented.sizeToFit()
+            item.view = segmented
+            return item
+        }
+        guard let index = ids.firstIndex(of: id) else { return nil }
+        let button = NSButton(title: names[index], target: nil, action: nil)
+        button.bezelStyle = .toolbar
+        button.sizeToFit()
+        item.view = button
+        return item
+    }
+}
+
 struct SwitchView: View {
     @State var isOn: Bool
     var body: some View { Toggle("", isOn: $isOn).toggleStyle(.switch).labelsHidden() }
 }
 
 @available(macOS 26.0, *)
-struct GlassView: View {
-    let shape: String
-    let style: String
+struct GlassButtonView: View {
+    let prominent: Bool
+    let large: Bool
     var body: some View {
-        let base = RoundedRectangle(cornerRadius: shape == "capsule" ? 22 : 18)
-            .fill(.clear)
-            .frame(width: shape == "capsule" ? 120 : 200,
-                   height: shape == "capsule" ? 44 : 120)
-        if style == "clear" { base.glassEffect(.clear) }
-        else if style == "interactive" { base.glassEffect(.regular.interactive()) }
-        else { base.glassEffect(.regular) }
+        if prominent {
+            Button("Button") {}.buttonStyle(.glassProminent)
+                .controlSize(large ? .large : .regular)
+        } else {
+            Button("Button") {}.buttonStyle(.glass)
+                .controlSize(large ? .large : .regular)
+        }
     }
 }
 
-func safeDescription(_ value: Any?) -> Any? {
+@available(macOS 26.0, *)
+struct GlassView: View {
+    let shape: String
+    let style: String
+    let width: CGFloat
+    let height: CGFloat
+    let spacing: CGFloat
+    var glass: Glass {
+        switch style {
+        case "clear": return .clear
+        case "identity": return .identity
+        case "blue": return .regular.tint(.blue)
+        case "red50": return .regular.tint(.red.opacity(0.5))
+        case "interactive": return .regular.interactive()
+        default: return .regular
+        }
+    }
+    @ViewBuilder var element: some View {
+        let content = Color.clear.frame(width: width, height: height)
+        if shape == "circle" { content.glassEffect(glass, in: Circle()) }
+        else if shape == "rounded" {
+            content.glassEffect(glass, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        } else { content.glassEffect(glass, in: Capsule()) }
+    }
+    var body: some View {
+        if shape == "legacy-capsule" || shape == "legacy-large" {
+            let base = RoundedRectangle(cornerRadius: shape == "legacy-capsule" ? 22 : 18)
+                .fill(.clear).frame(width: width, height: height)
+            if style == "clear" { base.glassEffect(.clear) }
+            else if style == "interactive" { base.glassEffect(.regular.interactive()) }
+            else { base.glassEffect(.regular) }
+        } else if shape == "container-merged" || shape == "container-separate" {
+            GlassEffectContainer(spacing: 20) {
+                HStack(spacing: spacing) {
+                    Color.clear.frame(width: 64, height: 64).glassEffect(glass, in: Capsule())
+                    Color.clear.frame(width: 64, height: 64).glassEffect(glass, in: Capsule())
+                }
+            }
+        } else { element }
+    }
+}
+
+func safeDescription(_ value: Any?, depth: Int = 0) -> Any? {
     guard let value else { return nil }
+    if depth > 12 { return ["error": "value depth limit"] }
     if value is NSNull { return NSNull() }
     if let s = value as? String { return s }
     if let n = value as? NSNumber { return n }
-    if let p = value as? NSValue { return p.description }
-    if let a = value as? [Any] { return a.map { safeDescription($0) ?? NSNull() } }
+    if let color = value as? CGColor {
+        return ["components": color.components?.map(Double.init) ?? [],
+                "color_space": color.colorSpace.map { String(describing: $0.name) } ?? "unknown"] as [String: Any]
+    }
+    if let data = value as? Data {
+        if data.count % 4 == 0 {
+            let bytes = [UInt8](data)
+            return stride(from: 0, to: bytes.count, by: 4).map { i -> Float in
+                let bits = UInt32(bytes[i]) | UInt32(bytes[i+1]) << 8 |
+                    UInt32(bytes[i+2]) << 16 | UInt32(bytes[i+3]) << 24
+                return Float(bitPattern: bits)
+            }
+        }
+        return ["bytes": data.count, "base64": data.base64EncodedString()]
+    }
+    if let p = value as? NSValue {
+        let type = String(cString: p.objCType)
+        if type.hasPrefix("{CGRect") { return rectJSON(p.rectValue) }
+        if type.hasPrefix("{CGPoint") { return pointJSON(p.pointValue) }
+        if type.hasPrefix("{CGSize") { return ["width": p.sizeValue.width, "height": p.sizeValue.height] }
+        if type.hasPrefix("{CGAffineTransform") {
+            var t = CGAffineTransform.identity
+            p.getValue(&t)
+            return [t.a, t.b, t.c, t.d, t.tx, t.ty]
+        }
+        return ["type": type, "value": p.description]
+    }
+    if let a = value as? [Any] { return a.map { safeDescription($0, depth: depth + 1) ?? NSNull() } }
+    if let d = value as? [String: Any] {
+        return d.mapValues { safeDescription($0, depth: depth + 1) ?? NSNull() }
+    }
     return String(describing: value)
 }
 
@@ -171,16 +305,36 @@ func layerJSON(_ layer: CALayer, depth: Int = 0) -> [String: Any] {
     return d
 }
 
-func filterJSON(_ value: Any) -> Any {
-    if let a = value as? [Any] { return a.map { filterJSON($0) } }
+func filterJSON(_ value: Any, depth: Int = 0) -> Any {
+    if depth > 12 { return ["error": "filter depth limit"] }
+    if let a = value as? [Any] { return a.map { filterJSON($0, depth: depth + 1) } }
     let obj = value as AnyObject
-    var d: [String: Any] = ["class": NSStringFromClass(type(of: obj)), "description": String(describing: value)]
-    for key in ["name", "inputAmount", "inputRadius", "inputColorMatrix"] {
-        if let v = SafeValueForKey(obj, key) { d[key] = safeDescription(v) }
+    var d: [String: Any] = ["class": NSStringFromClass(type(of: obj))]
+    var keys = Set(["name", "inputAmount", "inputRadius", "inputColorMatrix"])
+    if let attributes = SafeValueForKey(obj, "attributes") as? [String: Any] {
+        d["attributes"] = safeDescription(attributes)
+        keys.formUnion(attributes.keys.filter { $0.hasPrefix("input") })
     }
-    if let keys = SafeValueForKey(obj, "inputKeys") as? [String] {
-        for key in keys where d[key] == nil {
-            if let v = SafeValueForKey(obj, key) { d[key] = safeDescription(v) }
+    if let inputKeys = SafeValueForKey(obj, "inputKeys") as? [String] {
+        keys.formUnion(inputKeys)
+    }
+    var cls: AnyClass? = type(of: obj)
+    while let current = cls {
+        var count: UInt32 = 0
+        if let properties = class_copyPropertyList(current, &count) {
+            for i in 0..<Int(count) {
+                let key = String(cString: property_getName(properties[i]))
+                if key.hasPrefix("input") { keys.insert(key) }
+            }
+            free(properties)
+        }
+        cls = class_getSuperclass(current)
+    }
+    for key in keys.sorted() {
+        if let v = SafeValueForKey(obj, key) {
+            if let nested = v as? [Any], nested.contains(where: { String(describing: type(of: $0)).contains("Filter") }) {
+                d[key] = filterJSON(nested, depth: depth + 1)
+            } else { d[key] = safeDescription(v, depth: depth + 1) }
         }
     }
     return d
@@ -212,6 +366,66 @@ func writePNG(_ image: CGImage, to url: URL) -> Bool {
     guard let dest = CGImageDestinationCreateWithURL(url as CFURL, "public.png" as CFString, 1, nil) else { return false }
     CGImageDestinationAddImage(dest, image, nil)
     return CGImageDestinationFinalize(dest)
+}
+
+func systemFact(_ name: String) -> String {
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: "/usr/sbin/sysctl")
+    process.arguments = ["-n", name]
+    let pipe = Pipe()
+    process.standardOutput = pipe
+    process.standardError = Pipe()
+    do {
+        try process.run()
+        let value = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+        process.waitUntilExit()
+        return value.trimmingCharacters(in: .whitespacesAndNewlines)
+    } catch { return "unavailable: \(error)" }
+}
+
+let hardwareModel = systemFact("hw.model")
+let osBuild = systemFact("kern.osversion")
+
+func overlappingWindows(above window: NSWindow) -> [[String: Any]] {
+    let screen = window.screen ?? NSScreen.main
+    let top = screen?.frame.maxY ?? 0
+    let target = CGRect(x: window.frame.minX, y: top - window.frame.maxY,
+                        width: window.frame.width, height: window.frame.height)
+    let list = CGWindowListCopyWindowInfo([.optionOnScreenAboveWindow, .excludeDesktopElements],
+                                           CGWindowID(window.windowNumber)) as? [[String: Any]] ?? []
+    return list.compactMap { item in
+        if (item[kCGWindowOwnerPID as String] as? NSNumber)?.int32Value ==
+            ProcessInfo.processInfo.processIdentifier { return nil }
+        guard let b = item[kCGWindowBounds as String] as? [String: Any],
+              let x = (b["X"] as? NSNumber)?.doubleValue,
+              let y = (b["Y"] as? NSNumber)?.doubleValue,
+              let w = (b["Width"] as? NSNumber)?.doubleValue,
+              let h = (b["Height"] as? NSNumber)?.doubleValue else { return nil }
+        let frame = CGRect(x: x, y: y, width: w, height: h)
+        guard frame.intersects(target) else { return nil }
+        return ["owner": item[kCGWindowOwnerName as String] ?? NSNull(),
+                "name": item[kCGWindowName as String] ?? NSNull(),
+                "frame": rectJSON(frame),
+                "owner_pid": item[kCGWindowOwnerPID as String] ?? NSNull()]
+    }
+}
+
+func ownPresentationFrame(above window: NSWindow) -> CGRect? {
+    let top = (window.screen ?? NSScreen.main)?.frame.maxY ?? 0
+    let list = CGWindowListCopyWindowInfo([.optionOnScreenAboveWindow, .excludeDesktopElements],
+                                          CGWindowID(window.windowNumber)) as? [[String: Any]] ?? []
+    for item in list {
+        guard (item[kCGWindowOwnerPID as String] as? NSNumber)?.int32Value ==
+                  ProcessInfo.processInfo.processIdentifier,
+              let b = item[kCGWindowBounds as String] as? [String: Any],
+              let x = (b["X"] as? NSNumber)?.doubleValue,
+              let y = (b["Y"] as? NSNumber)?.doubleValue,
+              let w = (b["Width"] as? NSNumber)?.doubleValue,
+              let h = (b["Height"] as? NSNumber)?.doubleValue else { continue }
+        return CGRect(x: x - window.frame.minX, y: top - y - h - window.frame.minY,
+                      width: w, height: h)
+    }
+    return nil
 }
 
 func writeDisplayEnvironment(to path: String) throws {
@@ -253,8 +467,17 @@ final class CaptureSession {
     let options: Options
     let window: NSWindow
     let control: NSView
+    let glassLocalFrame: CGRect
+    let glassShape: String
+    let glassStyle: String
+    let glassCornerRadius: CGFloat
+    let glassSpacing: CGFloat?
     let folder: URL
     let scale: CGFloat
+    let toolbarItems: CaptureToolbarItems?
+    let splitController: NSSplitViewController?
+    let popover: NSPopover?
+    let menu: NSMenu?
     var results: [[String: Any]] = []
     var mouseDownTime: Date?
     var mouseUpTime: Date?
@@ -263,23 +486,52 @@ final class CaptureSession {
     var usedDirectFallback = false
     var sckFailure: String?
     var sckUnavailable = false
+    var backgroundPath: String?
+    var backgroundError: String?
+    var backgroundObstructions: [[String: Any]] = []
 
     init(options: Options) throws {
         self.options = options
         let root = URL(fileURLWithPath: options.out, isDirectory: true)
         folder = root.appendingPathComponent(options.scenario)
-            .appendingPathComponent("\(options.appearance)-\(options.accent)-\(options.size)-\(options.state)-\(options.interaction)")
+            .appendingPathComponent("\(options.appearance)-\(options.accent)-\(options.size)-\(options.state)-\(options.interaction)\(options.accessibility == "default" ? "" : "-\(options.accessibility)")")
             .appendingPathComponent(options.background)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        let w = CaptureWindow(contentRect: CGRect(x: 100, y: 100, width: 480, height: 300),
-                         styleMask: [.borderless], backing: .buffered, defer: false)
+        let isToolbar = options.scenario == "toolbar-window"
+        let isSidebar = options.scenario == "sidebar-window"
+        let w = CaptureWindow(contentRect: CGRect(x: 24, y: 24, width: 480, height: 300),
+                         styleMask: isToolbar || isSidebar ? [.titled, .fullSizeContentView] : [.borderless],
+                         backing: .buffered, defer: false)
+        if isToolbar || isSidebar {
+            w.setFrame(CGRect(x: 24, y: 24, width: 480, height: 300), display: false)
+        }
         w.isReleasedWhenClosed = false
         w.backgroundColor = .windowBackgroundColor
         w.hasShadow = false
         w.level = .normal
+        var newToolbarItems: CaptureToolbarItems? = nil
+        var newSplitController: NSSplitViewController? = nil
+        var newPopover: NSPopover? = nil
+        var newMenu: NSMenu? = nil
+        if isToolbar {
+            w.titleVisibility = .hidden
+            w.titlebarAppearsTransparent = true
+            let items = CaptureToolbarItems()
+            let toolbar = NSToolbar(identifier: "capture-glass-toolbar")
+            toolbar.delegate = items
+            toolbar.displayMode = .iconOnly
+            w.toolbar = toolbar
+            newToolbarItems = items
+        }
+        w.appearance = NSAppearance(named: options.appearance == "dark" ? .darkAqua : .aqua)
         let bg = BackgroundView(frame: CGRect(x: 0, y: 0, width: 480, height: 300), kind: options.background)
         w.contentView = bg
         let c: NSView
+        var shape = "capsule"
+        var style = "none"
+        var localGlass = CGRect.zero
+        var corner: CGFloat = 0
+        var spacing: CGFloat? = nil
         let controlSize: NSControl.ControlSize = options.size == "mini" ? .mini : options.size == "small" ? .small : options.size == "large" ? .large : .regular
         switch options.scenario {
         case "nsswitch":
@@ -310,26 +562,129 @@ final class CaptureSession {
             v.controlSize = controlSize
             v.sizeToFit()
             c = v
-        case "nsglass":
+        case "nsbutton-glass":
             if #available(macOS 26.0, *) {
-                let v = NSGlassEffectView(frame: CGRect(x: 0, y: 0, width: options.size == "large" ? 200 : 120, height: options.size == "large" ? 120 : 44))
+                let v = NSButton(title: "Button", target: nil, action: nil)
+                v.bezelStyle = .glass
+                v.controlSize = controlSize
+                v.sizeToFit()
+                c = v
+                style = "button-glass"
+            } else { throw NSError(domain: "GlassCaptures", code: 8, userInfo: [NSLocalizedDescriptionKey: "glass button unavailable"]) }
+        case "swiftui-button-glass", "swiftui-button-prominent":
+            if #available(macOS 26.0, *) {
+                let prominent = options.scenario == "swiftui-button-prominent"
+                let v = NSHostingView(rootView: GlassButtonView(prominent: prominent,
+                    large: options.size == "large"))
+                v.frame.size = v.fittingSize
+                c = v
+                style = prominent ? "glassProminent" : "glass"
+            } else { throw NSError(domain: "GlassCaptures", code: 9, userInfo: [NSLocalizedDescriptionKey: "SwiftUI glass button unavailable"]) }
+        case "toolbar-window":
+            let v = NSView(frame: CGRect(x: 0, y: 0, width: 480, height: 300))
+            c = v
+            style = "toolbar"
+            shape = "rect"
+            localGlass = CGRect(x: 0, y: 246, width: 480, height: 54)
+        case "sidebar-window":
+            let split = NSSplitViewController()
+            let sidebar = NSViewController()
+            sidebar.view = NSView(frame: CGRect(x: 0, y: 0, width: 180, height: 300))
+            let content = NSViewController()
+            content.view = NSView(frame: CGRect(x: 0, y: 0, width: 300, height: 300))
+            split.addSplitViewItem(NSSplitViewItem(sidebarWithViewController: sidebar))
+            split.addSplitViewItem(NSSplitViewItem(viewController: content))
+            split.view.frame = bg.bounds
+            split.view.autoresizingMask = [.width, .height]
+            c = split.view
+            newSplitController = split
+            style = "sidebar"
+            shape = "rect"
+            localGlass = CGRect(x: 0, y: 0, width: 180, height: 300)
+        case "popover", "menu":
+            let button = NSButton(title: options.scenario == "popover" ? "Open" : "Menu",
+                                  target: nil, action: nil)
+            button.sizeToFit()
+            c = button
+            style = options.scenario
+            shape = "rect"
+            if options.scenario == "popover" {
+                let controller = NSViewController()
+                controller.view = NSView(frame: CGRect(x: 0, y: 0, width: 220, height: 160))
+                let text = NSTextField(labelWithString: "Popover")
+                text.frame = CGRect(x: 20, y: 115, width: 170, height: 25)
+                controller.view.addSubview(text)
+                let p = NSPopover()
+                p.contentViewController = controller
+                p.contentSize = CGSize(width: 220, height: 160)
+                p.behavior = .transient
+                newPopover = p
+            } else {
+                let m = NSMenu(title: "Menu")
+                for title in ["First", "Second", "Third"] {
+                    m.addItem(NSMenuItem(title: title, action: nil, keyEquivalent: ""))
+                }
+                newMenu = m
+            }
+        case "nsglass", "nsglass-regular", "nsglass-clear", "nsglass-blue":
+            if #available(macOS 26.0, *) {
+                let large = options.size.hasPrefix("large")
+                let height: CGFloat = large ? 120 : 44
+                let v = NSGlassEffectView(frame: CGRect(x: 0, y: 0, width: large ? 200 : 120, height: height))
+                style = options.scenario == "nsglass-clear" ? "clear" : "regular"
+                if options.scenario != "nsglass" { v.style = style == "clear" ? .clear : .regular }
+                if options.scenario == "nsglass-blue" { v.tintColor = .systemBlue }
+                corner = options.size.hasSuffix("r0") ? 0 : options.size.hasSuffix("r12") ? 12 : height / 2
+                if options.scenario != "nsglass" { v.cornerRadius = corner }
+                corner = v.cornerRadius
+                shape = corner == height / 2 ? "capsule" : "rect"
+                localGlass = v.bounds
                 c = v
             } else { throw NSError(domain: "GlassCaptures", code: 1, userInfo: [NSLocalizedDescriptionKey: "NSGlassEffectView unavailable"]) }
-        case "swiftui-glass-regular", "swiftui-glass-clear", "swiftui-glass-interactive":
+        case let scenario where scenario.hasPrefix("swiftui-glass-"):
             if #available(macOS 26.0, *) {
-                let style = options.scenario.replacingOccurrences(of: "swiftui-glass-", with: "")
-                let v = NSHostingView(rootView: GlassView(shape: options.size == "large" ? "rect" : "capsule", style: style))
-                v.frame.size = CGSize(width: options.size == "large" ? 220 : 140,
-                                      height: options.size == "large" ? 140 : 64)
+                style = scenario.replacingOccurrences(of: "swiftui-glass-", with: "")
+                let dimensions: CGSize
+                if options.size.hasPrefix("h"), let h = Double(options.size.dropFirst()) {
+                    dimensions = CGSize(width: 2.5 * h, height: h)
+                } else if options.size == "circle" { dimensions = CGSize(width: 64, height: 64) }
+                else if options.size == "large" || options.size == "rounded" {
+                    dimensions = CGSize(width: 200, height: 120)
+                } else if options.size.hasPrefix("container") {
+                    dimensions = CGSize(width: options.size == "container-merged" ? 140 : 152, height: 64)
+                } else { dimensions = CGSize(width: 120, height: 44) }
+                shape = options.size == "large" ? "legacy-large"
+                    : options.size == "regular" ? "legacy-capsule"
+                    : options.size == "rounded" ? "rounded"
+                    : options.size == "circle" ? "circle"
+                    : options.size.hasPrefix("container") ? options.size : "capsule"
+                spacing = shape == "container-merged" ? 12 : shape == "container-separate" ? 24 : nil
+                let v = NSHostingView(rootView: GlassView(shape: shape, style: style,
+                    width: dimensions.width, height: dimensions.height, spacing: spacing ?? 0))
+                v.frame.size = CGSize(width: dimensions.width + 20, height: dimensions.height + 20)
+                localGlass = CGRect(x: 10, y: 10, width: dimensions.width, height: dimensions.height)
+                corner = shape == "rounded" ? 12
+                    : shape == "legacy-large" ? 18 : min(dimensions.width, dimensions.height) / 2
                 c = v
             } else { throw NSError(domain: "GlassCaptures", code: 2, userInfo: [NSLocalizedDescriptionKey: "SwiftUI glass unavailable"]) }
         default: throw NSError(domain: "GlassCaptures", code: 3, userInfo: [NSLocalizedDescriptionKey: "unknown scenario \(options.scenario)"])
         }
-        c.frame.origin = CGPoint(x: (480 - c.frame.width) / 2, y: (300 - c.frame.height) / 2)
+        c.frame.origin = CGPoint(x: (480 - c.frame.width) / 2,
+                                 y: options.scenario == "popover" || options.scenario == "menu"
+                                     ? 70 : (300 - c.frame.height) / 2)
         bg.addSubview(c)
         control = c
+        glassLocalFrame = localGlass == .zero ? c.bounds : localGlass
+        glassShape = shape == "legacy-large" ? "rect" : shape == "legacy-capsule" ? "capsule" : shape
+        glassStyle = style
+        glassCornerRadius = corner
+        glassSpacing = spacing
         window = w
         scale = w.screen?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 1
+        toolbarItems = newToolbarItems
+        splitController = newSplitController
+        popover = newPopover
+        menu = newMenu
     }
 
     func screenshot(_ url: URL) -> (String, String?) {
@@ -391,12 +746,44 @@ final class CaptureSession {
         } catch { return ("none", "ScreenCaptureKit: \(sckFailure ?? "unknown"); screencapture: \(error)") }
     }
 
+    func waitForUnobstructedWindow() -> [[String: Any]] {
+        let deadline = Date().addingTimeInterval(4)
+        var overlaps = overlappingWindows(above: window)
+        while !overlaps.isEmpty && Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.1))
+            overlaps = overlappingWindows(above: window)
+        }
+        return overlaps
+    }
+
     func capture(_ phase: String) {
+        let obstructions = waitForUnobstructedWindow()
         let url = folder.appendingPathComponent("\(phase).png")
         let (method, error) = screenshot(url)
         let frame = control.convert(control.bounds, to: window.contentView)
+        var glassFrame = control.convert(glassLocalFrame, to: window.contentView)
+        if let popupWindow = popover?.contentViewController?.view.window {
+            let content = popupWindow.frame
+            glassFrame = CGRect(x: content.minX - window.frame.minX,
+                               y: content.minY - window.frame.minY,
+                               width: content.width, height: content.height)
+        }
         let knob = knobFrame()
+        let workspace = NSWorkspace.shared
+        let accessibility: [String: Bool] = [
+            "increase_contrast": workspace.accessibilityDisplayShouldIncreaseContrast,
+            "reduce_transparency": workspace.accessibilityDisplayShouldReduceTransparency,
+            "reduce_motion": workspace.accessibilityDisplayShouldReduceMotion,
+            "differentiate_without_color": workspace.accessibilityDisplayShouldDifferentiateWithoutColor
+        ]
+        let accessibilityApplied = options.accessibility == "contrast"
+            ? accessibility["increase_contrast"] == true
+            : options.accessibility == "transparency"
+            ? accessibility["reduce_transparency"] == true
+            : accessibility.values.allSatisfy { !$0 }
+        let screen = window.screen ?? NSScreen.main
         var cropPath: String? = nil
+        var layerPath: String? = nil
         if method != "none", let source = CGImageSourceCreateWithURL(url as CFURL, nil),
            let image = CGImageSourceCreateImageAtIndex(source, 0, nil) {
             let actualScale = CGFloat(image.width) / window.frame.width
@@ -415,25 +802,60 @@ final class CaptureSession {
             let layerURL = folder.appendingPathComponent("layers-\(phase).json")
             do {
                 if let layer = window.contentView?.superview?.layer {
-                    try writeJSON(layerJSON(layer), to: layerURL)
-                } else { try writeJSON(["error": "frame view has no layer"], to: layerURL) }
+                    var tree = layerJSON(layer)
+                    let presentation = NSApp.windows.filter { $0 !== window && $0.isVisible }
+                        .compactMap { other -> [String: Any]? in
+                            guard let root = other.contentView?.superview?.layer else { return nil }
+                            return ["window_frame": rectJSON(other.frame), "layers": layerJSON(root)]
+                        }
+                    if !presentation.isEmpty { tree["presentation_windows"] = presentation }
+                    try writeJSON(tree, to: layerURL)
+                    layerPath = layerURL.path
+                } else { record("layer dump missing root layer \(phase)") }
             } catch { record("layer dump failed \(phase): \(error)") }
         }
         let t = mouseDownTime.map { Int(Date().timeIntervalSince($0) * 1000) }
+        let glassFrameJSON: Any = options.scenario == "menu"
+            ? (ownPresentationFrame(above: window).map { rectJSON($0) } as Any? ?? NSNull())
+            : rectJSON(glassFrame)
         let entry: [String: Any] = [
             "scenario": options.scenario, "control": NSStringFromClass(type(of: control)),
             "size": options.size, "state": options.state, "interaction": options.interaction,
             "appearance": options.appearance,
             "accent": options.accent, "background": options.background, "phase": phase,
+            "accessibility_axis": options.accessibility,
             "t_ms_since_mouse_down": t as Any? ?? NSNull(), "control_frame_window_points": rectJSON(frame),
             "control_frame_window_pixels": rectJSON(frame.applying(CGAffineTransform(scaleX: scale, y: scale))),
             "knob_frame_window_points": knob.map { rectJSON($0) } as Any? ?? NSNull(),
             "knob_frame_window_pixels": knob.map { rectJSON($0.applying(CGAffineTransform(scaleX: scale, y: scale))) } as Any? ?? NSNull(),
-            "backing_scale": scale, "capture_method": method, "success": method != "none",
-            "window_is_key": window.isKeyWindow,
+            "backing_scale": scale, "capture_method": method,
+            "success": method != "none" && backgroundPath != nil &&
+                backgroundObstructions.isEmpty && accessibilityApplied,
+            "window_is_key": NSApp.isActive && window.isKeyWindow && window.isMainWindow,
+            "window_key": window.isKeyWindow, "window_main": window.isMainWindow,
+            "app_active": NSApp.isActive, "obstructed": !obstructions.isEmpty,
+            "obstructions": obstructions,
+            "accessibility": accessibility,
+            "accessibility_axis_applied": accessibilityApplied,
+            "effective_appearance": window.effectiveAppearance.name.rawValue,
+            "accent_color": safeDescription(NSColor.controlAccentColor.cgColor) ?? NSNull(),
+            "window_background_color": safeDescription(NSColor.windowBackgroundColor.cgColor) ?? NSNull(),
+            "cursor_location": pointJSON(NSEvent.mouseLocation),
+            "screen_color_space": screen?.colorSpace?.localizedName ?? "unknown",
+            "edr_headroom": screen?.maximumExtendedDynamicRangeColorComponentValue ?? 1,
+            "hardware_model": hardwareModel, "os_build": osBuild,
+            "glass": glassStyle, "shape": glassShape,
+            "glass_frame_window_points": glassFrameJSON,
+            "corner_radius": glassCornerRadius,
+            "container_spacing": glassSpacing as Any? ?? NSNull(),
+            "background_image": backgroundPath as Any? ?? NSNull(),
+            "background_error": backgroundError as Any? ?? NSNull(),
+            "background_obstructions": backgroundObstructions,
+            "do_not_disturb": "not configured; obstruction check is authoritative",
             "control_value": (control as? NSSwitch).map { $0.state.rawValue } as Any? ?? NSNull(),
             "error": error as Any? ?? NSNull(), "image": method == "none" ? NSNull() : url.path as Any,
-            "crop": cropPath as Any? ?? NSNull(), "sck_error": sckFailure as Any? ?? NSNull()
+            "crop": cropPath as Any? ?? NSNull(), "sck_error": sckFailure as Any? ?? NSNull(),
+            "layers": layerPath as Any? ?? NSNull()
         ]
         results.append(entry)
         record("capture \(phase) method=\(method) t_ms=\(t.map(String.init) ?? "idle") error=\(error ?? "none")")
@@ -460,7 +882,8 @@ final class CaptureSession {
             "scenario": options.scenario, "size": options.size, "state": options.state,
             "interaction": options.interaction,
             "appearance": options.appearance, "accent": options.accent,
-            "background": options.background, "phase": "error", "success": false,
+            "background": options.background, "accessibility_axis": options.accessibility,
+            "phase": "error", "success": false,
             "capture_method": "none", "error": String(describing: error)
         ])
         try? saveManifest()
@@ -529,6 +952,7 @@ final class CaptureSession {
 
     func run() throws {
         NSApp.appearance = NSAppearance(named: options.appearance == "dark" ? .darkAqua : .aqua)
+        window.appearance = NSApp.appearance
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
         NSApp.activate(ignoringOtherApps: true)
@@ -538,7 +962,7 @@ final class CaptureSession {
         var askedLaunchServices = false
         repeat {
             RunLoop.main.run(until: Date().addingTimeInterval(0.15))
-            if NSApp.isActive && window.isKeyWindow { break }
+            if NSApp.isActive && window.isKeyWindow && window.isMainWindow { break }
             if !askedLaunchServices {
                 askedLaunchServices = true
                 let launcher = Process()
@@ -553,8 +977,53 @@ final class CaptureSession {
             window.makeKeyAndOrderFront(nil)
         } while Date() < activationDeadline
         RunLoop.main.run(until: Date().addingTimeInterval(1.1))
+        if let screen = window.screen ?? NSScreen.main {
+            _ = CGWarpMouseCursorPosition(CGPoint(x: screen.frame.maxX - 12, y: screen.frame.minY + 12))
+        }
+        NSCursor.hide()
+        defer { NSCursor.unhide() }
+        var inactiveWindow: NSWindow? = nil
+        defer { inactiveWindow?.close() }
+        // Capture the exact backdrop through the same display-composite path.
+        control.isHidden = true
+        if options.scenario == "toolbar-window" { window.toolbar?.isVisible = false }
+        RunLoop.main.run(until: Date().addingTimeInterval(0.35))
+        backgroundObstructions = waitForUnobstructedWindow()
+        let backgroundURL = folder.appendingPathComponent("background.png")
+        let (backgroundMethod, backgroundError) = screenshot(backgroundURL)
+        if backgroundMethod != "none" { backgroundPath = backgroundURL.path }
+        else {
+            self.backgroundError = backgroundError ?? "unknown"
+            record("background capture failed: \(backgroundError ?? "unknown")")
+        }
+        control.isHidden = false
+        if options.scenario == "toolbar-window" { window.toolbar?.isVisible = true }
+        RunLoop.main.run(until: Date().addingTimeInterval(0.35))
+        if let popover {
+            popover.show(relativeTo: control.bounds, of: control, preferredEdge: .maxY)
+            RunLoop.main.run(until: Date().addingTimeInterval(0.35))
+        }
+        if options.scenario == "swiftui-glass-regular-inactive" {
+            let other = CaptureWindow(contentRect: CGRect(x: 600, y: 24, width: 100, height: 80),
+                                      styleMask: [.borderless], backing: .buffered, defer: false)
+            other.backgroundColor = .windowBackgroundColor
+            other.makeKeyAndOrderFront(nil)
+            inactiveWindow = other
+            RunLoop.main.run(until: Date().addingTimeInterval(0.35))
+        }
         record("window key=\(window.isKeyWindow) main=\(window.isMainWindow) appActive=\(NSApp.isActive)")
         record("frontmost=\(NSWorkspace.shared.frontmostApplication?.localizedName ?? "nil") frontmostPID=\(NSWorkspace.shared.frontmostApplication?.processIdentifier ?? -1) current=\(NSRunningApplication.current.localizedName ?? "nil") currentPID=\(ProcessInfo.processInfo.processIdentifier) visible=\(window.isVisible)")
+        if let menu {
+            let timer = Timer(timeInterval: 0.35, repeats: false) { [self] _ in
+                capture("idle")
+                menu.cancelTracking()
+            }
+            RunLoop.main.add(timer, forMode: .eventTracking)
+            _ = menu.popUp(positioning: nil, at: CGPoint(x: control.frame.minX,
+                y: control.frame.maxY), in: window.contentView)
+            try saveManifest()
+            return
+        }
         capture("idle")
         if options.interaction == "idle" { try saveManifest(); return }
         let f = control.convert(control.bounds, to: window.contentView)
@@ -660,12 +1129,13 @@ DispatchQueue.main.async {
             record("case setup failed: \(error)")
             let folder = URL(fileURLWithPath: item.out, isDirectory: true)
                 .appendingPathComponent(item.scenario)
-                .appendingPathComponent("\(item.appearance)-\(item.accent)-\(item.size)-\(item.state)-\(item.interaction)")
+                .appendingPathComponent("\(item.appearance)-\(item.accent)-\(item.size)-\(item.state)-\(item.interaction)\(item.accessibility == "default" ? "" : "-\(item.accessibility)")")
                 .appendingPathComponent(item.background)
             try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             try? writeJSON([["scenario": item.scenario, "size": item.size, "state": item.state,
                              "interaction": item.interaction,
                              "appearance": item.appearance, "accent": item.accent,
+                             "accessibility_axis": item.accessibility,
                              "background": item.background, "phase": "setup-error", "success": false,
                              "capture_method": "none", "error": String(describing: error)]],
                            to: folder.appendingPathComponent("manifest-part.json"))

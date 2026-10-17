@@ -15,6 +15,8 @@ mkdir -p "$APP/Contents/MacOS"
 cp "$ROOT/App/Info.plist" "$APP/Contents/Info.plist"
 cp "$EXE" "$APP/Contents/MacOS/GlassCaptures"
 chmod +x "$APP/Contents/MacOS/GlassCaptures"
+mkdir -p "$APP/Contents/Resources"
+cp "$ROOT/Resources/photo.png" "$APP/Contents/Resources/photo.png"
 
 # Hosted images currently boot with these accessibility options enabled. Capture
 # the normal animated/translucent appearance, and record both original and set values.
@@ -26,6 +28,10 @@ chmod +x "$APP/Contents/MacOS/GlassCaptures"
 defaults write com.apple.universalaccess reduceTransparency -bool false
 defaults write com.apple.universalaccess reduceMotion -bool false
 defaults write com.apple.universalaccess increaseContrast -bool false
+defaults write com.apple.universalaccess differentiateWithoutColor -bool false
+defaults write -g AppleReduceDesktopTinting -bool true
+defaults delete -g AppleAccentColor >/dev/null 2>&1 || true
+defaults delete -g AppleHighlightColor >/dev/null 2>&1 || true
 killall cfprefsd >/dev/null 2>&1 || true
 
 {
@@ -39,6 +45,8 @@ killall cfprefsd >/dev/null 2>&1 || true
   defaults read com.apple.universalaccess reduceTransparency 2>&1 || true
   defaults read com.apple.universalaccess reduceMotion 2>&1 || true
   defaults read com.apple.universalaccess increaseContrast 2>&1 || true
+  defaults read com.apple.universalaccess differentiateWithoutColor 2>&1 || true
+  defaults read -g AppleReduceDesktopTinting 2>&1 || true
   echo '--- accent ---'; defaults read -g AppleAccentColor 2>&1 || true
   echo '--- screen capture access ---'
   echo 'The app records CGPreflightScreenCaptureAccess in display.json and each app run.'
@@ -56,8 +64,9 @@ contains_filter() {
 
 run_case() {
   local scenario="$1" appearance="$2" background="$3" size="$4" state="$5" interaction="$6" accent="$7"
-  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-    "$scenario" "$appearance" "$background" "$size" "$state" "$interaction" "$accent" >> out/cases.tsv
+  local accessibility="${8:-default}"
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+    "$scenario" "$appearance" "$background" "$size" "$state" "$interaction" "$accent" "$accessibility" >> out/cases.tsv
 }
 
 : > out/cases.tsv
@@ -115,13 +124,94 @@ if [[ "$FILTER" != smoke ]]; then
   done
 fi
 
-for accent in default green graphite; do
-  python3 - "$accent" "$ROOT/out" <<'PY' > "out/batch-$accent.json"
+# Recipe matrix is dispatched by style (or the small "core" gate) to keep a
+# hosted run below the workflow time limit. A style filter captures every size,
+# shape and background for that recipe; repeated workflows cover all styles.
+for style in regular clear identity blue red50 interactive; do
+  scenario="swiftui-glass-$style"
+  if [[ "$FILTER" == "$scenario" || "$FILTER" == core ]]; then
+    for appearance in light dark; do
+      for background in plain black white grid hstripes vstripes rainbow checker8 photo; do
+        for size in h20 h28 h36 h44 h64 h96 h128 rounded circle container-merged container-separate; do
+          if [[ "$FILTER" == core && \
+                ( "$style" != regular && "$style" != clear || \
+                  "$background" != grid && "$background" != photo || \
+                  "$size" != h20 && "$size" != h44 && "$size" != h128 ) ]]; then continue; fi
+          run_case "$scenario" "$appearance" "$background" "$size" on idle default
+          if [[ "$style" == interactive && "$size" == h44 ]]; then
+            run_case "$scenario" "$appearance" "$background" "$size" on hold default
+          fi
+        done
+      done
+    done
+  fi
+done
+
+if [[ "$FILTER" == nsglass-matrix || "$FILTER" == core ]]; then
+  for scenario in nsglass-regular nsglass-clear nsglass-blue; do
+    for appearance in light dark; do
+      for background in plain black white grid hstripes vstripes rainbow checker8 photo; do
+        for size in regular-r0 regular-r12 regular-r22 large-r0 large-r12 large-r60; do
+          if [[ "$FILTER" == core && ( "$background" != grid && "$background" != photo || \
+                "$size" != regular-r22 || "$scenario" == nsglass-blue ) ]]; then continue; fi
+          run_case "$scenario" "$appearance" "$background" "$size" on idle default
+        done
+      done
+    done
+  done
+fi
+
+if [[ "$FILTER" == glass-buttons || "$FILTER" == core ]]; then
+  for scenario in nsbutton-glass swiftui-button-glass swiftui-button-prominent; do
+    for appearance in light dark; do
+      for background in plain grid rainbow photo; do
+        for size in regular large; do
+          if [[ "$FILTER" == core && ( "$scenario" != swiftui-button-prominent || \
+                "$appearance" != light || "$background" != grid || "$size" != regular ) ]]; then continue; fi
+          run_case "$scenario" "$appearance" "$background" "$size" on hold default
+        done
+      done
+    done
+  done
+fi
+
+if [[ "$FILTER" == structural-glass || "$FILTER" == core ]]; then
+  for scenario in toolbar-window sidebar-window popover menu; do
+    for appearance in light dark; do
+      for background in grid photo; do
+        if [[ "$FILTER" == core && ( "$scenario" != toolbar-window || \
+              "$appearance" != light || "$background" != grid ) ]]; then continue; fi
+        run_case "$scenario" "$appearance" "$background" regular on idle default
+      done
+    done
+  done
+fi
+
+if [[ "$FILTER" == regular-accessibility ]]; then
+  for accessibility in contrast transparency; do
+    for appearance in light dark; do
+      for background in grid photo; do
+        run_case swiftui-glass-regular "$appearance" "$background" h44 on idle default "$accessibility"
+      done
+    done
+  done
+  for appearance in light dark; do
+    for background in grid photo; do
+      run_case swiftui-glass-regular-inactive "$appearance" "$background" h44 on idle default
+    done
+  done
+fi
+
+for batch_key in default-default green-default graphite-default default-contrast default-transparency; do
+  accent="${batch_key%-*}"
+  accessibility="${batch_key#*-}"
+  python3 - "$accent" "$accessibility" "$ROOT/out" <<'PY' > "out/batch-$batch_key.json"
 import csv, json, sys
-accent, out = sys.argv[1:]
-keys = ['scenario', 'appearance', 'background', 'size', 'state', 'interaction', 'accent']
+accent, accessibility, out = sys.argv[1:]
+keys = ['scenario', 'appearance', 'background', 'size', 'state', 'interaction', 'accent', 'accessibility']
 with open('out/cases.tsv', newline='') as f:
-    cases = [dict(zip(keys, row), out=out) for row in csv.reader(f, delimiter='\t') if row[-1] == accent]
+    cases = [dict(zip(keys, row), out=out) for row in csv.reader(f, delimiter='\t')
+             if row[6] == accent and row[7] == accessibility]
 if accent != 'default' and cases:
     # A fresh accent process can show a WindowServer consent overlay during its
     # first window. Keep that real attempt in the artifact, then capture the
@@ -131,19 +221,26 @@ if accent != 'default' and cases:
     cases.insert(0, warmup)
 json.dump(cases, sys.stdout)
 PY
-  count="$(python3 -c 'import json,sys; print(len(json.load(open(sys.argv[1]))))' "out/batch-$accent.json")"
+  count="$(python3 -c 'import json,sys; print(len(json.load(open(sys.argv[1]))))' "out/batch-$batch_key.json")"
   if [[ "$count" == 0 ]]; then continue; fi
   case "$accent" in
-    default) defaults delete -g AppleAccentColor >/dev/null 2>&1 || true ;;
+    default) defaults delete -g AppleAccentColor >/dev/null 2>&1 || true; defaults delete -g AppleHighlightColor >/dev/null 2>&1 || true ;;
     green) defaults write -g AppleAccentColor -int 3 ;;
     graphite) defaults write -g AppleAccentColor -int -1 ;;
   esac
-  echo "BATCH accent=$accent cases=$count accent_value=$(defaults read -g AppleAccentColor 2>&1 || true)" >> out/log.txt
+  defaults write com.apple.universalaccess increaseContrast -bool false
+  defaults write com.apple.universalaccess reduceTransparency -bool false
+  case "$accessibility" in
+    contrast) defaults write com.apple.universalaccess increaseContrast -bool true ;;
+    transparency) defaults write com.apple.universalaccess reduceTransparency -bool true ;;
+  esac
+  killall cfprefsd >/dev/null 2>&1 || true
+  echo "BATCH accent=$accent accessibility=$accessibility cases=$count accent_value=$(defaults read -g AppleAccentColor 2>&1 || true)" >> out/log.txt
   sleep 2
   if ! perl -e 'alarm shift; exec @ARGV' 1450 /usr/bin/open -W -n -a "$APP" --args \
-      --batch "$ROOT/out/batch-$accent.json" --out "$ROOT/out" >> out/log.txt 2>&1; then
+      --batch "$ROOT/out/batch-$batch_key.json" --out "$ROOT/out" >> out/log.txt 2>&1; then
     FAILURES=$((FAILURES + 1))
-    echo "BATCH FAILED accent=$accent" >> out/log.txt
+    echo "BATCH FAILED accent=$accent accessibility=$accessibility" >> out/log.txt
   fi
 done
 
@@ -155,27 +252,31 @@ for crash_dir in "$HOME/Library/Logs/DiagnosticReports" /Library/Logs/Diagnostic
   fi
 done
 
-python3 - <<'PY'
-import csv, glob, json, os
+python3 - "$FILTER" <<'PY'
+import csv, glob, json, os, sys
+filter_name = sys.argv[1]
 parts = []
 for path in glob.glob('out/**/manifest-part.json', recursive=True):
     if '/warmup-' in path:
         continue
     with open(path) as f:
         parts.extend(json.load(f))
-keys = ['scenario', 'appearance', 'background', 'size', 'state', 'interaction', 'accent']
+keys = ['scenario', 'appearance', 'background', 'size', 'state', 'interaction', 'accent', 'accessibility']
 with open('out/cases.tsv', newline='') as f:
     scheduled = [dict(zip(keys, row)) for row in csv.reader(f, delimiter='\t')]
 incomplete = []
 for case in scheduled:
-    matching = [e for e in parts if all(e.get(key) == case[key] for key in keys)]
+    matching = [e for e in parts if all(e.get('accessibility_axis' if key == 'accessibility' else key, 'default') == case[key] for key in keys)]
     expected = {'idle'} if case['interaction'] == 'idle' else {
         'idle', 'held-0100ms', 'held-0250ms', 'held-1000ms',
         'released-0050ms', 'released-0100ms', 'released-0200ms',
         'released-0350ms', 'released-0600ms',
         'drag-held-0500ms' if case['interaction'] == 'drag' else 'held-0500ms'
     }
-    got = {e['phase'] for e in matching if e.get('success')}
+    got = {e['phase'] for e in matching if e.get('success') and not e.get('obstructed')
+           and e.get('background_image') and os.path.isfile(e['background_image'])
+           and (e.get('phase') not in ('idle', 'held-0500ms', 'drag-held-0500ms')
+                or e.get('layers') and os.path.isfile(e['layers']))}
     missing_phases = sorted(expected - got)
     if missing_phases:
         label = '/'.join(case[key] for key in keys)
@@ -189,7 +290,7 @@ quality_warnings = []
 for case in scheduled:
     if case['interaction'] == 'idle':
         continue
-    matching = [e for e in parts if all(e.get(key) == case[key] for key in keys)]
+    matching = [e for e in parts if all(e.get('accessibility_axis' if key == 'accessibility' else key, 'default') == case[key] for key in keys)]
     idle = next((e for e in matching if e.get('phase') == 'idle'), None)
     if idle is not None and idle.get('held_differs_from_idle') is False:
         label = '/'.join(case[key] for key in keys)
@@ -207,7 +308,9 @@ for appearance, background in required:
     entries = [e for e in parts if e['scenario'] == 'nsswitch' and e['size'] == 'regular'
                and e['state'] == 'on' and e['appearance'] == appearance
                and e['background'] == background and e['accent'] == 'default'
-               and e['phase'] in phases and e['success'] and e.get('window_is_key')
+               and e['phase'] in phases and e['success'] and not e.get('obstructed')
+               and e.get('background_image') and os.path.isfile(e['background_image'])
+               and e.get('window_is_key')
                and e.get('control_frame_window_points', {}).get('width') == 54]
     got = {e['phase'] for e in entries}
     if got != phases:
@@ -225,7 +328,31 @@ for appearance, background in required:
         missing.append(f'{appearance}/{background}: missing held layer dump')
 with open('out/gate.txt', 'w') as f:
     f.write('PASS\n' if not missing else 'FAIL\n' + '\n'.join(missing) + '\n')
+recipe_missing = []
+if filter_name == 'core':
+    required_recipes = []
+    for style in ('regular', 'clear'):
+        for appearance in ('light', 'dark'):
+            for background in ('grid', 'photo'):
+                for size in ('h20', 'h44', 'h128'):
+                    required_recipes.append((f'swiftui-glass-{style}', appearance, background, size))
+    required_recipes += [('nsglass-regular', 'light', 'grid', 'regular-r22'),
+                         ('nsglass-clear', 'light', 'grid', 'regular-r22'),
+                         ('toolbar-window', 'light', 'grid', 'regular'),
+                         ('swiftui-button-prominent', 'light', 'grid', 'regular')]
+    for scenario, appearance, background, size in required_recipes:
+        found = [e for e in parts if e.get('scenario') == scenario and
+                 e.get('appearance') == appearance and e.get('background') == background and
+                 e.get('size') == size and e.get('phase') == 'idle' and e.get('success') and
+                 e.get('window_is_key') and not e.get('obstructed') and
+                 e.get('background_image') and os.path.isfile(e['background_image']) and
+                 e.get('layers') and os.path.isfile(e['layers'])]
+        if not found:
+            recipe_missing.append(f'{scenario}/{appearance}/{background}/{size}: incomplete')
+with open('out/recipe-gate.txt', 'w') as f:
+    f.write('PASS\n' if not recipe_missing else 'FAIL\n' + '\n'.join(recipe_missing) + '\n')
 print(open('out/gate.txt').read())
+if filter_name == 'core': print('recipe ' + open('out/recipe-gate.txt').read())
 print(f'scheduled cases: {len(scheduled)}; incomplete cases: {len(incomplete)}')
 print(f'held-crop quality warnings: {len(quality_warnings)}')
 PY
@@ -238,4 +365,4 @@ fi
 
 echo "case failures: $FAILURES" >> out/env.txt
 echo "capture finished: $(date -u +%FT%TZ)" >> out/env.txt
-if grep -q '^PASS' out/gate.txt; then exit 0; else exit 1; fi
+if grep -q '^PASS' out/gate.txt && grep -q '^PASS' out/recipe-gate.txt; then exit 0; else exit 1; fi
