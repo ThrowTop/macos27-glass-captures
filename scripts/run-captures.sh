@@ -30,6 +30,13 @@ defaults write com.apple.universalaccess reduceMotion -bool false
 defaults write com.apple.universalaccess increaseContrast -bool false
 defaults write com.apple.universalaccess differentiateWithoutColor -bool false
 defaults write -g AppleReduceDesktopTinting -bool true
+# Keep the Dock bar off screen and dismiss the stale screen-recording prompt (access is granted
+# through TCC above); both otherwise overlap capture windows.
+defaults write com.apple.dock autohide -bool true
+defaults write com.apple.dock autohide-delay -float 1000
+killall Dock 2>/dev/null || true
+killall UserNotificationCenter 2>/dev/null || true
+sleep 3
 defaults delete -g AppleAccentColor >/dev/null 2>&1 || true
 defaults delete -g AppleHighlightColor >/dev/null 2>&1 || true
 killall cfprefsd >/dev/null 2>&1 || true

@@ -387,11 +387,17 @@ func systemFact(_ name: String) -> String {
 let hardwareModel = systemFact("hw.model")
 let osBuild = systemFact("kern.osversion")
 
-func overlappingWindows(above window: NSWindow) -> [[String: Any]] {
+// Windows above `window` that cover `region` (window coordinates; the whole window when nil).
+// The Dock's screen-sized backstop window is transparent outside the (auto-hidden) Dock bar and
+// is ignored; the bar itself is a separate check by the script (Dock autohide).
+func overlappingWindows(above window: NSWindow, region: CGRect? = nil) -> [[String: Any]] {
     let screen = window.screen ?? NSScreen.main
     let top = screen?.frame.maxY ?? 0
-    let target = CGRect(x: window.frame.minX, y: top - window.frame.maxY,
-                        width: window.frame.width, height: window.frame.height)
+    let screenFrame = screen?.frame ?? .zero
+    let local = region ?? CGRect(origin: .zero, size: window.frame.size)
+    let onScreen = window.convertToScreen(local)
+    let target = CGRect(x: onScreen.minX, y: top - onScreen.maxY,
+                        width: onScreen.width, height: onScreen.height)
     let list = CGWindowListCopyWindowInfo([.optionOnScreenAboveWindow, .excludeDesktopElements],
                                            CGWindowID(window.windowNumber)) as? [[String: Any]] ?? []
     return list.compactMap { item in
@@ -403,6 +409,8 @@ func overlappingWindows(above window: NSWindow) -> [[String: Any]] {
               let w = (b["Width"] as? NSNumber)?.doubleValue,
               let h = (b["Height"] as? NSNumber)?.doubleValue else { return nil }
         let frame = CGRect(x: x, y: y, width: w, height: h)
+        if (item[kCGWindowOwnerName as String] as? String) == "Dock" &&
+            frame.size == screenFrame.size { return nil }
         guard frame.intersects(target) else { return nil }
         return ["owner": item[kCGWindowOwnerName as String] ?? NSNull(),
                 "name": item[kCGWindowName as String] ?? NSNull(),
@@ -749,10 +757,12 @@ final class CaptureSession {
 
     func waitForUnobstructedWindow() -> [[String: Any]] {
         let deadline = Date().addingTimeInterval(4)
-        var overlaps = overlappingWindows(above: window)
+        // Only the glass neighbourhood that the harness compares (control frame +/- 40 pt).
+        let region = control.convert(control.bounds, to: nil).insetBy(dx: -40, dy: -40)
+        var overlaps = overlappingWindows(above: window, region: region)
         while !overlaps.isEmpty && Date() < deadline {
             RunLoop.main.run(until: Date().addingTimeInterval(0.1))
-            overlaps = overlappingWindows(above: window)
+            overlaps = overlappingWindows(above: window, region: region)
         }
         return overlaps
     }
