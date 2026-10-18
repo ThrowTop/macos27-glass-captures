@@ -1216,6 +1216,17 @@ if let i = CommandLine.arguments.firstIndex(of: "--env-out"), i + 1 < CommandLin
     do { try writeDisplayEnvironment(to: CommandLine.arguments[i + 1]); exit(0) }
     catch { record("display environment failed: \(error)"); exit(1) }
 }
+if let i = CommandLine.arguments.firstIndex(of: "--probe-mode"),
+   let appearanceIndex = CommandLine.arguments.firstIndex(of: "--probe-appearance"),
+   let outputIndex = CommandLine.arguments.firstIndex(of: "--probe-out"),
+   appearanceIndex + 1 < CommandLine.arguments.count, outputIndex + 1 < CommandLine.arguments.count {
+    NSApplication.shared.setActivationPolicy(.regular)
+    do {
+        try runProbes(appearance: CommandLine.arguments[appearanceIndex + 1],
+                      output: CommandLine.arguments[outputIndex + 1])
+        exit(0)
+    } catch { record("probe pass failed: \(error)"); exit(1) }
+}
 let options = Options()
 NSApplication.shared.setActivationPolicy(.regular)
 NSApp.appearance = NSAppearance(named: options.appearance == "dark" ? .darkAqua : .aqua)

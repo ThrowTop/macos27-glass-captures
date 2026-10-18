@@ -291,6 +291,30 @@ PY
   fi
 done
 
+# Runtime AppKit probes are separate from image scenarios. Keep the four required
+# NSSwitch captures above first for every filter, including probes.
+if [[ "$FILTER" == all || "$FILTER" == probes || ",$FILTER," == *,probes,* ]]; then
+  mkdir -p out/probes
+  for pass in light dark light-contrast dark-contrast; do
+    appearance="${pass%%-*}"
+    contrast=false
+    [[ "$pass" == *-contrast ]] && contrast=true
+    defaults write com.apple.universalaccess increaseContrast -bool "$contrast"
+    killall cfprefsd >/dev/null 2>&1 || true
+    pass_dir="$ROOT/out/probes/$pass"
+    mkdir -p "$pass_dir"
+    echo "PROBE PASS name=$pass appearance=$appearance increaseContrast=$contrast" >> out/log.txt
+    if ! perl -e 'alarm shift; exec @ARGV' 1450 /usr/bin/open -W -n -a "$APP" --args \
+        --probe-mode --probe-appearance "$appearance" --probe-out "$pass_dir" >> out/log.txt 2>&1; then
+      echo "PROBE PASS FAILED name=$pass" >> out/log.txt
+      FAILURES=$((FAILURES + 1))
+    fi
+  done
+  defaults write com.apple.universalaccess increaseContrast -bool false
+  killall cfprefsd >/dev/null 2>&1 || true
+  python3 scripts/probe-gate.py out/probes > out/probes-gate.txt
+fi
+
 mkdir -p out/crashes
 for crash_dir in "$HOME/Library/Logs/DiagnosticReports" /Library/Logs/DiagnosticReports; do
   if [[ -d "$crash_dir" ]]; then
@@ -412,4 +436,11 @@ fi
 
 echo "case failures: $FAILURES" >> out/env.txt
 echo "capture finished: $(date -u +%FT%TZ)" >> out/env.txt
-if grep -q '^PASS' out/gate.txt && grep -q '^PASS' out/recipe-gate.txt; then exit 0; else exit 1; fi
+if grep -q '^PASS' out/gate.txt && grep -q '^PASS' out/recipe-gate.txt; then
+  if [[ "$FILTER" == probes || ",$FILTER," == *,probes,* ]]; then
+    grep -q '^PASS' out/probes-gate.txt && exit 0
+    exit 1
+  fi
+  exit 0
+fi
+exit 1

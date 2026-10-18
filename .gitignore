@@ -1,5 +1,6 @@
 .build/
 out/
+runs/
 build.log
 artifact-*/
 GlassCaptures.app/
