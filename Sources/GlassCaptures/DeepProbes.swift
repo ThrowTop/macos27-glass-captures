@@ -306,8 +306,20 @@ private func probeSliderDrag(window: NSWindow, root: NSView, folder: URL, record
                             recorder: recorder, id: id)
         }
         RunLoop.main.add(release, forMode: .common); timers.append(release)
-        postQuartzMouse(.leftMouseDown, at: start, window: window, recorder: recorder, id: id)
-        let tracking = "CGEvent.post"
+        let downEvent = NSEvent.mouseEvent(with: .leftMouseDown, location: start, modifierFlags: [],
+                                           timestamp: ProcessInfo.processInfo.systemUptime,
+                                           windowNumber: window.windowNumber, context: nil, eventNumber: 0,
+                                           clickCount: 1, pressure: 1)
+        var tracking = "none"
+        if let downEvent {
+            let sent = Date()
+            recorder.guarded("\(id).sendEvent", { window.sendEvent(downEvent) })
+            tracking = "window.sendEvent"
+            if Date().timeIntervalSince(sent) < 0.02 {
+                recorder.guarded("\(id).mouseDown", { s.mouseDown(with: downEvent) })
+                tracking = Date().timeIntervalSince(sent) < 0.02 ? "no tracking loop" : "control.mouseDown"
+            }
+        }
         recorder.put("\(id).tracking", tracking)
         recorder.put("\(id).trackingReturnedAt", Date().timeIntervalSince(began))
         // Settle after release while the sampler keeps running, then a late screenshot.
