@@ -573,8 +573,8 @@ func runProbes(appearance: String, output: String) throws {
     record("probe colors complete count=\(recorder.values.count)")
 
     // Controls, in a visible window after a run-loop turn so their layers exist.
-    let window = NSWindow(contentRect: CGRect(x: 100, y: 100, width: 440, height: 300),
-                          styleMask: [.titled], backing: .buffered, defer: false)
+    let window = CaptureWindow(contentRect: CGRect(x: 100, y: 100, width: 440, height: 300),
+                               styleMask: [.titled], backing: .buffered, defer: false)
     window.isReleasedWhenClosed = false
     window.appearance = appAppearance
     window.title = "Runtime probes"
