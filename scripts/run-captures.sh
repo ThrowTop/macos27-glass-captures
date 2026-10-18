@@ -305,8 +305,12 @@ if [[ "$FILTER" == all || "$FILTER" == probes || ",$FILTER," == *,probes,* ]]; t
     mkdir -p "$pass_dir"
     echo "PROBE PASS name=$pass appearance=$appearance increaseContrast=$contrast" >> out/log.txt
     if ! perl -e 'alarm shift; exec @ARGV' 1450 /usr/bin/open -W -n -a "$APP" --args \
-        --probe-mode --probe-appearance "$appearance" --probe-out "$pass_dir" >> out/log.txt 2>&1; then
+        --out "$ROOT/out" --probe-mode --probe-appearance "$appearance" --probe-out "$pass_dir" >> out/log.txt 2>&1; then
       echo "PROBE PASS FAILED name=$pass" >> out/log.txt
+      FAILURES=$((FAILURES + 1))
+    fi
+    if [[ ! -s "$pass_dir/probes.json" || ! -s "$pass_dir/env.json" ]]; then
+      echo "PROBE PASS MISSING OUTPUT name=$pass" >> out/log.txt
       FAILURES=$((FAILURES + 1))
     fi
   done

@@ -1221,6 +1221,7 @@ if CommandLine.arguments.contains("--probe-mode"),
    let outputIndex = CommandLine.arguments.firstIndex(of: "--probe-out"),
    appearanceIndex + 1 < CommandLine.arguments.count, outputIndex + 1 < CommandLine.arguments.count {
     NSApplication.shared.setActivationPolicy(.regular)
+    record("probe mode args=\(CommandLine.arguments)")
     do {
         try runProbes(appearance: CommandLine.arguments[appearanceIndex + 1],
                       output: CommandLine.arguments[outputIndex + 1])

@@ -207,6 +207,7 @@ func runProbes(appearance: String, output: String) throws {
     NSApp.appearance = appAppearance
     let folder = URL(fileURLWithPath: output, isDirectory: true)
     try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+    record("probe start appearance=\(appearance) output=\(output)")
 
     appAppearance.performAsCurrentDrawingAppearance {
         for sizeName in ["mini", "small", "regular", "large", "extraLarge"] {
@@ -245,6 +246,8 @@ func runProbes(appearance: String, output: String) throws {
             } else { recorder.missing(id, "semantic color unavailable on this runtime") }
         }
     }
+    try writeJSON(recorder.values, to: folder.appendingPathComponent("probes.json"))
+    record("probe metrics complete count=\(recorder.values.count)")
 
     let window = NSWindow(contentRect: CGRect(x: 100, y: 100, width: 440, height: 300), styleMask: [.titled], backing: .buffered, defer: false)
     window.isReleasedWhenClosed = false; window.appearance = appAppearance; window.title = "Runtime probes"
@@ -266,7 +269,11 @@ func runProbes(appearance: String, output: String) throws {
             }
         }
     }
+    try writeJSON(recorder.values, to: folder.appendingPathComponent("probes.json"))
+    record("probe controls complete count=\(recorder.values.count)")
+    record("probe scroller start")
     probeScroller(id: "scroller.regular.overlay", window: window, recorder: recorder)
+    record("probe scroller complete")
     window.displayIfNeeded()
     try writeJSON(recorder.values, to: folder.appendingPathComponent("probes.json"))
     let version = ProcessInfo.processInfo.operatingSystemVersion
@@ -284,5 +291,6 @@ func runProbes(appearance: String, output: String) throws {
         "backingScale": window.backingScaleFactor
     ]
     try writeJSON(env, to: folder.appendingPathComponent("env.json"))
+    record("probe complete appearance=\(appearance) count=\(recorder.values.count)")
     window.close()
 }
