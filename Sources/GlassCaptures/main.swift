@@ -574,6 +574,41 @@ final class CaptureSession {
             v.controlSize = controlSize
             v.sizeToFit()
             c = v
+        case "popup", "pulldown":
+            // NSPopUpButton as a pop-up (selected item shown, checkmark in the menu) or pull-down
+            // (fixed title, commands). Holding opens the menu; held captures show it.
+            let pullsDown = options.scenario == "pulldown"
+            let v = NSPopUpButton(frame: .zero, pullsDown: pullsDown)
+            if pullsDown { v.addItem(withTitle: "Actions") }
+            v.addItems(withTitles: pullsDown ? ["Duplicate", "Rename", "Move to Trash"]
+                                             : ["Automatic", "Blue", "Pink", "Yellow"])
+            if !pullsDown { v.selectItem(at: options.state == "on" ? 1 : 0) }
+            v.controlSize = controlSize
+            v.font = NSFont.systemFont(ofSize: NSFont.systemFontSize(for: controlSize))
+            v.sizeToFit()
+            c = v
+            style = options.scenario
+        case "progress":
+            let v = NSProgressIndicator(frame: CGRect(x: 0, y: 0, width: 200, height: 20))
+            v.style = .bar
+            v.isIndeterminate = false
+            v.minValue = 0
+            v.maxValue = 100
+            v.doubleValue = options.state == "on" ? 70 : 30
+            v.controlSize = controlSize
+            c = v
+            style = "progress"
+        case "checkbox", "radio":
+            let v = options.scenario == "checkbox"
+                ? NSButton(checkboxWithTitle: "Checkbox", target: nil, action: nil)
+                : NSButton(radioButtonWithTitle: "Radio", target: nil, action: nil)
+            v.state = options.state == "on" ? .on : options.state == "mixed" ? .mixed : .off
+            if options.state == "mixed" { v.allowsMixedState = true }
+            v.controlSize = controlSize
+            v.font = NSFont.systemFont(ofSize: NSFont.systemFontSize(for: controlSize))
+            v.sizeToFit()
+            c = v
+            style = options.scenario
         case "nsbutton-glass":
             if #available(macOS 26.0, *) {
                 let v = NSButton(title: "Button", target: nil, action: nil)
@@ -632,10 +667,28 @@ final class CaptureSession {
                 p.behavior = .transient
                 newPopover = p
             } else {
+                // Covers the NSContextMenuImpl layout terms: plain items, a key equivalent, a
+                // checked item (mark column), separators, a submenu arrow and an item image.
                 let m = NSMenu(title: "Menu")
-                for title in ["First", "Second", "Third"] {
-                    m.addItem(NSMenuItem(title: title, action: nil, keyEquivalent: ""))
-                }
+                m.autoenablesItems = false
+                m.addItem(NSMenuItem(title: "First", action: nil, keyEquivalent: ""))
+                let shortcut = NSMenuItem(title: "Show in Finder", action: nil, keyEquivalent: "r")
+                shortcut.keyEquivalentModifierMask = .command
+                m.addItem(shortcut)
+                let checked = NSMenuItem(title: "Show Sidebar", action: nil, keyEquivalent: "")
+                checked.state = .on
+                m.addItem(checked)
+                m.addItem(.separator())
+                let sort = NSMenuItem(title: "Sort By", action: nil, keyEquivalent: "")
+                let sub = NSMenu(title: "Sort By")
+                sub.addItem(NSMenuItem(title: "Name", action: nil, keyEquivalent: ""))
+                sort.submenu = sub
+                m.addItem(sort)
+                let image = NSMenuItem(title: "Settings", action: nil, keyEquivalent: "")
+                image.image = NSImage(systemSymbolName: "gearshape", accessibilityDescription: nil)
+                m.addItem(image)
+                m.addItem(.separator())
+                m.addItem(NSMenuItem(title: "Third", action: nil, keyEquivalent: ""))
                 newMenu = m
             }
         case "nsglass", "nsglass-regular", "nsglass-clear", "nsglass-blue":

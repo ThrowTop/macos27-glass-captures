@@ -207,6 +207,30 @@ if [[ "$FILTER" == structural-glass || "$FILTER" == core ]]; then
   done
 fi
 
+# Control references for MacUIKit's non-glass controls: pop-up and pull-down buttons (static and
+# held with the menu open), the context menu, the linear progress bar, checkboxes and radios.
+if [[ "$FILTER" == controls-extra ]]; then
+  for appearance in light dark; do
+    for scenario in popup pulldown; do
+      for size in mini small regular large; do
+        run_case "$scenario" "$appearance" plain "$size" off idle default
+      done
+      run_case "$scenario" "$appearance" plain regular off hold default
+    done
+    run_case menu "$appearance" plain regular on idle default
+    run_case menu "$appearance" grid regular on idle default
+    for size in small regular large; do
+      run_case progress "$appearance" plain "$size" on idle default
+    done
+    for state in off on mixed; do
+      run_case checkbox "$appearance" plain regular "$state" hold default
+    done
+    for state in off on; do
+      run_case radio "$appearance" plain regular "$state" hold default
+    done
+  done
+fi
+
 if [[ "$FILTER" == regular-accessibility ]]; then
   for accessibility in contrast transparency; do
     for appearance in light dark; do
