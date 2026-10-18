@@ -5,7 +5,7 @@ import ObjectiveC.runtime
 
 // Runtime probes: values returned by the real AppKit on the runner, recorded as JSON. Every probe runs
 // through SafeInvoke so an Objective-C exception becomes an explicit error instead of killing the pass.
-private final class ProbeRecorder {
+final class ProbeRecorder {
     var values: [String: [String: Any]] = [:]
 
     func put(_ id: String, _ value: @autoclosure () -> Any?) {
@@ -29,6 +29,7 @@ private final class ProbeRecorder {
     }
 
     // Runs side-effecting setup that may raise; returns false (and records `id`) on an exception.
+    @discardableResult
     func guarded(_ id: String, _ body: () -> Void) -> Bool {
         var error: NSString?
         _ = SafeInvoke({ body(); return NSNull() }, &error)
@@ -37,10 +38,10 @@ private final class ProbeRecorder {
     }
 }
 
-private func probeRect(_ r: CGRect) -> [String: CGFloat] {
+func probeRect(_ r: CGRect) -> [String: CGFloat] {
     ["x": r.minX, "y": r.minY, "width": r.width, "height": r.height]
 }
-private func probeSize(_ s: CGSize) -> [String: CGFloat] { ["width": s.width, "height": s.height] }
+func probeSize(_ s: CGSize) -> [String: CGFloat] { ["width": s.width, "height": s.height] }
 private func probeInsets(_ i: NSEdgeInsets) -> [String: CGFloat] {
     ["top": i.top, "left": i.left, "bottom": i.bottom, "right": i.right]
 }
@@ -89,7 +90,7 @@ private final class ProbeToolbarDelegate: NSObject, NSToolbarDelegate {
 // Resolves a (possibly dynamic, catalog-backed) colour in `appearance`. Dynamic colours must not be
 // asked for `colorSpace` or components directly; converting inside the drawing appearance resolves
 // them. Extended sRGB keeps wide-gamut and >1 components unclamped.
-private func probeColor(_ color: NSColor, appearance: NSAppearance) -> [String: Any] {
+func probeColor(_ color: NSColor, appearance: NSAppearance) -> [String: Any] {
     var result: [String: Any] = [:]
     appearance.performAsCurrentDrawingAppearance {
         let type: String
@@ -117,12 +118,12 @@ private func semanticColor(_ name: String) -> NSColor? {
     return unmanaged.takeUnretainedValue() as? NSColor
 }
 
-private func fontJSON(_ font: NSFont?) -> Any? {
+func fontJSON(_ font: NSFont?) -> Any? {
     guard let font else { return nil }
     return ["name": font.fontName, "pointSize": font.pointSize]
 }
 
-private func controlSize(_ name: String) -> NSControl.ControlSize? {
+func controlSize(_ name: String) -> NSControl.ControlSize? {
     switch name {
     case "mini": return .mini
     case "small": return .small
@@ -133,7 +134,7 @@ private func controlSize(_ name: String) -> NSControl.ControlSize? {
     }
 }
 
-private func settle() { RunLoop.main.run(until: Date().addingTimeInterval(0.05)) }
+func settle() { RunLoop.main.run(until: Date().addingTimeInterval(0.05)) }
 
 private func captureControl(_ control: NSView, id: String, recorder: ProbeRecorder) {
     recorder.put("\(id).frame", probeRect(control.frame))
@@ -622,6 +623,11 @@ func runProbes(appearance: String, output: String) throws {
     probeMenus(recorder: recorder)
     probeTables(root: root, recorder: recorder)
     probeWindowChrome(appearance: appAppearance, recorder: recorder)
+    window.makeKeyAndOrderFront(nil)
+    NSApp.activate(ignoringOtherApps: true)
+    settle()
+    do { try runDeepProbes(window: window, root: root, output: folder) }
+    catch { record("deep probes failed: \(error)") }
     try writeJSON(recorder.values, to: probesURL)
     record("probe scroller complete count=\(recorder.values.count)")
 

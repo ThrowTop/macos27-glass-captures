@@ -86,6 +86,23 @@ for pass_name in passes:
             missing.append(f"{pass_name}: env missing {field}")
     errs = sum(1 for v in probes.values() if v.get("error") is not None)
     counts.append(f"{pass_name}: {len(probes)} probes, {errs} errors")
+    # Deep probes: required keys must exist; extra keys (sample errors) are allowed.
+    deep_path = folder / "deep.json"
+    if not deep_path.is_file():
+        missing.append(f"{pass_name}: missing deep.json")
+        continue
+    try:
+        deep = json.loads(deep_path.read_text())
+    except Exception as exc:
+        missing.append(f"{pass_name}: invalid deep.json: {exc}")
+        continue
+    for key in catalog["deepRequired"]:
+        if key not in deep:
+            missing.append(f"{pass_name}: deep missing {key}")
+    deep_errs = sorted(k for k, v in deep.items() if isinstance(v, dict) and v.get("error") is not None)
+    pngs = len(list((folder / "deep").glob("*.png")))
+    counts.append(f"{pass_name}: deep {len(deep)} keys, {len(deep_errs)} errors, {pngs} png")
+    counts.extend(f"{pass_name}: deep error {k}: {deep[k]['error']}" for k in deep_errs[:40])
 
 if missing:
     print("FAIL")
