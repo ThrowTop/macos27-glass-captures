@@ -70,7 +70,7 @@ private func controlSize(_ name: String) -> NSControl.ControlSize? {
     }
 }
 
-private func captureControl(_ control: NSControl, id: String, recorder: ProbeRecorder) {
+private func captureControl(_ control: NSView, id: String, recorder: ProbeRecorder) {
     control.sizeToFit()
     recorder.put("\(id).frame", probeRect(control.frame))
     recorder.put("\(id).intrinsicContentSize", probeSize(control.intrinsicContentSize))
@@ -89,8 +89,8 @@ private func captureControl(_ control: NSControl, id: String, recorder: ProbeRec
     else { recorder.missing("\(id).layers", "control has no layer") }
 }
 
-private func makeProbeControl(_ kind: String, size: NSControl.ControlSize, state: String) -> NSControl? {
-    let c: NSControl
+private func makeProbeControl(_ kind: String, size: NSControl.ControlSize, state: String) -> NSView? {
+    let c: NSView
     switch kind {
     case "button": let b = NSButton(title: "Button", target: nil, action: nil); b.bezelStyle = .rounded; c = b
     case "checkbox": let b = NSButton(checkboxWithTitle: "Checkbox", target: nil, action: nil); c = b
@@ -105,18 +105,18 @@ private func makeProbeControl(_ kind: String, size: NSControl.ControlSize, state
     case "slider": let s = NSSlider(value: 0.5, minValue: 0, maxValue: 1, target: nil, action: nil); s.frame.size = CGSize(width: 200, height: 28); c = s
     case "progress": let p = NSProgressIndicator(frame: CGRect(x: 0, y: 0, width: 200, height: 20)); p.style = .bar; p.isIndeterminate = false; p.minValue = 0; p.maxValue = 100; p.doubleValue = 30; c = p
     case "switch": let s = NSSwitch(); s.state = state == "on" ? .on : .off; c = s
-    case "segmented": let s = NSSegmentedControl(labels: ["One", "Two", "Three"], trackingMode: .selectOne); s.selectedSegment = 1; c = s
+    case "segmented": let s = NSSegmentedControl(labels: ["One", "Two", "Three"], trackingMode: .selectOne, target: nil, action: nil); s.selectedSegment = 1; c = s
     case "scrollview": return nil
     default: return nil
     }
-    c.controlSize = size
+    (c as? NSControl)?.controlSize = size
     if let b = c as? NSButton, kind == "checkbox" || kind == "radio" {
         b.allowsMixedState = true; b.state = state == "on" ? .on : state == "mixed" ? .mixed : .off
     }
     return c
 }
 
-private func controlExtras(_ control: NSControl, kind: String, id: String, recorder: ProbeRecorder) {
+private func controlExtras(_ control: NSView, kind: String, id: String, recorder: ProbeRecorder) {
     if let popup = control as? NSPopUpButton, let cell = popup.cell as? NSPopUpButtonCell {
         let b = popup.bounds
         recorder.put("\(id).titleRect", probeRect(cell.titleRect(forBounds: b)))
@@ -171,12 +171,12 @@ private func probeScroller(id: String, window: NSWindow, recorder: ProbeRecorder
     }
     let selector = NSSelectorFromString("expandedRectForPart:")
     if imp.responds(to: selector), let method = class_getInstanceMethod(type(of: imp), selector) {
-        guard method_getNumberOfArguments(method) == 3,
-              let returnPointer = method_copyReturnType(method),
-              let argumentPointer = method_copyArgumentType(method, 2) else {
+        guard method_getNumberOfArguments(method) == 3 else {
             recorder.missing("\(id).expandedRectForPart", "method signature unavailable")
             return
         }
+        let returnPointer = method_copyReturnType(method)
+        let argumentPointer = method_copyArgumentType(method, 2)
         let returnType = String(cString: returnPointer); free(returnPointer)
         let argumentType = String(cString: argumentPointer); free(argumentPointer)
         guard returnType.hasPrefix("{CGRect") || returnType.hasPrefix("{_NSRect"),

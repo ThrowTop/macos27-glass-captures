@@ -1216,7 +1216,7 @@ if let i = CommandLine.arguments.firstIndex(of: "--env-out"), i + 1 < CommandLin
     do { try writeDisplayEnvironment(to: CommandLine.arguments[i + 1]); exit(0) }
     catch { record("display environment failed: \(error)"); exit(1) }
 }
-if let i = CommandLine.arguments.firstIndex(of: "--probe-mode"),
+if CommandLine.arguments.contains("--probe-mode"),
    let appearanceIndex = CommandLine.arguments.firstIndex(of: "--probe-appearance"),
    let outputIndex = CommandLine.arguments.firstIndex(of: "--probe-out"),
    appearanceIndex + 1 < CommandLine.arguments.count, outputIndex + 1 < CommandLine.arguments.count {
