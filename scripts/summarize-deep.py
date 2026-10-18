@@ -121,7 +121,7 @@ def main(run):
             parts.append('- '+mid+'; '+'; '.join(descriptions))
         parts.append('\n### Slider drag\n')
         for end in ('maxEnd','minEnd'):
-            p=f'sliderDrag.regular.{end}'; samples=val(d,p+'.samples',[]) or []
+            p=f'sliderDrag.regular.{end}'; samples=val(d,p+'.timeline',[]) or []
             # identify layer paths that move most across samples
             per={}
             for s in samples:
@@ -143,7 +143,9 @@ def main(run):
                         if x: cols.append(f"{path}:f={rectstr(x.get('frame'))},tr={x.get('transform')}")
                     if s.get('overlayWindows'): cols.append('overlays='+json.dumps(s['overlayWindows'],separators=(',',':')))
                     table.append('; '.join(cols))
-                parts.append('  Samples (t, value, changing layer frame/transform, overlays): '+'<br>'.join(table))
+                parts.append('  | t | doubleValue | layers and overlay windows |')
+                parts.append('  |---|---:|---|')
+                parts.append('  | '+'<br>'.join(table)+' |')
     out='\n'.join(parts)+'\n'; lines=out.splitlines()
     if len(lines)>150: out='\n'.join(lines[:149]+['[truncated at 150 lines]'])+'\n'
     dest=root/'deep-summary.md'; dest.write_text(out,encoding='utf-8'); print(dest)
