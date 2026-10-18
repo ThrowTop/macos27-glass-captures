@@ -71,7 +71,13 @@ private func controlSize(_ name: String) -> NSControl.ControlSize? {
 }
 
 private func captureControl(_ control: NSView, id: String, recorder: ProbeRecorder) {
-    control.sizeToFit()
+    if let control = control as? NSControl {
+        control.sizeToFit()
+    } else {
+        var frame = control.frame
+        frame.size = control.fittingSize
+        control.frame = frame
+    }
     recorder.put("\(id).frame", probeRect(control.frame))
     recorder.put("\(id).intrinsicContentSize", probeSize(control.intrinsicContentSize))
     recorder.put("\(id).fittingSize", probeSize(control.fittingSize))
@@ -176,8 +182,11 @@ private func probeScroller(id: String, window: NSWindow, recorder: ProbeRecorder
             return
         }
         let returnPointer = method_copyReturnType(method)
-        let argumentPointer = method_copyArgumentType(method, 2)
         let returnType = String(cString: returnPointer); free(returnPointer)
+        guard let argumentPointer = method_copyArgumentType(method, 2) else {
+            recorder.missing("\(id).expandedRectForPart", "argument type unavailable")
+            return
+        }
         let argumentType = String(cString: argumentPointer); free(argumentPointer)
         guard returnType.hasPrefix("{CGRect") || returnType.hasPrefix("{_NSRect"),
               argumentType == "Q" || argumentType == "q" else {
