@@ -214,18 +214,23 @@ func runProbes(appearance: String, output: String) throws {
             guard let size = controlSize(sizeName) else { recorder.missing("font.systemFontSize.\(sizeName)", "control size unavailable"); continue }
             recorder.put("font.systemFontSize.\(sizeName)", NSFont.systemFontSize(for: size))
         }
+        record("probe font-size metrics complete")
         recorder.put("font.smallSystemFontSize", NSFont.smallSystemFontSize)
         recorder.put("font.systemFontSize", NSFont.systemFontSize)
         recorder.put("font.labelFontSize", NSFont.labelFontSize)
+        record("probe global font metrics complete")
         probeFont(recorder, "font.toolTipsFont", { NSFont.toolTipsFont(ofSize: 0) })
         probeFont(recorder, "font.menuFont", { NSFont.menuFont(ofSize: 0) })
         probeFont(recorder, "font.menuBarFont", { NSFont.menuBarFont(ofSize: 0) })
+        record("probe named fonts complete")
         for sizeName in ["regular", "small", "mini"] {
             let size = controlSize(sizeName)!
             for (styleName, style) in [("overlay", NSScroller.Style.overlay), ("legacy", .legacy)] {
                 recorder.put("scroller.width.\(sizeName).\(styleName)", NSScroller.scrollerWidth(for: size, scrollerStyle: style))
             }
         }
+        try? writeJSON(recorder.values, to: folder.appendingPathComponent("probes.json"))
+        record("probe scroller widths complete")
         let colors = ["labelColor", "secondaryLabelColor", "tertiaryLabelColor", "quaternaryLabelColor", "quinaryLabelColor",
                       "systemFillColor", "secondarySystemFillColor", "tertiarySystemFillColor", "quaternarySystemFillColor",
                       "textColor", "placeholderTextColor", "selectedTextColor", "textBackgroundColor", "selectedTextBackgroundColor",
@@ -244,6 +249,8 @@ func runProbes(appearance: String, output: String) throws {
                     else { recorder.missing(id, "cannot convert resolved color to sRGB") }
                 }
             } else { recorder.missing(id, "semantic color unavailable on this runtime") }
+            try? writeJSON(recorder.values, to: folder.appendingPathComponent("probes.json"))
+            record("probe color complete \(name)")
         }
     }
     try writeJSON(recorder.values, to: folder.appendingPathComponent("probes.json"))
