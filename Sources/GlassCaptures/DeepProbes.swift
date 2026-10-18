@@ -420,6 +420,7 @@ private func probeOpenMenu(name: String, menu: NSMenu, anchor: NSView, window: N
     RunLoop.main.add(cancel, forMode: .common)
     let fallback = Timer(timeInterval: 4.0, repeats: false) { _ in menu.cancelTrackingWithoutAnimation() }
     RunLoop.main.add(fallback, forMode: .common)
+    parkCursor()
     recorder.guarded("\(id).present", present)
     let closedAt = Date()
     if recorder.values["\(id).windows"] == nil {
@@ -484,7 +485,7 @@ private func probeMenusOpen(window: NSWindow, root: NSView, folder: URL, recorde
         anchor.removeFromSuperview()
     }
     for (name, pullsDown) in [("popup", false), ("pulldown", true)] {
-        for sizeName in ["small", "regular", "large"] {
+        for sizeName in ["mini", "small", "regular", "large", "extraLarge"] {
             guard let size = controlSize(sizeName) else { continue }
             let id = "\(name).\(sizeName)"
             var made: NSPopUpButton?
@@ -498,6 +499,7 @@ private func probeMenusOpen(window: NSWindow, root: NSView, folder: URL, recorde
                     p.selectItem(at: 2)
                 }
                 p.controlSize = size
+                p.font = NSFont.systemFont(ofSize: NSFont.systemFontSize(for: size))
                 p.sizeToFit()
                 p.frame.origin = CGPoint(x: 120, y: 140)
                 root.addSubview(p)
@@ -505,8 +507,14 @@ private func probeMenusOpen(window: NSWindow, root: NSView, folder: URL, recorde
             }), let p = made, let menu = p.menu else { continue }
             recorder.guarded("openMenu.\(id).display", { window.displayIfNeeded() })
             settle()
-            recorder.put("openMenu.\(id).buttonFrameScreen",
-                         probeRect(window.convertToScreen(p.convert(p.bounds, to: nil))))
+            let buttonScreen = window.convertToScreen(p.convert(p.bounds, to: nil))
+            recorder.put("openMenu.\(id).buttonFrameScreen", probeRect(buttonScreen))
+            recorder.put("openMenu.\(id).buttonFont", fontJSON(p.font))
+            recorder.put("openMenu.\(id).closedScreenshot",
+                         captureScreen(buttonScreen.insetBy(dx: -20, dy: -12),
+                                       to: folder.appendingPathComponent("openMenu.\(id).closed.png")))
+            recorder.put("openMenu.\(id).buttonCache2x",
+                         cacheRender(p, scale: 2, to: folder.appendingPathComponent("openMenu.\(id).closed@2x-cache.png")))
             probeOpenMenu(name: id, menu: menu, anchor: p, window: window, folder: folder, recorder: recorder) {
                 p.performClick(nil)
             }
@@ -517,8 +525,57 @@ private func probeMenusOpen(window: NSWindow, root: NSView, folder: URL, recorde
 
 // MARK: - Entry
 
+private func windowIsOnScreen(_ window: NSWindow) -> Bool {
+    ownServerWindows().contains { ($0["number"] as? Int) == window.windowNumber }
+}
+
+// The scenario path's activation sequence (main.swift `run`): the first probe run showed the probe
+// window absent from the on-screen window list, so screenshots were black.
+private func bringOnScreen(_ window: NSWindow, recorder: ProbeRecorder) {
+    let began = Date()
+    var askedLaunchServices = false
+    recorder.guarded("deep.activation", {
+        window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
+        NSApp.activate(ignoringOtherApps: true)
+        _ = NSRunningApplication.current.activate(options: [.activateAllWindows])
+    })
+    repeat {
+        RunLoop.main.run(until: Date().addingTimeInterval(0.15))
+        if windowIsOnScreen(window) && NSApp.isActive && window.isKeyWindow { break }
+        if !askedLaunchServices {
+            askedLaunchServices = true
+            let launcher = Process()
+            launcher.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+            launcher.arguments = ["-a", Bundle.main.bundleURL.path]
+            if (try? launcher.run()) != nil { launcher.waitUntilExit() }
+        }
+        recorder.guarded("deep.activation.retry", {
+            NSApp.unhide(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            _ = NSRunningApplication.current.activate(options: [.activateAllWindows])
+            window.makeKeyAndOrderFront(nil)
+            window.orderFrontRegardless()
+        })
+    } while Date().timeIntervalSince(began) < 5
+    RunLoop.main.run(until: Date().addingTimeInterval(0.5))
+    parkCursor()
+    recorder.put("deep.window", ["onScreen": windowIsOnScreen(window), "isVisible": window.isVisible,
+                                 "isKey": window.isKeyWindow, "appActive": NSApp.isActive,
+                                 "appHidden": NSApp.isHidden, "occlusionVisible": window.occlusionState.contains(.visible),
+                                 "frame": probeRect(window.frame), "number": window.windowNumber,
+                                 "activationSeconds": Date().timeIntervalSince(began)] as [String: Any])
+}
+
+// Moves the pointer to the bottom-right corner so it does not hover a control or menu item.
+private func parkCursor() {
+    let screen = primaryScreenFrame()
+    CGWarpMouseCursorPosition(CGPoint(x: screen.maxX - 12, y: screen.maxY - 12))
+}
+
 func runDeepProbes(window: NSWindow, root: NSView, output: URL) throws {
     let recorder = ProbeRecorder()
+    bringOnScreen(window, recorder: recorder)
     let folder = output.appendingPathComponent("deep", isDirectory: true)
     try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
     let url = output.appendingPathComponent("deep.json")
