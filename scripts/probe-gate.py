@@ -30,8 +30,10 @@ for size in sizes:
             if kind == "slider":
                 expected.update(f"{base}.{field}" for field in catalog["sliderFields"])
                 for variant in catalog["sliderTickVariants"]:
-                    expected.update(f"{base}.{variant}.rectOfTickMark.{i}" for i in catalog["tickIndexes"])
-                    expected.update(f"{base}.{variant}.tickMarkPosition.{p}" for p in catalog["tickPositions"])
+                    for position in catalog["tickPositions"]:
+                        tick = f"{base}.{variant}.{position}"
+                        expected.update(f"{tick}.{field}" for field in catalog["sliderTickFields"])
+                        expected.update(f"{tick}.rectOfTickMark.{i}" for i in catalog["tickIndexes"])
             if kind == "segmented":
                 expected.update(f"{base}.widthForSegment.{i}" for i in catalog["segmentIndexes"])
 sid = catalog["scrollerProbe"]

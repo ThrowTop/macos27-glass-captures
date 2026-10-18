@@ -1222,11 +1222,14 @@ if CommandLine.arguments.contains("--probe-mode"),
    appearanceIndex + 1 < CommandLine.arguments.count, outputIndex + 1 < CommandLine.arguments.count {
     NSApplication.shared.setActivationPolicy(.regular)
     record("probe mode args=\(CommandLine.arguments)")
-    do {
-        try runProbes(appearance: CommandLine.arguments[appearanceIndex + 1],
-                      output: CommandLine.arguments[outputIndex + 1])
-        exit(0)
-    } catch { record("probe pass failed: \(error)"); exit(1) }
+    let probeAppearance = CommandLine.arguments[appearanceIndex + 1]
+    let probeOutput = CommandLine.arguments[outputIndex + 1]
+    // Probe inside the running event loop so windows and layers behave as in an app.
+    DispatchQueue.main.async {
+        do { try runProbes(appearance: probeAppearance, output: probeOutput); exit(0) }
+        catch { record("probe pass failed: \(error)"); exit(1) }
+    }
+    NSApp.run()
 }
 let options = Options()
 NSApplication.shared.setActivationPolicy(.regular)

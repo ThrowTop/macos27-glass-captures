@@ -1,37 +1,205 @@
 {
-  "version": 1,
-  "sizes": ["mini", "small", "regular", "large", "extraLarge"],
+  "version": 2,
+  "sizes": [
+    "mini",
+    "small",
+    "regular",
+    "large",
+    "extraLarge"
+  ],
   "colors": [
-    "labelColor", "secondaryLabelColor", "tertiaryLabelColor", "quaternaryLabelColor", "quinaryLabelColor",
-    "systemFillColor", "secondarySystemFillColor", "tertiarySystemFillColor", "quaternarySystemFillColor",
-    "textColor", "placeholderTextColor", "selectedTextColor", "textBackgroundColor", "selectedTextBackgroundColor",
-    "keyboardFocusIndicatorColor", "unemphasizedSelectedTextColor", "unemphasizedSelectedTextBackgroundColor",
-    "linkColor", "separatorColor", "gridColor", "headerTextColor", "controlColor", "controlTextColor",
-    "selectedControlColor", "selectedControlTextColor", "alternateSelectedControlColor", "disabledControlTextColor",
-    "windowBackgroundColor", "windowFrameTextColor", "underPageBackgroundColor", "findHighlightColor",
-    "controlAccentColor", "systemRedColor", "systemGreenColor", "systemBlueColor", "systemOrangeColor",
-    "systemYellowColor", "systemBrownColor", "systemPinkColor", "systemPurpleColor", "systemTealColor",
-    "systemIndigoColor", "scrubberTexturedBackground"
+    "labelColor",
+    "secondaryLabelColor",
+    "tertiaryLabelColor",
+    "quaternaryLabelColor",
+    "quinaryLabelColor",
+    "systemFillColor",
+    "secondarySystemFillColor",
+    "tertiarySystemFillColor",
+    "quaternarySystemFillColor",
+    "quinarySystemFillColor",
+    "textColor",
+    "placeholderTextColor",
+    "selectedTextColor",
+    "textBackgroundColor",
+    "selectedTextBackgroundColor",
+    "keyboardFocusIndicatorColor",
+    "unemphasizedSelectedTextColor",
+    "unemphasizedSelectedTextBackgroundColor",
+    "linkColor",
+    "separatorColor",
+    "gridColor",
+    "headerTextColor",
+    "controlColor",
+    "controlBackgroundColor",
+    "controlTextColor",
+    "selectedControlColor",
+    "selectedControlTextColor",
+    "alternateSelectedControlTextColor",
+    "selectedContentBackgroundColor",
+    "unemphasizedSelectedContentBackgroundColor",
+    "selectedMenuItemTextColor",
+    "disabledControlTextColor",
+    "windowBackgroundColor",
+    "windowFrameTextColor",
+    "underPageBackgroundColor",
+    "findHighlightColor",
+    "highlightColor",
+    "shadowColor",
+    "textInsertionPointColor",
+    "controlAccentColor",
+    "systemRedColor",
+    "systemOrangeColor",
+    "systemYellowColor",
+    "systemGreenColor",
+    "systemMintColor",
+    "systemTealColor",
+    "systemCyanColor",
+    "systemBlueColor",
+    "systemIndigoColor",
+    "systemPurpleColor",
+    "systemPinkColor",
+    "systemBrownColor",
+    "systemGrayColor",
+    "scrubberTexturedBackground"
   ],
   "controlKinds": {
-    "button": [""], "checkbox": [".off", ".on", ".mixed"], "radio": [".off", ".on", ".mixed"],
-    "popup": [""], "pulldown": [""], "textfield": [""],
-    "searchfield": [".empty", ".abc"], "stepper": [""], "slider": [""], "progress": [""],
-    "switch": [".off", ".on"], "segmented": [""]
+    "button": [
+      ""
+    ],
+    "checkbox": [
+      ".off",
+      ".on",
+      ".mixed"
+    ],
+    "radio": [
+      ".off",
+      ".on",
+      ".mixed"
+    ],
+    "popup": [
+      ""
+    ],
+    "pulldown": [
+      ""
+    ],
+    "textfield": [
+      ""
+    ],
+    "searchfield": [
+      ".empty",
+      ".abc"
+    ],
+    "stepper": [
+      ""
+    ],
+    "slider": [
+      ""
+    ],
+    "progress": [
+      ""
+    ],
+    "switch": [
+      ".off",
+      ".on"
+    ],
+    "segmented": [
+      ""
+    ]
   },
-  "controlFields": ["frame", "intrinsicContentSize", "fittingSize", "alignmentRectInsets", "firstBaselineOffsetFromTop", "lastBaselineOffsetFromBottom", "layers"],
-  "popupFields": ["titleRect", "imageRect", "drawingRect"],
-  "searchFields": ["searchButtonRect", "cancelButtonRect", "searchTextRect"],
-  "searchWidths": [120, 200, 300],
-  "sliderFields": ["knobRect", "barRect", "knobThickness"],
-  "sliderTickVariants": ["ticks", "tickOnly"],
-  "tickPositions": ["above", "below"],
-  "tickIndexes": [0, 1, 2, 3, 4],
-  "segmentIndexes": [0, 1, 2],
-  "scrollerSizes": ["regular", "small", "mini"],
-  "scrollerStyles": ["overlay", "legacy"],
-  "fontSizes": ["mini", "small", "regular", "large", "extraLarge"],
-  "globalFontMetrics": ["smallSystemFontSize", "systemFontSize", "labelFontSize", "toolTipsFont", "menuFont", "menuBarFont"],
+  "controlFields": [
+    "frame",
+    "intrinsicContentSize",
+    "fittingSize",
+    "alignmentRectInsets",
+    "firstBaselineOffsetFromTop",
+    "lastBaselineOffsetFromBottom",
+    "layers"
+  ],
+  "popupFields": [
+    "titleRect",
+    "imageRect",
+    "drawingRect"
+  ],
+  "searchFields": [
+    "searchButtonRect",
+    "cancelButtonRect",
+    "searchTextRect"
+  ],
+  "searchWidths": [
+    120,
+    200,
+    300
+  ],
+  "sliderFields": [
+    "knobRect",
+    "barRect",
+    "knobThickness"
+  ],
+  "sliderTickVariants": [
+    "ticks",
+    "tickOnly"
+  ],
+  "tickPositions": [
+    "below",
+    "above"
+  ],
+  "tickIndexes": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "segmentIndexes": [
+    0,
+    1,
+    2
+  ],
+  "scrollerSizes": [
+    "regular",
+    "small",
+    "mini"
+  ],
+  "scrollerStyles": [
+    "overlay",
+    "legacy"
+  ],
+  "fontSizes": [
+    "mini",
+    "small",
+    "regular",
+    "large",
+    "extraLarge"
+  ],
+  "globalFontMetrics": [
+    "smallSystemFontSize",
+    "systemFontSize",
+    "labelFontSize",
+    "toolTipsFont",
+    "menuFont",
+    "menuBarFont"
+  ],
   "scrollerProbe": "scroller.regular.overlay",
-  "scrollerFields": ["knobRect", "knobSlotRect", "scrollerImp", "trackWidth", "trackSideInset", "knobMinLength", "knobEndInset", "knobAlpha", "trackAlpha", "expandedRectForPart"]
+  "scrollerFields": [
+    "frame",
+    "knobRect",
+    "knobSlotRect",
+    "knobProportion",
+    "layers",
+    "scrollerImp",
+    "trackWidth",
+    "trackSideInset",
+    "trackBoxWidth",
+    "knobMinLength",
+    "knobEndInset",
+    "knobAlpha",
+    "trackAlpha",
+    "expansionTransitionProgress"
+  ],
+  "sliderTickFields": [
+    "frame",
+    "knobRect",
+    "barRect"
+  ]
 }

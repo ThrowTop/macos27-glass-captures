@@ -3,21 +3,29 @@ import QuartzCore
 import SafeKVC
 import ObjectiveC.runtime
 
-private struct ProbeValue {
-    var value: Any
-    var error: String? = nil
-    var json: [String: Any] { ["value": value, "error": error as Any? ?? NSNull()] }
-}
-
+// Runtime probes: values returned by the real AppKit on the runner, recorded as JSON. Every probe runs
+// through SafeInvoke so an Objective-C exception becomes an explicit error instead of killing the pass.
 private final class ProbeRecorder {
     var values: [String: [String: Any]] = [:]
-    func put(_ id: String, _ value: Any) { values[id] = ProbeValue(value: value).json }
-    func attempt(_ id: String, _ body: () throws -> Any) {
-        do { put(id, try body()) }
-        catch { values[id] = ProbeValue(value: NSNull(), error: String(describing: error)).json }
+
+    func put(_ id: String, _ value: @autoclosure () -> Any?) {
+        var error: NSString?
+        let result = SafeInvoke({ value() }, &error)
+        if let error { values[id] = ["value": NSNull(), "error": error as String] }
+        else if let result { values[id] = ["value": result, "error": NSNull()] }
+        else { values[id] = ["value": NSNull(), "error": "nil result"] }
     }
+
     func missing(_ id: String, _ reason: String) {
-        values[id] = ProbeValue(value: NSNull(), error: reason).json
+        values[id] = ["value": NSNull(), "error": reason]
+    }
+
+    // Runs side-effecting setup that may raise; returns false (and records `id`) on an exception.
+    func guarded(_ id: String, _ body: () -> Void) -> Bool {
+        var error: NSString?
+        _ = SafeInvoke({ body(); return NSNull() }, &error)
+        if let error { missing(id, "setup raised \(error)"); return false }
+        return true
     }
 }
 
@@ -30,23 +38,37 @@ private func probeInsets(_ i: NSEdgeInsets) -> [String: CGFloat] {
 }
 private func probeLayer(_ layer: CALayer, depth: Int = 0) -> [String: Any] {
     var d = layerJSON(layer, depth: depth)
-    d["backgroundColor"] = layer.backgroundColor.map { safeDescription($0) } ?? NSNull()
-    d["borderColor"] = layer.borderColor.map { safeDescription($0) } ?? NSNull()
+    d["backgroundColor"] = layer.backgroundColor.map { safeDescription($0) as Any } ?? NSNull()
+    d["borderColor"] = layer.borderColor.map { safeDescription($0) as Any } ?? NSNull()
     d["borderWidth"] = layer.borderWidth
     d["contentsPresent"] = layer.contents != nil
     d["sublayers"] = (layer.sublayers ?? []).map { probeLayer($0, depth: depth + 1) }
     return d
 }
 
-private func probeColor(_ color: NSColor, appearance: NSAppearance) -> [String: Any]? {
-    let concrete = color.resolvedColor(with: appearance)
-    let original = concrete.colorSpace.localizedName ?? String(describing: concrete.type)
-    guard let resolved = concrete.usingColorSpace(.sRGB) else {
-        return nil
+// Resolves a (possibly dynamic, catalog-backed) colour in `appearance`. Dynamic colours must not be
+// asked for `colorSpace` or components directly; converting inside the drawing appearance resolves
+// them. Extended sRGB keeps wide-gamut and >1 components unclamped.
+private func probeColor(_ color: NSColor, appearance: NSAppearance) -> [String: Any] {
+    var result: [String: Any] = [:]
+    appearance.performAsCurrentDrawingAppearance {
+        let type: String
+        switch color.type {
+        case .componentBased: type = "componentBased"
+        case .catalog: type = "catalog"
+        case .pattern: type = "pattern"
+        @unknown default: type = "unknown"
+        }
+        result["type"] = type
+        if let c = color.usingColorSpace(.extendedSRGB) {
+            result["extendedSRGB"] = ["r": c.redComponent, "g": c.greenComponent,
+                                      "b": c.blueComponent, "a": c.alphaComponent]
+        } else { result["extendedSRGB"] = NSNull() }
+        if let resolved = color.usingType(.componentBased) {
+            result["resolvedColorSpace"] = resolved.colorSpace.localizedName ?? "unnamed"
+        }
     }
-    return ["color_space": original,
-            "sRGB": ["r": resolved.redComponent, "g": resolved.greenComponent,
-                     "b": resolved.blueComponent, "a": resolved.alphaComponent]]
+    return result
 }
 
 private func semanticColor(_ name: String) -> NSColor? {
@@ -55,9 +77,9 @@ private func semanticColor(_ name: String) -> NSColor? {
     return unmanaged.takeUnretainedValue() as? NSColor
 }
 
-private func probeFont(_ recorder: ProbeRecorder, _ id: String, _ body: () -> NSFont?) {
-    if let font = body() { recorder.put(id, ["name": font.fontName, "pointSize": font.pointSize]) }
-    else { recorder.missing(id, "AppKit returned no font") }
+private func fontJSON(_ font: NSFont?) -> Any? {
+    guard let font else { return nil }
+    return ["name": font.fontName, "pointSize": font.pointSize]
 }
 
 private func controlSize(_ name: String) -> NSControl.ControlSize? {
@@ -71,27 +93,15 @@ private func controlSize(_ name: String) -> NSControl.ControlSize? {
     }
 }
 
+private func settle() { RunLoop.main.run(until: Date().addingTimeInterval(0.05)) }
+
 private func captureControl(_ control: NSView, id: String, recorder: ProbeRecorder) {
-    if let control = control as? NSControl {
-        control.sizeToFit()
-    } else {
-        var frame = control.frame
-        frame.size = control.fittingSize
-        control.frame = frame
-    }
     recorder.put("\(id).frame", probeRect(control.frame))
     recorder.put("\(id).intrinsicContentSize", probeSize(control.intrinsicContentSize))
     recorder.put("\(id).fittingSize", probeSize(control.fittingSize))
     recorder.put("\(id).alignmentRectInsets", probeInsets(control.alignmentRectInsets))
-    let cls: AnyObject = control
-    for (key, label) in [("firstBaselineOffsetFromTop", "firstBaselineOffsetFromTop"),
-                          ("lastBaselineOffsetFromBottom", "lastBaselineOffsetFromBottom")] {
-        let selector = NSSelectorFromString(key)
-        if cls.responds(to: selector), let value = SafeValueForKey(cls, key) {
-            recorder.put("\(id).\(label)", safeDescription(value) ?? NSNull())
-        } else { recorder.missing("\(id).\(label)", "selector unavailable") }
-    }
-    control.wantsLayer = true
+    recorder.put("\(id).firstBaselineOffsetFromTop", control.firstBaselineOffsetFromTop)
+    recorder.put("\(id).lastBaselineOffsetFromBottom", control.lastBaselineOffsetFromBottom)
     if let layer = control.layer { recorder.put("\(id).layers", probeLayer(layer)) }
     else { recorder.missing("\(id).layers", "control has no layer") }
 }
@@ -99,31 +109,47 @@ private func captureControl(_ control: NSView, id: String, recorder: ProbeRecord
 private func makeProbeControl(_ kind: String, size: NSControl.ControlSize, state: String) -> NSView? {
     let c: NSView
     switch kind {
-    case "button": let b = NSButton(title: "Button", target: nil, action: nil); b.bezelStyle = .rounded; c = b
-    case "checkbox": let b = NSButton(checkboxWithTitle: "Checkbox", target: nil, action: nil); c = b
-    case "radio": let b = NSButton(radioButtonWithTitle: "Radio", target: nil, action: nil); c = b
+    case "button":
+        let b = NSButton(title: "Button", target: nil, action: nil); b.bezelStyle = .rounded; c = b
+    case "checkbox": c = NSButton(checkboxWithTitle: "Checkbox", target: nil, action: nil)
+    case "radio": c = NSButton(radioButtonWithTitle: "Radio", target: nil, action: nil)
     case "popup":
-        let p = NSPopUpButton(frame: .zero, pullsDown: false); p.addItems(withTitles: ["Automatic", "Blue", "Pink", "Yellow"]); p.selectItem(at: 2); c = p
+        let p = NSPopUpButton(frame: .zero, pullsDown: false)
+        p.addItems(withTitles: ["Automatic", "Blue", "Pink", "Yellow"]); p.selectItem(at: 2); c = p
     case "pulldown":
-        let p = NSPopUpButton(frame: .zero, pullsDown: true); p.addItem(withTitle: "Actions"); p.addItems(withTitles: ["Duplicate", "Rename", "Move to Trash"]); c = p
-    case "textfield": let t = NSTextField(string: "Value"); t.isEditable = true; t.isBezeled = true; c = t
-    case "search-empty", "search-abc": let s = NSSearchField(string: kind == "search-abc" ? "abc" : ""); c = s
+        let p = NSPopUpButton(frame: .zero, pullsDown: true)
+        p.addItem(withTitle: "Actions"); p.addItems(withTitles: ["Duplicate", "Rename", "Move to Trash"]); c = p
+    case "textfield":
+        let t = NSTextField(string: "Value"); t.isEditable = true; t.isBezeled = true; c = t
+    case "search-empty", "search-abc": c = NSSearchField(string: kind == "search-abc" ? "abc" : "")
     case "stepper": c = NSStepper()
-    case "slider": let s = NSSlider(value: 0.5, minValue: 0, maxValue: 1, target: nil, action: nil); s.frame.size = CGSize(width: 200, height: 28); c = s
-    case "progress": let p = NSProgressIndicator(frame: CGRect(x: 0, y: 0, width: 200, height: 20)); p.style = .bar; p.isIndeterminate = false; p.minValue = 0; p.maxValue = 100; p.doubleValue = 30; c = p
+    case "slider": c = NSSlider(value: 0.5, minValue: 0, maxValue: 1, target: nil, action: nil)
+    case "progress":
+        let p = NSProgressIndicator(frame: CGRect(x: 0, y: 0, width: 200, height: 20))
+        p.style = .bar; p.isIndeterminate = false; p.minValue = 0; p.maxValue = 100; p.doubleValue = 30; c = p
     case "switch": let s = NSSwitch(); s.state = state == "on" ? .on : .off; c = s
-    case "segmented": let s = NSSegmentedControl(labels: ["One", "Two", "Three"], trackingMode: .selectOne, target: nil, action: nil); s.selectedSegment = 1; c = s
-    case "scrollview": return nil
+    case "segmented":
+        let s = NSSegmentedControl(labels: ["One", "Two", "Three"], trackingMode: .selectOne,
+                                   target: nil, action: nil)
+        s.selectedSegment = 1; c = s
     default: return nil
     }
-    (c as? NSControl)?.controlSize = size
+    if let control = c as? NSControl { control.controlSize = size }
+    if let p = c as? NSProgressIndicator { p.controlSize = size }
     if let b = c as? NSButton, kind == "checkbox" || kind == "radio" {
-        b.allowsMixedState = true; b.state = state == "on" ? .on : state == "mixed" ? .mixed : .off
+        b.allowsMixedState = true
+        b.state = state == "on" ? .on : state == "mixed" ? .mixed : .off
     }
+    // Size to content, then fix the width of controls whose geometry depends on it.
+    if let control = c as? NSControl { control.sizeToFit() }
+    else { c.frame.size = c.fittingSize }
+    if kind == "slider" { c.frame.size.width = 200 }
+    if kind == "progress" { c.frame.size.width = 200 }
+    if kind.hasPrefix("search") || kind == "textfield" { c.frame.size.width = 200 }
     return c
 }
 
-private func controlExtras(_ control: NSView, kind: String, id: String, recorder: ProbeRecorder) {
+private func controlExtras(_ control: NSView, id: String, recorder: ProbeRecorder) {
     if let popup = control as? NSPopUpButton, let cell = popup.cell as? NSPopUpButtonCell {
         let b = popup.bounds
         recorder.put("\(id).titleRect", probeRect(cell.titleRect(forBounds: b)))
@@ -132,7 +158,7 @@ private func controlExtras(_ control: NSView, kind: String, id: String, recorder
     }
     if let search = control as? NSSearchField, let cell = search.cell as? NSSearchFieldCell {
         for width: CGFloat in [120, 200, 300] {
-            let b = CGRect(x: 0, y: 0, width: width, height: search.fittingSize.height)
+            let b = CGRect(x: 0, y: 0, width: width, height: search.frame.height)
             let suffix = "w\(Int(width))"
             recorder.put("\(id).searchButtonRect.\(suffix)", probeRect(cell.searchButtonRect(forBounds: b)))
             recorder.put("\(id).cancelButtonRect.\(suffix)", probeRect(cell.cancelButtonRect(forBounds: b)))
@@ -140,153 +166,178 @@ private func controlExtras(_ control: NSView, kind: String, id: String, recorder
         }
     }
     if let slider = control as? NSSlider, let cell = slider.cell as? NSSliderCell {
-        recorder.put("\(id).knobRect", probeRect(cell.knobRect(flipped: false)))
-        recorder.put("\(id).barRect", probeRect(cell.barRect(flipped: false)))
+        recorder.put("\(id).knobRect", probeRect(cell.knobRect(flipped: slider.isFlipped)))
+        recorder.put("\(id).barRect", probeRect(cell.barRect(flipped: slider.isFlipped)))
         recorder.put("\(id).knobThickness", cell.knobThickness)
-        slider.numberOfTickMarks = 5
         for only in [false, true] {
-            slider.allowsTickMarkValuesOnly = only
             let variant = only ? "tickOnly" : "ticks"
-            for i in 0..<5 { recorder.put("\(id).\(variant).rectOfTickMark.\(i)", probeRect(cell.rectOfTickMark(at: i))) }
-            for position in [NSSlider.TickMarkPosition.above, .below] {
-                slider.tickMarkPosition = position
-                recorder.put("\(id).\(variant).tickMarkPosition.\(position == .above ? "above" : "below")", position.rawValue)
+            for (positionName, position) in [("below", NSSlider.TickMarkPosition.below), ("above", .above)] {
+                let key = "\(id).\(variant).\(positionName)"
+                guard recorder.guarded(key, {
+                    slider.numberOfTickMarks = 5
+                    slider.allowsTickMarkValuesOnly = only
+                    slider.tickMarkPosition = position
+                    slider.sizeToFit()
+                    slider.frame.size.width = 200
+                }) else { continue }
+                settle()
+                recorder.put("\(key).frame", probeRect(slider.frame))
+                recorder.put("\(key).knobRect", probeRect(cell.knobRect(flipped: slider.isFlipped)))
+                recorder.put("\(key).barRect", probeRect(cell.barRect(flipped: slider.isFlipped)))
+                for i in 0..<5 {
+                    recorder.put("\(key).rectOfTickMark.\(i)", probeRect(cell.rectOfTickMark(at: i)))
+                }
             }
         }
     }
     if let segmented = control as? NSSegmentedControl {
-        for i in 0..<segmented.segmentCount { recorder.put("\(id).widthForSegment.\(i)", segmented.width(forSegment: i)) }
+        for i in 0..<segmented.segmentCount {
+            recorder.put("\(id).widthForSegment.\(i)", segmented.width(forSegment: i))
+        }
     }
 }
 
 private func probeScroller(id: String, window: NSWindow, recorder: ProbeRecorder) {
-    let scroll = NSScrollView(frame: CGRect(x: 100, y: 80, width: 180, height: 220))
-    scroll.hasVerticalScroller = true; scroll.hasHorizontalScroller = false
-    scroll.scrollerStyle = .overlay
+    let scroll = NSScrollView(frame: CGRect(x: 100, y: 40, width: 180, height: 220))
     let doc = NSView(frame: CGRect(x: 0, y: 0, width: 160, height: 660))
-    scroll.documentView = doc
-    window.contentView?.addSubview(scroll)
-    scroll.contentView.scroll(to: CGPoint(x: 0, y: 220)); scroll.reflectScrolledClipView(scroll.contentView)
-    window.displayIfNeeded()
-    guard let scroller = scroll.verticalScroller else { recorder.missing("\(id).scroller", "vertical scroller unavailable"); return }
+    guard recorder.guarded("\(id).setup", {
+        scroll.hasVerticalScroller = true
+        scroll.hasHorizontalScroller = false
+        scroll.scrollerStyle = .overlay
+        scroll.documentView = doc
+        window.contentView?.addSubview(scroll)
+        scroll.contentView.scroll(to: CGPoint(x: 0, y: 220))
+        scroll.reflectScrolledClipView(scroll.contentView)
+        scroll.flashScrollers()
+    }) else { return }
+    settle()
+    guard let scroller = scroll.verticalScroller else {
+        recorder.missing("\(id).scroller", "vertical scroller unavailable"); return
+    }
+    recorder.put("\(id).frame", probeRect(scroller.frame))
     recorder.put("\(id).knobRect", probeRect(scroller.rect(for: .knob)))
     recorder.put("\(id).knobSlotRect", probeRect(scroller.rect(for: .knobSlot)))
-    guard let imp = SafeValueForKey(scroller, "scrollerImp") as AnyObject? else { recorder.missing("\(id).scrollerImp", "scrollerImp unavailable"); return }
-    for key in ["trackWidth", "trackSideInset", "knobMinLength", "knobEndInset", "knobAlpha", "trackAlpha"] {
-        if let value = SafeValueForKey(imp, key) { recorder.put("\(id).\(key)", safeDescription(value) ?? NSNull()) }
+    recorder.put("\(id).knobProportion", scroller.knobProportion)
+    if let layer = scroller.layer { recorder.put("\(id).layers", probeLayer(layer)) }
+    else { recorder.missing("\(id).layers", "scroller has no layer") }
+    guard let imp = SafeValueForKey(scroller, "scrollerImp") as AnyObject? else {
+        recorder.missing("\(id).scrollerImp", "scrollerImp unavailable"); return
+    }
+    recorder.put("\(id).scrollerImp", NSStringFromClass(type(of: imp)))
+    // Read-only getters; KVC boxes the CGFloat results.
+    for key in ["trackWidth", "trackSideInset", "trackBoxWidth", "knobMinLength", "knobEndInset",
+                "knobAlpha", "trackAlpha", "expansionTransitionProgress"] {
+        if let value = SafeValueForKey(imp, key) { recorder.put("\(id).\(key)", safeDescription(value)) }
         else { recorder.missing("\(id).\(key)", "KVC value unavailable") }
     }
-    let selector = NSSelectorFromString("expandedRectForPart:")
-    if imp.responds(to: selector), let method = class_getInstanceMethod(type(of: imp), selector) {
-        guard method_getNumberOfArguments(method) == 3 else {
-            recorder.missing("\(id).expandedRectForPart", "method signature unavailable")
-            return
-        }
-        let returnPointer = method_copyReturnType(method)
-        let returnType = String(cString: returnPointer); free(returnPointer)
-        guard let argumentPointer = method_copyArgumentType(method, 2) else {
-            recorder.missing("\(id).expandedRectForPart", "argument type unavailable")
-            return
-        }
-        let argumentType = String(cString: argumentPointer); free(argumentPointer)
-        guard returnType.hasPrefix("{CGRect") || returnType.hasPrefix("{_NSRect"),
-              argumentType == "Q" || argumentType == "q" else {
-            recorder.missing("\(id).expandedRectForPart", "unsupported runtime signature \(returnType)(\(argumentType))")
-            return
-        }
-        typealias RectMethod = @convention(c) (AnyObject, Selector, UInt) -> CGRect
-        let call = unsafeBitCast(imp.method(for: selector), to: RectMethod.self)
-        let rect = call(imp, selector, UInt(NSScroller.Part.knob.rawValue))
-        recorder.put("\(id).expandedRectForPart", probeRect(rect))
-    } else { recorder.missing("\(id).expandedRectForPart", "selector unavailable") }
 }
 
 func runProbes(appearance: String, output: String) throws {
     let recorder = ProbeRecorder()
-    let isDark = appearance == "dark"
-    let appAppearance = NSAppearance(named: isDark ? .darkAqua : .aqua)!
+    let appAppearance = NSAppearance(named: appearance == "dark" ? .darkAqua : .aqua)!
     NSApp.appearance = appAppearance
     let folder = URL(fileURLWithPath: output, isDirectory: true)
     try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+    let probesURL = folder.appendingPathComponent("probes.json")
     record("probe start appearance=\(appearance) output=\(output)")
 
-    appAppearance.performAsCurrentDrawingAppearance {
-        for sizeName in ["mini", "small", "regular", "large", "extraLarge"] {
-            guard let size = controlSize(sizeName) else { recorder.missing("font.systemFontSize.\(sizeName)", "control size unavailable"); continue }
-            recorder.put("font.systemFontSize.\(sizeName)", NSFont.systemFontSize(for: size))
-        }
-        record("probe font-size metrics complete")
-        recorder.put("font.smallSystemFontSize", NSFont.smallSystemFontSize)
-        recorder.put("font.systemFontSize", NSFont.systemFontSize)
-        recorder.put("font.labelFontSize", NSFont.labelFontSize)
-        record("probe global font metrics complete")
-        probeFont(recorder, "font.toolTipsFont", { NSFont.toolTipsFont(ofSize: 0) })
-        probeFont(recorder, "font.menuFont", { NSFont.menuFont(ofSize: 0) })
-        probeFont(recorder, "font.menuBarFont", { NSFont.menuBarFont(ofSize: 0) })
-        record("probe named fonts complete")
-        for sizeName in ["regular", "small", "mini"] {
-            let size = controlSize(sizeName)!
-            for (styleName, style) in [("overlay", NSScroller.Style.overlay), ("legacy", .legacy)] {
-                recorder.put("scroller.width.\(sizeName).\(styleName)", NSScroller.scrollerWidth(for: size, scrollerStyle: style))
-            }
-        }
-        try? writeJSON(recorder.values, to: folder.appendingPathComponent("probes.json"))
-        record("probe scroller widths complete")
-        let colors = ["labelColor", "secondaryLabelColor", "tertiaryLabelColor", "quaternaryLabelColor", "quinaryLabelColor",
-                      "systemFillColor", "secondarySystemFillColor", "tertiarySystemFillColor", "quaternarySystemFillColor",
-                      "textColor", "placeholderTextColor", "selectedTextColor", "textBackgroundColor", "selectedTextBackgroundColor",
-                      "keyboardFocusIndicatorColor", "unemphasizedSelectedTextColor", "unemphasizedSelectedTextBackgroundColor",
-                      "linkColor", "separatorColor", "gridColor", "headerTextColor", "controlColor", "controlTextColor",
-                      "selectedControlColor", "selectedControlTextColor", "alternateSelectedControlColor", "disabledControlTextColor",
-                      "windowBackgroundColor", "windowFrameTextColor", "underPageBackgroundColor", "findHighlightColor",
-                      "controlAccentColor", "systemRedColor", "systemGreenColor", "systemBlueColor", "systemOrangeColor",
-                      "systemYellowColor", "systemBrownColor", "systemPinkColor", "systemPurpleColor", "systemTealColor",
-                      "systemIndigoColor", "scrubberTexturedBackground"]
-        for name in colors {
-            let id = "color.\(name)"
-            if let color = semanticColor(name) {
-                appAppearance.performAsCurrentDrawingAppearance {
-                    if let value = probeColor(color, appearance: appAppearance) { recorder.put(id, value) }
-                    else { recorder.missing(id, "cannot convert resolved color to sRGB") }
-                }
-            } else { recorder.missing(id, "semantic color unavailable on this runtime") }
-            try? writeJSON(recorder.values, to: folder.appendingPathComponent("probes.json"))
-            record("probe color complete \(name)")
+    // Fonts and metric class methods.
+    for sizeName in ["mini", "small", "regular", "large", "extraLarge"] {
+        let size = controlSize(sizeName)!
+        recorder.put("font.systemFontSize.\(sizeName)", NSFont.systemFontSize(for: size))
+    }
+    recorder.put("font.smallSystemFontSize", NSFont.smallSystemFontSize)
+    recorder.put("font.systemFontSize", NSFont.systemFontSize)
+    recorder.put("font.labelFontSize", NSFont.labelFontSize)
+    recorder.put("font.toolTipsFont", fontJSON(NSFont.toolTipsFont(ofSize: 0)))
+    recorder.put("font.menuFont", fontJSON(NSFont.menuFont(ofSize: 0)))
+    recorder.put("font.menuBarFont", fontJSON(NSFont.menuBarFont(ofSize: 0)))
+    for sizeName in ["regular", "small", "mini"] {
+        let size = controlSize(sizeName)!
+        for (styleName, style) in [("overlay", NSScroller.Style.overlay), ("legacy", .legacy)] {
+            recorder.put("scroller.width.\(sizeName).\(styleName)",
+                         NSScroller.scrollerWidth(for: size, scrollerStyle: style))
         }
     }
-    try writeJSON(recorder.values, to: folder.appendingPathComponent("probes.json"))
+    try? writeJSON(recorder.values, to: probesURL)
     record("probe metrics complete count=\(recorder.values.count)")
 
-    let window = NSWindow(contentRect: CGRect(x: 100, y: 100, width: 440, height: 300), styleMask: [.titled], backing: .buffered, defer: false)
-    window.isReleasedWhenClosed = false; window.appearance = appAppearance; window.title = "Runtime probes"
-    let root = NSView(frame: window.contentView?.bounds ?? .zero); root.autoresizingMask = [.width, .height]; window.contentView = root
-    window.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true); window.displayIfNeeded()
+    // Semantic colours, resolved in this pass's appearance.
+    let colors = ["labelColor", "secondaryLabelColor", "tertiaryLabelColor", "quaternaryLabelColor",
+                  "quinaryLabelColor", "systemFillColor", "secondarySystemFillColor",
+                  "tertiarySystemFillColor", "quaternarySystemFillColor", "quinarySystemFillColor",
+                  "textColor", "placeholderTextColor", "selectedTextColor", "textBackgroundColor",
+                  "selectedTextBackgroundColor", "keyboardFocusIndicatorColor",
+                  "unemphasizedSelectedTextColor", "unemphasizedSelectedTextBackgroundColor",
+                  "linkColor", "separatorColor", "gridColor", "headerTextColor", "controlColor",
+                  "controlBackgroundColor", "controlTextColor", "selectedControlColor",
+                  "selectedControlTextColor", "alternateSelectedControlTextColor",
+                  "selectedContentBackgroundColor", "unemphasizedSelectedContentBackgroundColor",
+                  "selectedMenuItemTextColor", "disabledControlTextColor", "windowBackgroundColor",
+                  "windowFrameTextColor", "underPageBackgroundColor", "findHighlightColor",
+                  "highlightColor", "shadowColor", "textInsertionPointColor", "controlAccentColor",
+                  "systemRedColor", "systemOrangeColor", "systemYellowColor", "systemGreenColor",
+                  "systemMintColor", "systemTealColor", "systemCyanColor", "systemBlueColor",
+                  "systemIndigoColor", "systemPurpleColor", "systemPinkColor", "systemBrownColor",
+                  "systemGrayColor", "scrubberTexturedBackground"]
+    for name in colors {
+        let id = "color.\(name)"
+        guard let color = semanticColor(name) else {
+            recorder.missing(id, "semantic color unavailable on this runtime"); continue
+        }
+        recorder.put(id, probeColor(color, appearance: appAppearance))
+    }
+    try? writeJSON(recorder.values, to: probesURL)
+    record("probe colors complete count=\(recorder.values.count)")
+
+    // Controls, in a visible window after a run-loop turn so their layers exist.
+    let window = NSWindow(contentRect: CGRect(x: 100, y: 100, width: 440, height: 300),
+                          styleMask: [.titled], backing: .buffered, defer: false)
+    window.isReleasedWhenClosed = false
+    window.appearance = appAppearance
+    window.title = "Runtime probes"
+    let root = NSView(frame: window.contentView?.bounds ?? .zero)
+    root.autoresizingMask = [.width, .height]
+    root.wantsLayer = true
+    window.contentView = root
+    window.makeKeyAndOrderFront(nil)
+    NSApp.activate(ignoringOtherApps: true)
+    settle()
+    let kinds = ["button", "checkbox", "radio", "popup", "pulldown", "textfield", "search-empty",
+                 "search-abc", "stepper", "slider", "progress", "switch", "segmented"]
     for sizeName in ["mini", "small", "regular", "large", "extraLarge"] {
-        guard let size = controlSize(sizeName) else { continue }
-        for kind in ["button", "checkbox", "radio", "popup", "pulldown", "textfield", "search-empty", "search-abc", "stepper", "slider", "progress", "switch", "segmented"] {
-            let states = (kind == "checkbox" || kind == "radio") ? ["off", "on", "mixed"] : kind == "switch" ? ["off", "on"] : ["default"]
+        let size = controlSize(sizeName)!
+        for kind in kinds {
+            let states = (kind == "checkbox" || kind == "radio") ? ["off", "on", "mixed"]
+                : kind == "switch" ? ["off", "on"] : ["default"]
             for state in states {
-                let publicKind = kind == "search-empty" || kind == "search-abc" ? "searchfield" : kind
+                let publicKind = kind.hasPrefix("search") ? "searchfield" : kind
                 let suffix = kind == "search-empty" ? ".empty" : kind == "search-abc" ? ".abc"
                     : state == "default" ? "" : ".\(state)"
                 let id = "control.\(publicKind).\(sizeName)\(suffix)"
-                guard let c = makeProbeControl(kind, size: size, state: state) else { recorder.missing(id, "control unavailable"); continue }
-                c.frame.origin = CGPoint(x: 18, y: 18); root.addSubview(c); window.displayIfNeeded()
-                captureControl(c, id: id, recorder: recorder); controlExtras(c, kind: kind, id: id, recorder: recorder)
+                var made: NSView?
+                guard recorder.guarded(id, { made = makeProbeControl(kind, size: size, state: state) }),
+                      let c = made else {
+                    if recorder.values[id] == nil { recorder.missing(id, "control unavailable") }
+                    continue
+                }
+                c.frame.origin = CGPoint(x: 18, y: 18)
+                root.addSubview(c)
+                window.displayIfNeeded()
+                settle()
+                captureControl(c, id: id, recorder: recorder)
+                controlExtras(c, id: id, recorder: recorder)
                 c.removeFromSuperview()
             }
         }
+        try? writeJSON(recorder.values, to: probesURL)
+        record("probe controls complete size=\(sizeName) count=\(recorder.values.count)")
     }
-    try writeJSON(recorder.values, to: folder.appendingPathComponent("probes.json"))
-    record("probe controls complete count=\(recorder.values.count)")
-    record("probe scroller start")
     probeScroller(id: "scroller.regular.overlay", window: window, recorder: recorder)
-    record("probe scroller complete")
-    window.displayIfNeeded()
-    try writeJSON(recorder.values, to: folder.appendingPathComponent("probes.json"))
+    try writeJSON(recorder.values, to: probesURL)
+    record("probe scroller complete count=\(recorder.values.count)")
+
     let version = ProcessInfo.processInfo.operatingSystemVersion
-    let accent = probeColor(NSColor.controlAccentColor, appearance: appAppearance).map { ["value": $0, "error": NSNull()] as [String: Any] }
-        ?? ["value": NSNull(), "error": "cannot convert accent color to sRGB"]
     let env: [String: Any] = [
         "os": "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)",
         "osBuild": systemFact("kern.osversion"),
@@ -295,7 +346,7 @@ func runProbes(appearance: String, output: String) throws {
         "reduceTransparency": NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency,
         "reduceMotion": NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
         "differentiateWithoutColor": NSWorkspace.shared.accessibilityDisplayShouldDifferentiateWithoutColor,
-        "accent": accent,
+        "accent": probeColor(NSColor.controlAccentColor, appearance: appAppearance),
         "backingScale": window.backingScaleFactor
     ]
     try writeJSON(env, to: folder.appendingPathComponent("env.json"))
