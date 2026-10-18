@@ -34,10 +34,28 @@ for size in sizes:
                         tick = f"{base}.{variant}.{position}"
                         expected.update(f"{tick}.{field}" for field in catalog["sliderTickFields"])
                         expected.update(f"{tick}.rectOfTickMark.{i}" for i in catalog["tickIndexes"])
+                for field in catalog["verticalSliderFields"]:
+                    expected.add(f"control.slider.vertical.{size}.{field}")
+                for variant in catalog["verticalSliderVariants"]:
+                    for position in catalog["tickPositions"]:
+                        tick = f"control.slider.vertical.{size}.{variant}.{position}"
+                        expected.update(f"{tick}.{field}" for field in catalog["sliderTickFields"])
+                        expected.update(f"{tick}.rectOfTickMark.{i}" for i in catalog["tickIndexes"])
+                expected.update(f"control.slider.circular.{size}.{field}"
+                                for field in catalog["circularSliderFields"])
             if kind == "segmented":
                 expected.update(f"{base}.widthForSegment.{i}" for i in catalog["segmentIndexes"])
-sid = catalog["scrollerProbe"]
-expected.update(f"{sid}.{field}" for field in catalog["scrollerFields"])
+for name, fields in catalog["scrollers"].items():
+    sid = f"scroller.{name}"
+    expected.update(f"{sid}.{field}" for field in fields)
+for name in catalog["menus"]:
+    expected.update(f"menu.{name}.{field}" for field in catalog["menuFields"])
+for style in catalog["windowStyles"]:
+    expected.update(f"window.{style}.{field}" for field in catalog["windowFields"])
+for style in catalog["tableStyles"]:
+    for row_size in catalog["tableRowSizes"]:
+        expected.update(f"table.{style}.{row_size}.{field}" for field in catalog["tableFields"])
+expected.add(catalog["outlineProbe"])
 
 passes = ["light", "dark", "light-contrast", "dark-contrast"]
 missing = []

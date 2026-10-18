@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "sizes": [
     "mini",
     "small",
@@ -105,6 +105,30 @@
     ],
     "segmented": [
       ""
+    ],
+    "colorwell-default": [
+      ""
+    ],
+    "colorwell-minimal": [
+      ""
+    ],
+    "colorwell-expanded": [
+      ""
+    ],
+    "combobox": [
+      ""
+    ],
+    "datepicker": [
+      ""
+    ],
+    "levelindicator": [
+      ""
+    ],
+    "pathcontrol": [
+      ""
+    ],
+    "disclosure": [
+      ""
     ]
   },
   "controlFields": [
@@ -199,6 +223,101 @@
   ],
   "sliderTickFields": [
     "frame",
+    "knobRect",
+    "barRect"
+  ],
+  "sliderVariantKinds": [
+    "vertical",
+    "circular"
+  ],
+  "verticalSliderVariants": [
+    "ticks",
+    "tickOnly"
+  ],
+  "circularSliderFields": [
+    "frame",
+    "knobRect",
+    "layers"
+  ],
+  "menus": [
+    "scenario",
+    "popup",
+    "pulldown"
+  ],
+  "menuFields": [
+    "size",
+    "minimumWidth",
+    "font"
+  ],
+  "scrollers": {
+    "regular.overlay": [
+      "frame",
+      "knobRect",
+      "knobSlotRect",
+      "knobProportion",
+      "layers",
+      "scrollerImp",
+      "trackWidth",
+      "trackSideInset",
+      "trackBoxWidth",
+      "knobMinLength",
+      "knobEndInset",
+      "knobAlpha",
+      "trackAlpha",
+      "expansionTransitionProgress"
+    ],
+    "small.overlay": [
+      "frame",
+      "knobRect",
+      "knobSlotRect",
+      "knobProportion",
+      "layers",
+      "scrollerImp",
+      "trackWidth",
+      "trackSideInset",
+      "trackBoxWidth",
+      "knobMinLength",
+      "knobEndInset",
+      "knobAlpha",
+      "trackAlpha",
+      "expansionTransitionProgress"
+    ]
+  },
+  "windowStyles": [
+    "titled",
+    "fullSizeContent",
+    "toolbarAutomatic",
+    "toolbarUnified",
+    "toolbarUnifiedCompact"
+  ],
+  "windowFields": [
+    "frame",
+    "contentLayoutRect",
+    "closeButtonFrame",
+    "miniaturizeButtonFrame",
+    "zoomButtonFrame",
+    "titlebarLayers"
+  ],
+  "tableStyles": [
+    "automatic",
+    "fullWidth",
+    "inset",
+    "sourceList",
+    "plain"
+  ],
+  "tableRowSizes": [
+    "small",
+    "medium",
+    "large"
+  ],
+  "tableFields": [
+    "rowHeight",
+    "intercellSpacing",
+    "rectOfRow",
+    "frameOfCell"
+  ],
+  "outlineProbe": "table.outline.sourceList.indentationPerLevel",
+  "verticalSliderFields": [
     "knobRect",
     "barRect"
   ]

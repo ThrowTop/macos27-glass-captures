@@ -295,6 +295,9 @@ done
 # NSSwitch captures above first for every filter, including probes.
 if [[ "$FILTER" == all || "$FILTER" == probes || ",$FILTER," == *,probes,* ]]; then
   mkdir -p out/probes
+  defaults write -g AppleShowScrollBars -string WhenScrolling
+  killall cfprefsd >/dev/null 2>&1 || true
+  echo "probe scroller preference=$(defaults read -g AppleShowScrollBars 2>&1 || true)" >> out/log.txt
   for pass in light dark light-contrast dark-contrast; do
     appearance="${pass%%-*}"
     contrast=false
@@ -315,6 +318,8 @@ if [[ "$FILTER" == all || "$FILTER" == probes || ",$FILTER," == *,probes,* ]]; t
     fi
   done
   defaults write com.apple.universalaccess increaseContrast -bool false
+  killall cfprefsd >/dev/null 2>&1 || true
+  defaults delete -g AppleShowScrollBars >/dev/null 2>&1 || true
   killall cfprefsd >/dev/null 2>&1 || true
   python3 scripts/probe-gate.py out/probes > out/probes-gate.txt
 fi
