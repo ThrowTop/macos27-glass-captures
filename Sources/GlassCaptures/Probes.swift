@@ -626,7 +626,18 @@ func runProbes(appearance: String, output: String) throws {
     window.makeKeyAndOrderFront(nil)
     NSApp.activate(ignoringOtherApps: true)
     settle()
-    do { try runDeepProbes(window: window, root: root, output: folder) }
+    // Deep probes get a fresh window ordered in after all getter probes.
+    let deepWindow = CaptureWindow(contentRect: CGRect(x: 100, y: 100, width: 440, height: 300),
+                                   styleMask: [.titled], backing: .buffered, defer: false)
+    deepWindow.isReleasedWhenClosed = false
+    deepWindow.appearance = appAppearance
+    deepWindow.title = "Deep probes"
+    let deepRoot = NSView(frame: deepWindow.contentView?.bounds ?? .zero)
+    deepRoot.autoresizingMask = [.width, .height]
+    deepRoot.wantsLayer = true
+    deepWindow.contentView = deepRoot
+    window.orderOut(nil)
+    do { try runDeepProbes(window: deepWindow, root: deepRoot, output: folder) }
     catch { record("deep probes failed: \(error)") }
     try writeJSON(recorder.values, to: probesURL)
     record("probe scroller complete count=\(recorder.values.count)")

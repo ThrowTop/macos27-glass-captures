@@ -1224,12 +1224,22 @@ if CommandLine.arguments.contains("--probe-mode"),
     record("probe mode args=\(CommandLine.arguments)")
     let probeAppearance = CommandLine.arguments[appearanceIndex + 1]
     let probeOutput = CommandLine.arguments[outputIndex + 1]
-    // Probe inside the running event loop so windows and layers behave as in an app.
-    DispatchQueue.main.async {
+    // Probe after launch finishes: windows ordered in while the app is still launching stayed off the
+    // window server's on-screen list (deep probe runs 39176734275, 39177216538).
+    final class ProbeLaunchDelegate: NSObject, NSApplicationDelegate {
+        let start: () -> Void
+        init(start: @escaping () -> Void) { self.start = start }
+        func applicationDidFinishLaunching(_ notification: Notification) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.start() }
+        }
+    }
+    let probeDelegate = ProbeLaunchDelegate {
         do { try runProbes(appearance: probeAppearance, output: probeOutput); exit(0) }
         catch { record("probe pass failed: \(error)"); exit(1) }
     }
+    NSApp.delegate = probeDelegate
     NSApp.run()
+    _ = probeDelegate
 }
 let options = Options()
 NSApplication.shared.setActivationPolicy(.regular)
