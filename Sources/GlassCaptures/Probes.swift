@@ -38,9 +38,10 @@ private func probeLayer(_ layer: CALayer, depth: Int = 0) -> [String: Any] {
     return d
 }
 
-private func probeColor(_ color: NSColor) -> [String: Any]? {
-    let original = color.colorSpace.localizedName ?? String(describing: color.colorSpaceName)
-    guard let resolved = color.usingColorSpace(.sRGB) else {
+private func probeColor(_ color: NSColor, appearance: NSAppearance) -> [String: Any]? {
+    let concrete = color.resolvedColor(with: appearance)
+    let original = concrete.colorSpace.localizedName ?? String(describing: concrete.type)
+    guard let resolved = concrete.usingColorSpace(.sRGB) else {
         return nil
     }
     return ["color_space": original,
@@ -245,7 +246,7 @@ func runProbes(appearance: String, output: String) throws {
             let id = "color.\(name)"
             if let color = semanticColor(name) {
                 appAppearance.performAsCurrentDrawingAppearance {
-                    if let value = probeColor(color) { recorder.put(id, value) }
+                    if let value = probeColor(color, appearance: appAppearance) { recorder.put(id, value) }
                     else { recorder.missing(id, "cannot convert resolved color to sRGB") }
                 }
             } else { recorder.missing(id, "semantic color unavailable on this runtime") }
@@ -284,7 +285,7 @@ func runProbes(appearance: String, output: String) throws {
     window.displayIfNeeded()
     try writeJSON(recorder.values, to: folder.appendingPathComponent("probes.json"))
     let version = ProcessInfo.processInfo.operatingSystemVersion
-    let accent = probeColor(NSColor.controlAccentColor).map { ["value": $0, "error": NSNull()] as [String: Any] }
+    let accent = probeColor(NSColor.controlAccentColor, appearance: appAppearance).map { ["value": $0, "error": NSNull()] as [String: Any] }
         ?? ["value": NSNull(), "error": "cannot convert accent color to sRGB"]
     let env: [String: Any] = [
         "os": "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)",
