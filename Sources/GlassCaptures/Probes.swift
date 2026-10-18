@@ -410,12 +410,13 @@ private func probeMenus(recorder: ProbeRecorder) {
 }
 
 private func probeWindowChrome(appearance: NSAppearance, recorder: ProbeRecorder) {
+    let titled: NSWindow.StyleMask = [.titled, .closable, .miniaturizable, .resizable]
     let definitions: [(String, NSWindow.StyleMask, NSWindow.ToolbarStyle?)] = [
-        ("titled", [.titled], nil),
-        ("fullSizeContent", [.titled, .fullSizeContentView], nil),
-        ("toolbarAutomatic", [.titled], .automatic),
-        ("toolbarUnified", [.titled], .unified),
-        ("toolbarUnifiedCompact", [.titled], .unifiedCompact)
+        ("titled", titled, nil),
+        ("fullSizeContent", titled.union(.fullSizeContentView), nil),
+        ("toolbarAutomatic", titled, .automatic),
+        ("toolbarUnified", titled, .unified),
+        ("toolbarUnifiedCompact", titled, .unifiedCompact)
     ]
     for (name, mask, toolbarStyle) in definitions {
         let id = "window.\(name)"
