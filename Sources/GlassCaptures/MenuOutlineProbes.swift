@@ -884,6 +884,33 @@ private final class TextSmoothingView: NSView {
     }
 }
 
+private final class TextColorSweepView: NSView {
+    var smoothing = true
+    override var isFlipped: Bool { true }
+    static let colors: [(String, NSColor)] = [
+        ("gray0", NSColor(srgbRed: 0, green: 0, blue: 0, alpha: 1)),
+        ("gray25", NSColor(srgbRed: 0.25, green: 0.25, blue: 0.25, alpha: 1)),
+        ("gray50", NSColor(srgbRed: 0.5, green: 0.5, blue: 0.5, alpha: 1)),
+        ("gray75", NSColor(srgbRed: 0.75, green: 0.75, blue: 0.75, alpha: 1)),
+        ("gray100", NSColor(srgbRed: 1, green: 1, blue: 1, alpha: 1)),
+        ("blue", NSColor(srgbRed: 0, green: 0.478, blue: 1, alpha: 1)),
+        ("red", NSColor(srgbRed: 1, green: 0.231, blue: 0.188, alpha: 1))]
+    override func draw(_ dirtyRect: NSRect) {
+        guard let context = NSGraphicsContext.current?.cgContext else { return }
+        context.setShouldSmoothFonts(smoothing)
+        context.setAllowsFontSmoothing(true)
+        var y: CGFloat = 4
+        for (_, color) in Self.colors {
+            for size in [13.0, 22.0] as [CGFloat] {
+                NSAttributedString(string: "Checkbox Radio", attributes: [
+                    .font: NSFont.systemFont(ofSize: size), .foregroundColor: color])
+                    .draw(at: CGPoint(x: 6, y: y))
+                y += ceil(size * 1.6)
+            }
+        }
+    }
+}
+
 func runTextProbe(appearance: String, output path: String) throws {
     let output = URL(fileURLWithPath: path, isDirectory: true)
     let dark = appearance.hasPrefix("dark")
@@ -892,7 +919,7 @@ func runTextProbe(appearance: String, output path: String) throws {
     try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
     let sizes: [CGFloat] = [9, 11, 13, 17, 22]
     let screen = NSScreen.main?.frame ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
-    let frame = CGRect(x: screen.midX - 260, y: screen.midY - 160, width: 520, height: 320)
+    let frame = CGRect(x: screen.midX - 430, y: screen.midY - 300, width: 860, height: 600)
     let window = NSWindow(contentRect: frame, styleMask: [.titled, .closable], backing: .buffered, defer: false)
     window.isReleasedWhenClosed = false
     window.title = "Text probe \(appearance)"
@@ -916,6 +943,11 @@ func runTextProbe(appearance: String, output path: String) throws {
         view.sizes = sizes
         root.addSubview(view)
     }
+    for (index, smoothing) in [true, false].enumerated() {
+        let sweep = TextColorSweepView(frame: CGRect(x: 520 + CGFloat(index) * 165, y: 8, width: 160, height: 584))
+        sweep.smoothing = smoothing
+        root.addSubview(sweep)
+    }
     window.contentView = root
     window.makeKeyAndOrderFront(nil)
     window.orderFrontRegardless()
@@ -930,6 +962,8 @@ func runTextProbe(appearance: String, output path: String) throws {
     try writeJSON(["appearance": appearance, "contentFrame": probeRect(root.frame),
                    "windowFrame": probeRect(window.frame), "labels": labelsFrame,
                    "smoothingViews": [["smoothing": true, "x": 200], ["smoothing": false, "x": 360]],
+                   "colorSweep": ["x": [520, 685], "smoothing": [true, false], "rowsTop": 4,
+                                  "sizes": [13, 22], "colors": TextColorSweepView.colors.map { $0.0 }],
                    "pixelScale": window.backingScaleFactor, "cgWindow": cg,
                    "labelColor": safeDescription(NSColor.labelColor.usingColorSpace(.sRGB)) ?? NSNull(),
                    "fontSmoothingDefault": UserDefaults.standard.object(forKey: "AppleFontSmoothing") ?? NSNull()],
