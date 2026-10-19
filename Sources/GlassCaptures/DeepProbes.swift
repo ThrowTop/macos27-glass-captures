@@ -3,6 +3,7 @@ import QuartzCore
 import ScreenCaptureKit
 import SafeKVC
 import ApplicationServices
+import SwiftUI
 
 // Deep probes: states that need a live window and a screenshot rather than a getter. Slider tick
 // marks, open menus (tree, layers, open/close timeline, highlight) and a slider over-drag timeline.
@@ -737,7 +738,16 @@ private func probePushButtons(window: NSWindow, root: NSView, folder: URL, recor
     do { try FileManager.default.createDirectory(at: imageFolder, withIntermediateDirectories: true) }
     catch { recorder.missing("role.folder", "could not create role folder: \(error)"); return }
 
-    window.makeKeyAndOrderFront(nil)
+    bringOnScreen(window, recorder: recorder)
+    func roleWindowState() -> [String: Bool] {
+        ["isKey": window.isKeyWindow, "isMain": window.isMainWindow, "appActive": NSApp.isActive]
+    }
+    recorder.put("role.windowState", roleWindowState())
+    if !window.isKeyWindow {
+        window.makeKey()
+        RunLoop.main.run(until: Date().addingTimeInterval(0.3))
+        recorder.put("role.windowStateRetry", roleWindowState())
+    }
     window.displayIfNeeded(); settle(); settle()
     for sizeName in ["regular", "large"] {
         guard let size = controlSize(sizeName) else { continue }
@@ -777,6 +787,49 @@ private func probePushButtons(window: NSWindow, root: NSView, folder: URL, recor
                     recorder.missing("\(id).titleRect", "button cell unavailable")
                 }
                 let shotRect = window.convertToScreen(container.convert(container.bounds, to: nil))
+                recorder.put("\(id).isKeyWindow", window.isKeyWindow)
+                recorder.put("\(id).screenshot", captureScreen(shotRect,
+                             to: imageFolder.appendingPathComponent("\(id).png")))
+                recorder.put("\(id).cache2x", cacheRender(container, scale: 2,
+                             to: imageFolder.appendingPathComponent("\(id)@2x-cache.png")))
+                container.removeFromSuperview()
+            }
+        }
+    }
+
+    let swiftUIVariants = ["plain", "destructive", "prominent", "destructiveProminent", "cancel", "defaultAction"]
+    for sizeName in ["regular", "large"] {
+        guard let size = controlSize(sizeName) else { continue }
+        for (title, titleSlug) in roles {
+            for variant in swiftUIVariants {
+                let id = "swiftuiRole.\(sizeName).\(titleSlug).\(variant)"
+                var container: NSView?
+                var hostingView: NSHostingView<AnyView>?
+                guard recorder.guarded(id, {
+                    let button: AnyView
+                    switch variant {
+                    case "destructive": button = AnyView(Button(title, role: .destructive) {})
+                    case "prominent": button = AnyView(Button(title) {}.buttonStyle(.borderedProminent))
+                    case "destructiveProminent": button = AnyView(Button(title, role: .destructive) {}.buttonStyle(.borderedProminent))
+                    case "cancel": button = AnyView(Button(title, role: .cancel) {})
+                    case "defaultAction": button = AnyView(Button(title) {}.keyboardShortcut(.defaultAction))
+                    default: button = AnyView(Button(title) {})
+                    }
+                    let made = NSHostingView(rootView: AnyView(
+                        button.controlSize(sizeName == "regular" ? .regular : .large)))
+                    made.frame = CGRect(origin: .zero, size: made.fittingSize)
+                    let box = NSView(frame: CGRect(x: 10, y: 10,
+                                                   width: made.frame.width + 48,
+                                                   height: made.frame.height + 48))
+                    made.frame.origin = CGPoint(x: 24, y: 24)
+                    box.addSubview(made)
+                    root.addSubview(box)
+                    container = box; hostingView = made
+                }), let container, let hostingView else { continue }
+                window.displayIfNeeded(); settle(); settle()
+                recorder.put("\(id).frame", probeRect(hostingView.frame))
+                let shotRect = window.convertToScreen(container.convert(container.bounds, to: nil))
+                recorder.put("\(id).isKeyWindow", window.isKeyWindow)
                 recorder.put("\(id).screenshot", captureScreen(shotRect,
                              to: imageFolder.appendingPathComponent("\(id).png")))
                 recorder.put("\(id).cache2x", cacheRender(container, scale: 2,

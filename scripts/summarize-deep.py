@@ -141,6 +141,10 @@ def main(run):
         jp=candidates[0]; d=json.loads(jp.read_text(encoding='utf-8')); folder=jp.parent/'deep'
         parts.append(f'## {passname}\n')
         parts.append(f"### Window\n\n`deep.window`: `{json.dumps(val(d,'deep.window'),separators=(',',':'))}`\n")
+        for key in ('role.windowState','role.windowStateRetry'):
+            state=val(d,key)
+            if state is not None:
+                parts.append(f"- `{key}`: `{json.dumps(state,separators=(',',':'))}`\n")
         parts.append('\n### Push widths\n')
         width_titles=[('OK','ok'),('A','a'),('Cancel','cancel'),('Button','button'),('Save Changes','saveChanges')]
         parts.append('| Size | '+' | '.join(f'{title} frame/intrinsic; titleRect x/width' for title,_ in width_titles)+' |')
@@ -156,14 +160,17 @@ def main(run):
         parts.append('\n### Roles\n')
         for size in ('regular','large'):
             for title in ('Delete','OK'):
-                entries=[]
-                for variant in ('plain','default','destructive','destructiveDefault','tinted'):
-                    ident=f'role.{size}.{title}.{variant}'
-                    shot=val(d,ident+'.screenshot',{}) or {}; frame=val(d,ident+'.frame',{}) or {}
-                    title_rect=val(d,ident+'.titleRect',{}) or {}
-                    pixels=role_pixels(folder/'roles'/shot.get('file',''),frame,title_rect)
-                    entries.append(f"{variant} {pixels}")
-                parts.append(f"- `{size}.{title}`: "+' | '.join(entries))
+                groups=(('AppKit','role',('plain','default','destructive','destructiveDefault','tinted')),
+                        ('SwiftUI','swiftuiRole',('plain','destructive','prominent','destructiveProminent','cancel','defaultAction')))
+                for label,prefix,variants in groups:
+                    entries=[]
+                    for variant in variants:
+                        ident=f'{prefix}.{size}.{title}.{variant}'
+                        shot=val(d,ident+'.screenshot',{}) or {}; frame=val(d,ident+'.frame',{}) or {}
+                        title_rect=val(d,ident+'.titleRect',{}) or {}
+                        pixels=role_pixels(folder/'roles'/shot.get('file',''),frame,title_rect)
+                        entries.append(f"{variant} {pixels}")
+                    parts.append(f"- `{size}.{title} ({label})`: "+' | '.join(entries))
         image_rows=[]
         images=sorted(set(folder.glob('slider*.png')) | set(folder.glob('sliderDrag*.png')))
         for f in images:
