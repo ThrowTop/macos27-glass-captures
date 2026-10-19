@@ -29,6 +29,8 @@ private func outlineCaptureDisplay(_ rect: CGRect, _ url: URL) -> [String: Any] 
     let semaphore = DispatchSemaphore(value: 0)
     let image = OutlineBox<CGImage?>(nil)
     let failure = OutlineBox<String?>(nil)
+    let excludedNames = OutlineBox<[String]>([])
+    let visibleNames = OutlineBox<[String]>([])
     Task.detached {
         do {
             let content = try await SCShareableContent.current
@@ -36,7 +38,17 @@ private func outlineCaptureDisplay(_ rect: CGRect, _ url: URL) -> [String: Any] 
                 throw NSError(domain: "MenuOutline", code: 1,
                               userInfo: [NSLocalizedDescriptionKey: "ScreenCaptureKit returned no display"])
             }
-            let filter = SCContentFilter(display: display, excludingWindows: [])
+            let names = content.windows.map { window in
+                "\(window.owningApplication?.applicationName ?? "unknown"): \(window.title)"
+            }
+            visibleNames.value = names
+            let excluded = content.windows.filter { window in
+                let title = window.title.lowercased()
+                return title.contains("private window picker") ||
+                    title.contains("screen and audio") || title.contains("screen recording")
+            }
+            excludedNames.value = excluded.map { "\($0.owningApplication?.applicationName ?? "unknown"): \($0.title)" }
+            let filter = SCContentFilter(display: display, excludingWindows: excluded)
             let configuration = SCStreamConfiguration()
             configuration.width = display.width
             configuration.height = display.height
@@ -61,7 +73,9 @@ private func outlineCaptureDisplay(_ rect: CGRect, _ url: URL) -> [String: Any] 
     }
     return ["file": url.lastPathComponent, "written": outlineWrite(clipped, url),
             "scale": scale, "cropScreenRect": probeRect(clippedRect), "cropPixels": probeRect(crop),
-            "imagePixels": ["width": clipped.width, "height": clipped.height]]
+            "imagePixels": ["width": clipped.width, "height": clipped.height],
+            "excludedSystemWindows": excludedNames.value,
+            "visibleWindowTitles": visibleNames.value]
 }
 
 private func outlineCaptureSingleWindow(_ window: NSWindow, _ url: URL) -> [String: Any] {
