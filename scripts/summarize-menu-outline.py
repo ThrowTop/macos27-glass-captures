@@ -234,9 +234,20 @@ def main(root):
                                   f"{', '.join(f'{s} +{v:.1f} Y' for s, v in item['rim_values'].items() if v >= 5) or 'none ≥5 Y'}.")
     step1 = [item for item in findings if "/step1/" in item["case"].replace("\\", "/")]
     if step1:
+        step1_display = [item for item in step1 if item["method"] == "display"]
+        step1_window = [item for item in step1 if item["method"] in ("single-window", "cgwindow")]
+        any_window_shadow = any(metric["alpha_reach"] > 0
+                                for item in step1_window for metric in item["metrics"].values())
+        display_changed = sum(metric["outside_count"]
+                              for item in step1_display for metric in item["metrics"].values())
         findings_block.extend(["", "## Step 1: runner window-server effects", "",
             "The display composites show whether the shadow survives in the desktop capture. "
             "The single-window and CG outputs retain alpha, so their exterior alpha values report the isolated window-server shadow.", ""])
+        findings_block.append(
+            f"Runner result: **{'yes' if any_window_shadow else 'no measurable alpha shadow'}** in isolated window captures; "
+            f"display composites have {display_changed} exterior side samples with ≥6 Y change from their −8 px sample. "
+            "Treat the near-edge color and alpha values below as raw contour data; they do not identify the private renderer's line type.")
+        findings_block.append("")
         groups = {}
         for item in step1:
             key = (item["appearance"], item["background"])
