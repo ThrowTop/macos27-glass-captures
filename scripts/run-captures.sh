@@ -67,9 +67,13 @@ python3 scripts/grant-screen-capture.py com.throwtop.glasscaptures "$APP/Content
 # which otherwise covers the very windows being measured.
 CAPTURE_APPROVALS="$HOME/Library/Group Containers/group.apple.replayd/ScreenCaptureApprovals.plist"
 mkdir -p "$(dirname "$CAPTURE_APPROVALS")"
-defaults write "$CAPTURE_APPROVALS" "/opt/hca/hosted-compute-agent" -date "3024-01-01 00:00:00 +0000"
+for responsible in "/opt/hca/hosted-compute-agent" "com.throwtop.glasscaptures" "$APP/Contents/MacOS/GlassCaptures"; do
+  defaults write "$CAPTURE_APPROVALS" "$responsible" -date "3024-01-01 00:00:00 +0000"
+done
 killall cfprefsd >/dev/null 2>&1 || true
-echo "replayd hosted-agent approval=$(defaults read "$CAPTURE_APPROVALS" /opt/hca/hosted-compute-agent 2>&1 || true)" >> out/env.txt
+for responsible in "/opt/hca/hosted-compute-agent" "com.throwtop.glasscaptures" "$APP/Contents/MacOS/GlassCaptures"; do
+  echo "replayd approval $responsible=$(defaults read "$CAPTURE_APPROVALS" "$responsible" 2>&1 || true)" >> out/env.txt
+done
 
 "$EXE" --env-out "$ROOT/out/display.json" >> out/log.txt 2>&1 || true
 cat out/display.json >> out/env.txt 2>/dev/null || true

@@ -16,7 +16,7 @@ def rgb_text(rgb):
     return "(" + ",".join(str(int(x)) for x in rgb[:3]) + ")"
 
 
-def image_map(info, case, image):
+def image_map(info, case, image, case_path):
     if isinstance(info.get("shapePixels"), dict):
         r = info["shapePixels"]
         return (float(r["x"]), float(r["y"]), float(r["width"]), float(r["height"]))
@@ -29,7 +29,19 @@ def image_map(info, case, image):
         return x, y, frame["width"] * scale, frame["height"] * scale
     scale = float(case.get("pixelScale", 1))
     width, height = frame["width"] * scale, frame["height"] * scale
-    return (image.width - width) / 2, (image.height - height) / 2, width, height
+    vertical_offset = 0.0
+    runtime_name = case.get("runtime")
+    if runtime_name:
+        try:
+            runtime = json.loads((case_path.parent / runtime_name).read_text(encoding="utf-8"))
+            parameters = runtime.get("shadowParameters", {})
+            state = "Inactive" if case.get("windowState") == "inactive" else "Active"
+            vertical_offset = float(parameters.get(f"com.apple.WindowShadowVerticalOffset{state}", 0))
+        except Exception:
+            pass
+    return ((image.width - width) / 2,
+            (image.height - height) / 2 - vertical_offset * scale,
+            width, height)
 
 
 def inspect_capture(path, info, case, crop_root):
@@ -42,7 +54,8 @@ def inspect_capture(path, info, case, crop_root):
     if not image_path.is_file():
         return [f"Image missing: `{image_path}`"], []
     im = Image.open(image_path).convert("RGBA")
-    x, y, width, height = image_map(info, case, im)
+    x, y, width, height = image_map(info, case, im, path)
+    composite_only = im.getchannel("A").getextrema() == (255, 255)
     left, top = int(round(x)), int(round(y))
     right, bottom = int(round(x + width)), int(round(y + height))
 
@@ -69,9 +82,14 @@ def inspect_capture(path, info, case, crop_root):
         inside = [lum(v) for v in values[12:17]]
         inside_luma = sum(inside) / len(inside)
         rim = [lum(v) - inside_luma for v in values[8:12]]
+        shadow_alpha = [v[3] for v in values[:8]]
+        alpha_extent = "opaque composite" if composite_only else max(
+            (8 - i for i, alpha in enumerate(shadow_alpha) if alpha > 0), default=0)
         lines.append(f"- {side}: RGB distances −8..+8: `{' '.join(rgb_text(v) for v in values)}`; "
                      f"luma: `{','.join(f'{lum(v):.1f}' for v in values)}`; "
+                     f"alpha: `{','.join(str(v[3]) for v in values)}`; "
                      f"outside deviations ≥6 from outer baseline at {affected or 'none'} px; "
+                     f"outside nonzero-alpha reach={alpha_extent if isinstance(alpha_extent,str) else str(alpha_extent)+' px'}; "
                      f"inner 1–4 px brightest lift={max(rim, default=0):.1f}.")
 
     crop_root.mkdir(parents=True, exist_ok=True)
