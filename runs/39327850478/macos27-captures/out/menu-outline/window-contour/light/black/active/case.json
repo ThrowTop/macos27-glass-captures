@@ -1,0 +1,99 @@
+{
+  "appearance" : "light",
+  "background" : "black",
+  "cgWindow" : {
+    "alphaExtrema" : [
+      0,
+      255
+    ],
+    "file" : "cgwindow.png",
+    "imagePixels" : {
+      "height" : 604,
+      "width" : 752
+    },
+    "written" : true
+  },
+  "display" : {
+    "cropPixels" : {
+      "height" : 620,
+      "width" : 768,
+      "x" : 128,
+      "y" : 58
+    },
+    "cropScreenRect" : {
+      "height" : 620,
+      "width" : 768,
+      "x" : 128,
+      "y" : 90
+    },
+    "excludedSystemWindows" : [
+      "UserNotificationCenter: "
+    ],
+    "file" : "display.png",
+    "imagePixels" : {
+      "height" : 620,
+      "width" : 768
+    },
+    "scale" : 1,
+    "visibleWindowTitles" : [
+      "GlassCaptures: ",
+      "GlassCaptures: ",
+      "GlassCaptures: ",
+      "Dock: Dock",
+      "MenuBarAgent: ",
+      "Siri: ",
+      "GlassCaptures: Window effects probe black",
+      "GlassCaptures: ",
+      "GlassCaptures: ",
+      "GlassCaptures: Window contour inactive white",
+      "UserNotificationCenter: ",
+      ": StatusIndicator",
+      ": StatusIndicator",
+      "GlassCaptures: Window effects probe white",
+      "GlassCaptures: Window contour active white",
+      "GlassCaptures: ",
+      "GlassCaptures: ",
+      "GlassCaptures: Key sink",
+      "GlassCaptures: Window contour active black",
+      "GlassCaptures: ",
+      "GlassCaptures: ",
+      "Finder: ",
+      "Finder: ",
+      "Finder: ",
+      "Finder: ",
+      "Finder: ",
+      "WindowManager: Wallpaper",
+      ": underbelly",
+      ": Menubar",
+      "CursorUIViewService: ",
+      ": Display 1 Backstop",
+      "Finder: ",
+      ": Cursor"
+    ],
+    "written" : true
+  },
+  "isKeyWindow" : true,
+  "pixelScale" : 1,
+  "runtime" : "runtime.json",
+  "shape" : "normal titled NSWindow",
+  "singleWindow" : {
+    "alphaExtrema" : [
+      0,
+      255
+    ],
+    "file" : "single-window.png",
+    "imagePixels" : {
+      "height" : 604,
+      "width" : 752
+    },
+    "written" : true
+  },
+  "stage" : "window-contour",
+  "windowFrame" : {
+    "height" : 492,
+    "width" : 640,
+    "x" : 192,
+    "y" : 154
+  },
+  "windowState" : "active"
+}

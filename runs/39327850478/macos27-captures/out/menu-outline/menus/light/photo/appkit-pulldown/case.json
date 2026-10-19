@@ -1,0 +1,201 @@
+{
+  "appearance" : "light",
+  "attempts" : [
+    {
+      "appearance" : "light",
+      "attempt" : 1,
+      "background" : "photo",
+      "captures" : [
+        {
+          "cropScreenRect" : {
+            "height" : 194,
+            "width" : 338,
+            "x" : 336,
+            "y" : 238
+          },
+          "error" : null,
+          "file" : "attempt-1-display.png",
+          "imagePixels" : {
+            "height" : 194,
+            "width" : 338
+          },
+          "method" : "display",
+          "pixelScale" : 1,
+          "runtime" : "attempt-1-runtime-0.json",
+          "scale" : 1,
+          "shapeFrame" : {
+            "height" : 82,
+            "width" : 226,
+            "x" : 392,
+            "y" : 294
+          },
+          "window" : "menu-window-0",
+          "windowState" : "active"
+        },
+        {
+          "alphaExtrema" : [
+            0,
+            255
+          ],
+          "file" : "attempt-1-window-0-single.png",
+          "imagePixels" : {
+            "height" : 194,
+            "width" : 338
+          },
+          "method" : "single-window",
+          "pixelScale" : 1,
+          "runtime" : "attempt-1-runtime-0.json",
+          "shapeFrame" : {
+            "height" : 82,
+            "width" : 226,
+            "x" : 392,
+            "y" : 294
+          },
+          "window" : "menu-window-0",
+          "windowState" : "active",
+          "written" : true
+        },
+        {
+          "alphaExtrema" : [
+            0,
+            255
+          ],
+          "file" : "attempt-1-window-0-cgwindow.png",
+          "imagePixels" : {
+            "height" : 128,
+            "width" : 272
+          },
+          "method" : "cgwindow",
+          "pixelScale" : 1,
+          "runtime" : "attempt-1-runtime-0.json",
+          "shapeFrame" : {
+            "height" : 82,
+            "width" : 226,
+            "x" : 392,
+            "y" : 294
+          },
+          "window" : "menu-window-0",
+          "windowState" : "active",
+          "written" : true
+        }
+      ],
+      "displayRect" : {
+        "height" : 194,
+        "width" : 338,
+        "x" : 336,
+        "y" : 238
+      },
+      "hostRuntime" : "attempt-1-host-runtime.json",
+      "menuWindows" : [
+        {
+          "class" : "NSPopupMenuWindow",
+          "frame" : {
+            "height" : 82,
+            "width" : 226,
+            "x" : 392,
+            "y" : 294
+          },
+          "name" : "menu-window-0",
+          "runtime" : "attempt-1-runtime-0.json",
+          "windowNumber" : 72
+        }
+      ],
+      "opened" : true,
+      "source" : "appkit-pulldown"
+    }
+  ],
+  "background" : "photo",
+  "captures" : [
+    {
+      "cropScreenRect" : {
+        "height" : 194,
+        "width" : 338,
+        "x" : 336,
+        "y" : 238
+      },
+      "error" : null,
+      "file" : "attempt-1-display.png",
+      "imagePixels" : {
+        "height" : 194,
+        "width" : 338
+      },
+      "method" : "display",
+      "pixelScale" : 1,
+      "runtime" : "attempt-1-runtime-0.json",
+      "scale" : 1,
+      "shapeFrame" : {
+        "height" : 82,
+        "width" : 226,
+        "x" : 392,
+        "y" : 294
+      },
+      "window" : "menu-window-0",
+      "windowState" : "active"
+    },
+    {
+      "alphaExtrema" : [
+        0,
+        255
+      ],
+      "file" : "attempt-1-window-0-single.png",
+      "imagePixels" : {
+        "height" : 194,
+        "width" : 338
+      },
+      "method" : "single-window",
+      "pixelScale" : 1,
+      "runtime" : "attempt-1-runtime-0.json",
+      "shapeFrame" : {
+        "height" : 82,
+        "width" : 226,
+        "x" : 392,
+        "y" : 294
+      },
+      "window" : "menu-window-0",
+      "windowState" : "active",
+      "written" : true
+    },
+    {
+      "alphaExtrema" : [
+        0,
+        255
+      ],
+      "file" : "attempt-1-window-0-cgwindow.png",
+      "imagePixels" : {
+        "height" : 128,
+        "width" : 272
+      },
+      "method" : "cgwindow",
+      "pixelScale" : 1,
+      "runtime" : "attempt-1-runtime-0.json",
+      "shapeFrame" : {
+        "height" : 82,
+        "width" : 226,
+        "x" : 392,
+        "y" : 294
+      },
+      "window" : "menu-window-0",
+      "windowState" : "active",
+      "written" : true
+    }
+  ],
+  "hostRuntime" : "attempt-1-host-runtime.json",
+  "menuWindows" : [
+    {
+      "class" : "NSPopupMenuWindow",
+      "frame" : {
+        "height" : 82,
+        "width" : 226,
+        "x" : 392,
+        "y" : 294
+      },
+      "name" : "menu-window-0",
+      "runtime" : "attempt-1-runtime-0.json",
+      "windowNumber" : 72
+    }
+  ],
+  "opened" : true,
+  "openError" : null,
+  "source" : "appkit-pulldown",
+  "stage" : "menus"
+}

@@ -112,11 +112,13 @@ def inspect_capture(path, info, case, crop_root):
 
     crop_root.mkdir(parents=True, exist_ok=True)
     case_slug = "-".join(part for part in path.parent.parts[-4:] if part not in ("", "."))
+    window_slug = str(info.get("window", "normal"))
+    crop_prefix = f"{case_slug}-{window_slug}-{file_name[:-4]}"
     for side, values in profiles.items():
         strip = Image.new("RGBA", (17, 1))
         strip.putdata(values)
         enlarged = strip.resize((17 * 8, 8), Image.Resampling.NEAREST)
-        enlarged.save(crop_root / f"{case_slug}-{file_name[:-4]}-{side}-8x.png")
+        enlarged.save(crop_root / f"{crop_prefix}-{side}-8x.png")
 
     corner_notes = []
     for label, ox, oy, sx, sy in (
@@ -141,6 +143,7 @@ def inspect_capture(path, info, case, crop_root):
         )
     evidence = {
         "file": file_name,
+        "image_path": str(image_path),
         "method": info.get("method", "unknown"),
         "window": info.get("window", "normal"),
         "composite": composite_only,
@@ -149,7 +152,7 @@ def inspect_capture(path, info, case, crop_root):
         "rim_values": {side: round(m["rim_lift"], 1) for side, m in metrics.items()},
         "metrics": metrics,
     }
-    return lines, [str(crop_root / f"{case_slug}-{file_name[:-4]}-{side}-8x.png") for side in profiles], evidence
+    return lines, [str(crop_root / f"{crop_prefix}-{side}-8x.png") for side in profiles], evidence
 
 
 def captures(case):
@@ -185,6 +188,15 @@ def main(root):
         if case.get("menuWindows"):
             parts.append(f"Visible captured menu windows: {len(case['menuWindows'])}.")
             parts.append("")
+        if case.get("source") == "submenu":
+            visible_count = len(case.get("menuWindows", []))
+            if visible_count >= 2:
+                parts.append(f"Nested submenu result: parent plus {visible_count - 1} submenu window(s) captured.")
+            elif visible_count == 1:
+                parts.append("Nested submenu result: parent popup captured; no separate submenu window appeared.")
+            else:
+                parts.append("Nested submenu result: no parent popup window appeared during the recorded attempts.")
+            parts.append("")
         runtime_names = set()
         if case.get("runtime"):
             runtime_names.add(case["runtime"])
@@ -212,8 +224,23 @@ def main(root):
             parts.append("")
     if not cases:
         parts.extend(["No `case.json` files found.", ""])
+    menu_cases = []
+    for path in cases:
+        try:
+            case = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if case.get("stage") == "menus":
+            menu_cases.append(case)
+    nested_cases = [case for case in menu_cases if len(case.get("menuWindows", [])) >= 2]
+    coverage_block = ["## Coverage", "",
+        f"- {len(cases)} case records; {len(findings)} valid capture profiles from "
+        f"{len({item['image_path'] for item in findings})} PNG files; {len(set(crop_paths))} unique 8× edge crops.",
+        f"- Menu cases opened: {sum(case.get('opened') is True for case in menu_cases)}/{len(menu_cases)}; "
+        f"submenu windows included: {len(nested_cases)}/{sum(case.get('source') == 'submenu' for case in menu_cases)}.", ""]
     findings_block = ["## Numerical findings", "",
-        "Display composites compare each exterior sample with the sample 8 px out; a ≥6 Y difference marks a changed pixel. "
+        "Display composites compare each exterior sample with the sample 8 px out; a ≥6 Y difference marks profile variation, "
+        "which may also come from texture in a busy backdrop. "
         "Single-window and CG images report the transparent shadow extent where alpha is at least 8. "
         "Inner lift compares the mean of distances 0–3 with distances 5–8; sides at +5 Y or more are flagged as a light rim.", "",
         "| Case / appearance / backdrop | Window, method | Exterior evidence by side | Light rim sides (mean ΔY) |",
@@ -244,8 +271,9 @@ def main(root):
             "The display composites show whether the shadow survives in the desktop capture. "
             "The single-window and CG outputs retain alpha, so their exterior alpha values report the isolated window-server shadow.", ""])
         findings_block.append(
-            f"Runner result: **{'yes' if any_window_shadow else 'no measurable alpha shadow'}** in isolated window captures; "
-            f"display composites have {display_changed} exterior side samples with ≥6 Y change from their −8 px sample. "
+            f"Runner result: **{'yes' if any_window_shadow else 'no measurable alpha shadow'}** in isolated window captures "
+            f"(shadow alpha reaches at least 8 px, the profile limit); "
+            f"display composites have {display_changed} exterior side samples with ≥6 Y variation from their −8 px sample. "
             "Treat the near-edge color and alpha values below as raw contour data; they do not identify the private renderer's line type.")
         findings_block.append("")
         groups = {}
@@ -267,7 +295,7 @@ def main(root):
             findings_block.append(
                 f"- {appearance} / {background} backdrop: display changed samples ≥6 Y="
                 f"{display_changes}/{side_total}; " + ("; ".join(window_shadows) or "no window-only capture"))
-    parts = parts[:4] + findings_block + [""] + parts[4:]
+    parts = parts[:5] + coverage_block + findings_block + [""] + parts[5:]
     parts.extend(["## Crops", "", "Nearest-neighbour side profile PNGs enlarge each 17-pixel side by 8× and are under `menu-outline-edge-crops/`.", ""])
     for crop in sorted(set(crop_paths)):
         parts.append(f"- `{Path(crop).relative_to(root)}`")

@@ -1,0 +1,32 @@
+{
+  "appearance" : "dark-contrast",
+  "attempts" : [
+    {
+      "attempt" : 1,
+      "error" : "no visible menu window during tracking",
+      "opened" : false
+    },
+    {
+      "attempt" : 2,
+      "error" : "no visible menu window during tracking",
+      "opened" : false
+    },
+    {
+      "attempt" : 3,
+      "error" : "no visible menu window during tracking",
+      "opened" : false
+    }
+  ],
+  "background" : "photo",
+  "captures" : [
+
+  ],
+  "hostRuntime" : null,
+  "menuWindows" : [
+
+  ],
+  "opened" : false,
+  "openError" : "no visible menu window during tracking",
+  "source" : "swiftui-picker",
+  "stage" : "menus"
+}

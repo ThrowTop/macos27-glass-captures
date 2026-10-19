@@ -1,0 +1,119 @@
+{
+  "appearance" : "light-contrast",
+  "backdrop" : "black",
+  "cgWindow" : {
+    "alphaExtrema" : [
+      0,
+      255
+    ],
+    "file" : "cgwindow.png",
+    "imagePixels" : {
+      "height" : 538,
+      "width" : 686
+    },
+    "written" : true
+  },
+  "display" : {
+    "cropPixels" : {
+      "height" : 620,
+      "width" : 768,
+      "x" : 128,
+      "y" : 58
+    },
+    "cropScreenRect" : {
+      "height" : 620,
+      "width" : 768,
+      "x" : 128,
+      "y" : 90
+    },
+    "excludedSystemWindows" : [
+      "UserNotificationCenter: "
+    ],
+    "file" : "display.png",
+    "imagePixels" : {
+      "height" : 620,
+      "width" : 768
+    },
+    "scale" : 1,
+    "visibleWindowTitles" : [
+      "GlassCaptures: ",
+      "GlassCaptures: ",
+      "GlassCaptures: ",
+      "GlassCaptures: ",
+      "GlassCaptures: ",
+      "GlassCaptures: ",
+      "universalAccessAuthWarn: Device Control and Data Access (Events)",
+      "GlassCaptures: ",
+      "GlassCaptures: Menu outline appkit-popup plain",
+      "GlassCaptures: Window contour inactive black",
+      "GlassCaptures: ",
+      "GlassCaptures: ",
+      "GlassCaptures: Window contour active white",
+      "GlassCaptures: ",
+      "GlassCaptures: Window effects probe black",
+      "GlassCaptures: Key sink",
+      "GlassCaptures: ",
+      "GlassCaptures: ",
+      "GlassCaptures: Window effects probe black",
+      "GlassCaptures: Menu outline swiftui-picker plain",
+      "GlassCaptures: ",
+      "GlassCaptures: Window effects probe white",
+      "UserNotificationCenter: ",
+      "Dock: Dock",
+      "GlassCaptures: ",
+      "MenuBarAgent: ",
+      "GlassCaptures: Window effects probe white",
+      "Siri: ",
+      "GlassCaptures: ",
+      "Finder: ",
+      "GlassCaptures: ",
+      "Finder: ",
+      "GlassCaptures: ",
+      "Finder: ",
+      "Finder: ",
+      "GlassCaptures: Menu outline swiftui-menu plain",
+      "Finder: ",
+      "GlassCaptures: Menu outline appkit-pulldown plain",
+      "WindowManager: Wallpaper",
+      "GlassCaptures: ",
+      ": underbelly",
+      "GlassCaptures: Window contour active black",
+      ": Menubar",
+      "GlassCaptures: ",
+      "GlassCaptures: ",
+      ": StatusIndicator",
+      "CursorUIViewService: ",
+      "GlassCaptures: Key sink",
+      ": Display 1 Backstop",
+      "GlassCaptures: Menu outline context plain",
+      ": StatusIndicator",
+      "Finder: ",
+      "GlassCaptures: Window contour inactive white",
+      ": Cursor"
+    ],
+    "written" : true
+  },
+  "pixelScale" : 1,
+  "runtime" : "runtime.json",
+  "shape" : "normal titled NSWindow",
+  "singleWindow" : {
+    "alphaExtrema" : [
+      0,
+      255
+    ],
+    "file" : "single-window.png",
+    "imagePixels" : {
+      "height" : 604,
+      "width" : 752
+    },
+    "written" : true
+  },
+  "stage" : "step1",
+  "windowFrame" : {
+    "height" : 492,
+    "width" : 640,
+    "x" : 192,
+    "y" : 154
+  },
+  "windowState" : "active"
+}

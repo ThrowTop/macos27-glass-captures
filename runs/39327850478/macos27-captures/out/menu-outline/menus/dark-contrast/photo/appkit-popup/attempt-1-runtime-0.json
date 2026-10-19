@@ -1,0 +1,2019 @@
+{
+  "_NSMenuUseGlassWindowStyle" : {
+    "reachable" : false
+  },
+  "backgroundColor" : "Generic Gray Gamma 2.2 Profile colorspace 0 0",
+  "class" : "NSPopupMenuWindow",
+  "contentViewBounds" : {
+    "height" : 106,
+    "width" : 230,
+    "x" : 0,
+    "y" : 0
+  },
+  "contentViewFillsWindowContentArea" : true,
+  "contentViewFrameInWindow" : {
+    "height" : 106,
+    "width" : 230,
+    "x" : 0,
+    "y" : 0
+  },
+  "contentViewFrameScreen" : {
+    "height" : 106,
+    "width" : 230,
+    "x" : 385,
+    "y" : 318
+  },
+  "effectiveAppearance" : "NSAppearanceNameDarkAqua",
+  "expectedContentFrameScreen" : {
+    "height" : 106,
+    "width" : 230,
+    "x" : 385,
+    "y" : 318
+  },
+  "frame" : {
+    "height" : 106,
+    "width" : 230,
+    "x" : 385,
+    "y" : 318
+  },
+  "glassRelatedLayers" : [
+    {
+      "backgroundFilters" : null,
+      "borderColor" : {
+        "color_space" : "Optional(kCGColorSpaceSRGB)",
+        "components" : [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "borderWidth" : 0,
+      "bounds" : {
+        "height" : 106,
+        "width" : 230,
+        "x" : 0,
+        "y" : 0
+      },
+      "class" : "_TtCE6AppKitCSo17NSGlassEffectViewP33_92F0BB6107B916AA04C9A991F505A16412BackingLayer",
+      "cornerRadius" : 0,
+      "filters" : null,
+      "frame" : {
+        "height" : 106,
+        "width" : 230,
+        "x" : 0,
+        "y" : 0
+      }
+    },
+    {
+      "backgroundFilters" : null,
+      "borderColor" : {
+        "color_space" : "Optional(kCGColorSpaceSRGB)",
+        "components" : [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "borderWidth" : 0,
+      "bounds" : {
+        "height" : 106,
+        "width" : 230,
+        "x" : 0,
+        "y" : 0
+      },
+      "class" : "SwiftUI.SDFLayer",
+      "cornerRadius" : 0,
+      "filters" : null,
+      "frame" : {
+        "height" : 106,
+        "width" : 230,
+        "x" : 0,
+        "y" : 0
+      }
+    },
+    {
+      "backgroundFilters" : null,
+      "borderColor" : {
+        "color_space" : "Optional(kCGColorSpaceSRGB)",
+        "components" : [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "borderWidth" : 0,
+      "bounds" : {
+        "height" : 106,
+        "width" : 230,
+        "x" : 0,
+        "y" : 0
+      },
+      "class" : "_TtCE6AppKitCSo17NSGlassEffectViewP33_92F0BB6107B916AA04C9A991F505A16411PortalLayer",
+      "cornerRadius" : 0,
+      "filters" : null,
+      "frame" : {
+        "height" : 106,
+        "width" : 230,
+        "x" : 0,
+        "y" : 0
+      }
+    },
+    {
+      "backgroundFilters" : null,
+      "borderColor" : {
+        "color_space" : "Optional(kCGColorSpaceSRGB)",
+        "components" : [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "borderWidth" : 0,
+      "bounds" : {
+        "height" : 106,
+        "width" : 230,
+        "x" : 0,
+        "y" : 0
+      },
+      "class" : "CABackdropLayer",
+      "cornerRadius" : 0,
+      "filters" : [
+        "glassBackground"
+      ],
+      "frame" : {
+        "height" : 106,
+        "width" : 230,
+        "x" : 0,
+        "y" : 0
+      }
+    },
+    {
+      "backgroundFilters" : null,
+      "borderColor" : {
+        "color_space" : "Optional(kCGColorSpaceSRGB)",
+        "components" : [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "borderWidth" : 0,
+      "bounds" : {
+        "height" : 106,
+        "width" : 230,
+        "x" : 0,
+        "y" : 0
+      },
+      "class" : "CASDFLayer",
+      "cornerRadius" : 0,
+      "filters" : null,
+      "frame" : {
+        "height" : 106,
+        "width" : 230,
+        "x" : 0,
+        "y" : 0
+      }
+    },
+    {
+      "backgroundFilters" : null,
+      "borderColor" : {
+        "color_space" : "Optional(kCGColorSpaceSRGB)",
+        "components" : [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "borderWidth" : 0,
+      "bounds" : {
+        "height" : 106,
+        "width" : 230,
+        "x" : 0,
+        "y" : 0
+      },
+      "class" : "CASDFElementLayer",
+      "cornerRadius" : 12,
+      "filters" : null,
+      "frame" : {
+        "height" : 106,
+        "width" : 230,
+        "x" : 0,
+        "y" : 0
+      }
+    },
+    {
+      "backgroundFilters" : null,
+      "borderColor" : {
+        "color_space" : "Optional(kCGColorSpaceSRGB)",
+        "components" : [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "borderWidth" : 0,
+      "bounds" : {
+        "height" : 106,
+        "width" : 230,
+        "x" : 0,
+        "y" : 0
+      },
+      "class" : "_TtC7SwiftUIP33_05C1F5BE6EE7940FED05100EA822F7B314SDFPortalLayer",
+      "cornerRadius" : 0,
+      "filters" : null,
+      "frame" : {
+        "height" : 106,
+        "width" : 230,
+        "x" : 0,
+        "y" : 0
+      }
+    },
+    {
+      "backgroundFilters" : null,
+      "borderColor" : {
+        "color_space" : "Optional(kCGColorSpaceSRGB)",
+        "components" : [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "borderWidth" : 0,
+      "bounds" : {
+        "height" : 106,
+        "width" : 230,
+        "x" : 0,
+        "y" : 0
+      },
+      "class" : "CASDFLayer",
+      "cornerRadius" : 0,
+      "filters" : [
+        "vibrantColorMatrix"
+      ],
+      "frame" : {
+        "height" : 106,
+        "width" : 230,
+        "x" : 0,
+        "y" : 0
+      }
+    },
+    {
+      "backgroundFilters" : null,
+      "borderColor" : {
+        "color_space" : "Optional(kCGColorSpaceSRGB)",
+        "components" : [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "borderWidth" : 0,
+      "bounds" : {
+        "height" : 0,
+        "width" : 0,
+        "x" : 0,
+        "y" : 0
+      },
+      "class" : "_TtC7SwiftUIP33_05C1F5BE6EE7940FED05100EA822F7B314SDFPortalLayer",
+      "cornerRadius" : 0,
+      "filters" : null,
+      "frame" : {
+        "height" : 0,
+        "width" : 0,
+        "x" : 0,
+        "y" : 0
+      }
+    }
+  ],
+  "glassViewFillsWindowExactly" : true,
+  "hasShadow" : true,
+  "isKeyWindow" : false,
+  "isMainWindow" : false,
+  "isOpaque" : false,
+  "shadowOptions" : {
+    "value" : 2
+  },
+  "shadowParameters" : {
+    "com.apple.WindowShadowContentAwareActive" : true,
+    "com.apple.WindowShadowContentAwareInctive" : true,
+    "com.apple.WindowShadowDensityActive" : 0.29999999999999999,
+    "com.apple.WindowShadowDensityInactive" : 0.29999999999999999,
+    "com.apple.WindowShadowInnerRimDensityActive" : 0.20000000000000001,
+    "com.apple.WindowShadowInnerRimDensityInactive" : 0.17999999999999999,
+    "com.apple.WindowShadowInnerRimRadiusActive" : 2,
+    "com.apple.WindowShadowInnerRimRadiusInactive" : 2,
+    "com.apple.WindowShadowInnerRimStyleWhiteActive" : true,
+    "com.apple.WindowShadowInnerRimStyleWhiteInactive" : true,
+    "com.apple.WindowShadowRadiusActive" : 8,
+    "com.apple.WindowShadowRadiusInactive" : 8,
+    "com.apple.WindowShadowRimDensityActive" : 0.125,
+    "com.apple.WindowShadowRimDensityInactive" : 0.125,
+    "com.apple.WindowShadowRimRadiusActive" : 2,
+    "com.apple.WindowShadowRimRadiusInactive" : 2,
+    "com.apple.WindowShadowRimStyleHardActive" : true,
+    "com.apple.WindowShadowRimStyleHardInactive" : true,
+    "com.apple.WindowShadowRimStyleWhiteActive" : false,
+    "com.apple.WindowShadowRimStyleWhiteInactive" : false,
+    "com.apple.WindowShadowVerticalOffsetActive" : 4,
+    "com.apple.WindowShadowVerticalOffsetInactive" : 4
+  },
+  "topLayerTree" : {
+    "backgroundFilters" : null,
+    "borderColor" : {
+      "color_space" : "Optional(kCGColorSpaceSRGB)",
+      "components" : [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "borderWidth" : 0,
+    "bounds" : {
+      "height" : 106,
+      "width" : 230,
+      "x" : 0,
+      "y" : 0
+    },
+    "class" : "NSViewBackingLayer",
+    "compositingFilter" : null,
+    "cornerRadius" : 0,
+    "filters" : null,
+    "frame" : {
+      "height" : 106,
+      "width" : 230,
+      "x" : 0,
+      "y" : 0
+    },
+    "isHidden" : false,
+    "opacity" : 1,
+    "sublayers" : [
+      {
+        "backgroundFilters" : null,
+        "borderColor" : {
+          "color_space" : "Optional(kCGColorSpaceSRGB)",
+          "components" : [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        "borderWidth" : 0,
+        "bounds" : {
+          "height" : 106,
+          "width" : 230,
+          "x" : 0,
+          "y" : 0
+        },
+        "class" : "_TtCE6AppKitCSo17NSGlassEffectViewP33_92F0BB6107B916AA04C9A991F505A16412BackingLayer",
+        "compositingFilter" : null,
+        "cornerRadius" : 0,
+        "filters" : null,
+        "frame" : {
+          "height" : 106,
+          "width" : 230,
+          "x" : 0,
+          "y" : 0
+        },
+        "isHidden" : false,
+        "opacity" : 1,
+        "sublayers" : [
+          {
+            "backgroundFilters" : null,
+            "borderColor" : {
+              "color_space" : "Optional(kCGColorSpaceSRGB)",
+              "components" : [
+                0,
+                0,
+                0,
+                1
+              ]
+            },
+            "borderWidth" : 0,
+            "bounds" : {
+              "height" : 106,
+              "width" : 230,
+              "x" : 0,
+              "y" : 0
+            },
+            "class" : "CALayer",
+            "compositingFilter" : null,
+            "cornerRadius" : 0,
+            "filters" : null,
+            "frame" : {
+              "height" : 106,
+              "width" : 230,
+              "x" : 0,
+              "y" : 0
+            },
+            "isHidden" : false,
+            "opacity" : 1,
+            "sublayers" : [
+              {
+                "backgroundFilters" : null,
+                "borderColor" : {
+                  "color_space" : "Optional(kCGColorSpaceSRGB)",
+                  "components" : [
+                    0,
+                    0,
+                    0,
+                    1
+                  ]
+                },
+                "borderWidth" : 0,
+                "bounds" : {
+                  "height" : 106,
+                  "width" : 230,
+                  "x" : 0,
+                  "y" : 0
+                },
+                "class" : "NSViewBackingLayer",
+                "compositingFilter" : null,
+                "cornerRadius" : 0,
+                "filters" : null,
+                "frame" : {
+                  "height" : 106,
+                  "width" : 230,
+                  "x" : 0,
+                  "y" : 0
+                },
+                "isHidden" : false,
+                "opacity" : 1,
+                "sublayers" : [
+                  {
+                    "backgroundFilters" : null,
+                    "borderColor" : null,
+                    "borderWidth" : 0,
+                    "bounds" : {
+                      "height" : 106,
+                      "width" : 230,
+                      "x" : 0,
+                      "y" : 0
+                    },
+                    "class" : "NSViewBackingLayer",
+                    "compositingFilter" : null,
+                    "cornerRadius" : 0,
+                    "filters" : null,
+                    "frame" : {
+                      "height" : 106,
+                      "width" : 230,
+                      "x" : 0,
+                      "y" : 0
+                    },
+                    "isHidden" : false,
+                    "opacity" : 1,
+                    "sublayers" : [
+                      {
+                        "backgroundFilters" : null,
+                        "borderColor" : {
+                          "color_space" : "Optional(kCGColorSpaceSRGB)",
+                          "components" : [
+                            0,
+                            0,
+                            0,
+                            1
+                          ]
+                        },
+                        "borderWidth" : 0,
+                        "bounds" : {
+                          "height" : 106,
+                          "width" : 230,
+                          "x" : 0,
+                          "y" : 0
+                        },
+                        "class" : "NSViewBackingLayer",
+                        "compositingFilter" : null,
+                        "cornerRadius" : 0,
+                        "filters" : null,
+                        "frame" : {
+                          "height" : 106,
+                          "width" : 230,
+                          "x" : 0,
+                          "y" : 0
+                        },
+                        "isHidden" : false,
+                        "opacity" : 1,
+                        "sublayers" : [
+                          {
+                            "backgroundFilters" : null,
+                            "borderColor" : {
+                              "color_space" : "Optional(kCGColorSpaceSRGB)",
+                              "components" : [
+                                0,
+                                0,
+                                0,
+                                1
+                              ]
+                            },
+                            "borderWidth" : 0,
+                            "bounds" : {
+                              "height" : 106,
+                              "width" : 230,
+                              "x" : 0,
+                              "y" : 0
+                            },
+                            "class" : "NSViewBackingLayer",
+                            "compositingFilter" : null,
+                            "cornerRadius" : 0,
+                            "filters" : null,
+                            "frame" : {
+                              "height" : 106,
+                              "width" : 230,
+                              "x" : 0,
+                              "y" : 0
+                            },
+                            "isHidden" : false,
+                            "opacity" : 1,
+                            "sublayers" : [
+                              {
+                                "backgroundFilters" : null,
+                                "borderColor" : {
+                                  "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                  "components" : [
+                                    0,
+                                    0,
+                                    0,
+                                    1
+                                  ]
+                                },
+                                "borderWidth" : 0,
+                                "bounds" : {
+                                  "height" : 24,
+                                  "width" : 220,
+                                  "x" : 0,
+                                  "y" : 0
+                                },
+                                "class" : "NSViewBackingLayer",
+                                "compositingFilter" : null,
+                                "cornerRadius" : 0,
+                                "filters" : null,
+                                "frame" : {
+                                  "height" : 24,
+                                  "width" : 220,
+                                  "x" : 5,
+                                  "y" : 5
+                                },
+                                "isHidden" : false,
+                                "opacity" : 1,
+                                "sublayers" : [
+                                  {
+                                    "backgroundFilters" : null,
+                                    "borderColor" : {
+                                      "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                      "components" : [
+                                        0,
+                                        0,
+                                        0,
+                                        1
+                                      ]
+                                    },
+                                    "borderWidth" : 0,
+                                    "bounds" : {
+                                      "height" : 24,
+                                      "width" : 220,
+                                      "x" : 0,
+                                      "y" : 0
+                                    },
+                                    "class" : "CALayer",
+                                    "compositingFilter" : null,
+                                    "cornerRadius" : 7,
+                                    "filters" : null,
+                                    "frame" : {
+                                      "height" : 24,
+                                      "width" : 220,
+                                      "x" : 0,
+                                      "y" : 0
+                                    },
+                                    "isHidden" : false,
+                                    "opacity" : 1,
+                                    "sublayers" : [
+
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "backgroundFilters" : null,
+                                "borderColor" : {
+                                  "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                  "components" : [
+                                    0,
+                                    0,
+                                    0,
+                                    1
+                                  ]
+                                },
+                                "borderWidth" : 0,
+                                "bounds" : {
+                                  "height" : 24,
+                                  "width" : 230,
+                                  "x" : 0,
+                                  "y" : 0
+                                },
+                                "class" : "NSViewBackingLayer",
+                                "compositingFilter" : null,
+                                "cornerRadius" : 0,
+                                "filters" : null,
+                                "frame" : {
+                                  "height" : 24,
+                                  "width" : 230,
+                                  "x" : 0,
+                                  "y" : 5
+                                },
+                                "isHidden" : false,
+                                "opacity" : 1,
+                                "sublayers" : [
+                                  {
+                                    "backgroundFilters" : null,
+                                    "borderColor" : {
+                                      "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                      "components" : [
+                                        0,
+                                        0,
+                                        0,
+                                        1
+                                      ]
+                                    },
+                                    "borderWidth" : 0,
+                                    "bounds" : {
+                                      "height" : 24,
+                                      "width" : 230,
+                                      "x" : 0,
+                                      "y" : 0
+                                    },
+                                    "class" : "CALayer",
+                                    "compositingFilter" : null,
+                                    "cornerRadius" : 0,
+                                    "filters" : null,
+                                    "frame" : {
+                                      "height" : 24,
+                                      "width" : 230,
+                                      "x" : 0,
+                                      "y" : 0
+                                    },
+                                    "isHidden" : false,
+                                    "opacity" : 1,
+                                    "sublayers" : [
+
+                                    ]
+                                  },
+                                  {
+                                    "backgroundFilters" : null,
+                                    "borderColor" : {
+                                      "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                      "components" : [
+                                        0,
+                                        0,
+                                        0,
+                                        1
+                                      ]
+                                    },
+                                    "borderWidth" : 0,
+                                    "bounds" : {
+                                      "height" : 24,
+                                      "width" : 230,
+                                      "x" : 0,
+                                      "y" : 0
+                                    },
+                                    "class" : "NSViewBackingLayer",
+                                    "compositingFilter" : null,
+                                    "cornerRadius" : 0,
+                                    "filters" : null,
+                                    "frame" : {
+                                      "height" : 24,
+                                      "width" : 230,
+                                      "x" : 0,
+                                      "y" : 0
+                                    },
+                                    "isHidden" : false,
+                                    "opacity" : 1,
+                                    "sublayers" : [
+                                      {
+                                        "backgroundFilters" : null,
+                                        "borderColor" : {
+                                          "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                          "components" : [
+                                            0,
+                                            0,
+                                            0,
+                                            1
+                                          ]
+                                        },
+                                        "borderWidth" : 0,
+                                        "bounds" : {
+                                          "height" : 11,
+                                          "width" : 12,
+                                          "x" : 0,
+                                          "y" : 0
+                                        },
+                                        "class" : "NSViewBackingLayer",
+                                        "compositingFilter" : null,
+                                        "cornerRadius" : 0,
+                                        "filters" : null,
+                                        "frame" : {
+                                          "height" : 11,
+                                          "width" : 12,
+                                          "x" : 12,
+                                          "y" : 6
+                                        },
+                                        "isHidden" : false,
+                                        "opacity" : 1,
+                                        "sublayers" : [
+                                          {
+                                            "backgroundFilters" : null,
+                                            "borderColor" : {
+                                              "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                              "components" : [
+                                                0,
+                                                0,
+                                                0,
+                                                1
+                                              ]
+                                            },
+                                            "borderWidth" : 0,
+                                            "bounds" : {
+                                              "height" : 9,
+                                              "width" : 10,
+                                              "x" : 1,
+                                              "y" : 1
+                                            },
+                                            "class" : "_TtCC6AppKit26NSViewBackingLayerContentsP33_936B6E90B4E319ADDB011517F9EF5EC612ContentLayer",
+                                            "compositingFilter" : null,
+                                            "cornerRadius" : 0,
+                                            "filters" : null,
+                                            "frame" : {
+                                              "height" : 9,
+                                              "width" : 10,
+                                              "x" : 1,
+                                              "y" : 1
+                                            },
+                                            "isHidden" : false,
+                                            "opacity" : 1,
+                                            "sublayers" : [
+
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "backgroundFilters" : null,
+                                        "borderColor" : {
+                                          "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                          "components" : [
+                                            0,
+                                            0,
+                                            0,
+                                            1
+                                          ]
+                                        },
+                                        "borderWidth" : 0,
+                                        "bounds" : {
+                                          "height" : 16,
+                                          "width" : 67,
+                                          "x" : 0,
+                                          "y" : 0
+                                        },
+                                        "class" : "NSViewBackingLayer",
+                                        "compositingFilter" : null,
+                                        "cornerRadius" : 0,
+                                        "filters" : null,
+                                        "frame" : {
+                                          "height" : 16,
+                                          "width" : 67,
+                                          "x" : 27,
+                                          "y" : 4
+                                        },
+                                        "isHidden" : false,
+                                        "opacity" : 1,
+                                        "sublayers" : [
+                                          {
+                                            "backgroundFilters" : null,
+                                            "borderColor" : {
+                                              "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                              "components" : [
+                                                0,
+                                                0,
+                                                0,
+                                                1
+                                              ]
+                                            },
+                                            "borderWidth" : 0,
+                                            "bounds" : {
+                                              "height" : 16,
+                                              "width" : 67,
+                                              "x" : 0,
+                                              "y" : 0
+                                            },
+                                            "class" : "NSViewBackingLayer",
+                                            "compositingFilter" : null,
+                                            "cornerRadius" : 0,
+                                            "filters" : null,
+                                            "frame" : {
+                                              "height" : 16,
+                                              "width" : 67,
+                                              "x" : 0,
+                                              "y" : 0
+                                            },
+                                            "isHidden" : false,
+                                            "opacity" : 1,
+                                            "sublayers" : [
+                                              {
+                                                "backgroundFilters" : null,
+                                                "borderColor" : {
+                                                  "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                                  "components" : [
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    1
+                                                  ]
+                                                },
+                                                "borderWidth" : 0,
+                                                "bounds" : {
+                                                  "height" : 24,
+                                                  "width" : 88,
+                                                  "x" : -12,
+                                                  "y" : -4
+                                                },
+                                                "class" : "_TtCC6AppKit26NSViewBackingLayerContentsP33_936B6E90B4E319ADDB011517F9EF5EC612ContentLayer",
+                                                "compositingFilter" : null,
+                                                "cornerRadius" : 0,
+                                                "filters" : null,
+                                                "frame" : {
+                                                  "height" : 24,
+                                                  "width" : 88,
+                                                  "x" : -12,
+                                                  "y" : -4
+                                                },
+                                                "isHidden" : false,
+                                                "opacity" : 1,
+                                                "sublayers" : [
+
+                                                ]
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "backgroundFilters" : null,
+                                "borderColor" : {
+                                  "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                  "components" : [
+                                    0,
+                                    0,
+                                    0,
+                                    1
+                                  ]
+                                },
+                                "borderWidth" : 0,
+                                "bounds" : {
+                                  "height" : 24,
+                                  "width" : 230,
+                                  "x" : 0,
+                                  "y" : 0
+                                },
+                                "class" : "NSViewBackingLayer",
+                                "compositingFilter" : null,
+                                "cornerRadius" : 0,
+                                "filters" : null,
+                                "frame" : {
+                                  "height" : 24,
+                                  "width" : 230,
+                                  "x" : 0,
+                                  "y" : 29
+                                },
+                                "isHidden" : false,
+                                "opacity" : 1,
+                                "sublayers" : [
+                                  {
+                                    "backgroundFilters" : null,
+                                    "borderColor" : {
+                                      "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                      "components" : [
+                                        0,
+                                        0,
+                                        0,
+                                        1
+                                      ]
+                                    },
+                                    "borderWidth" : 0,
+                                    "bounds" : {
+                                      "height" : 24,
+                                      "width" : 230,
+                                      "x" : 0,
+                                      "y" : 0
+                                    },
+                                    "class" : "CALayer",
+                                    "compositingFilter" : null,
+                                    "cornerRadius" : 0,
+                                    "filters" : null,
+                                    "frame" : {
+                                      "height" : 24,
+                                      "width" : 230,
+                                      "x" : 0,
+                                      "y" : 0
+                                    },
+                                    "isHidden" : false,
+                                    "opacity" : 1,
+                                    "sublayers" : [
+
+                                    ]
+                                  },
+                                  {
+                                    "backgroundFilters" : null,
+                                    "borderColor" : {
+                                      "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                      "components" : [
+                                        0,
+                                        0,
+                                        0,
+                                        1
+                                      ]
+                                    },
+                                    "borderWidth" : 0,
+                                    "bounds" : {
+                                      "height" : 24,
+                                      "width" : 230,
+                                      "x" : 0,
+                                      "y" : 0
+                                    },
+                                    "class" : "NSViewBackingLayer",
+                                    "compositingFilter" : null,
+                                    "cornerRadius" : 0,
+                                    "filters" : null,
+                                    "frame" : {
+                                      "height" : 24,
+                                      "width" : 230,
+                                      "x" : 0,
+                                      "y" : 0
+                                    },
+                                    "isHidden" : false,
+                                    "opacity" : 1,
+                                    "sublayers" : [
+                                      {
+                                        "backgroundFilters" : null,
+                                        "borderColor" : {
+                                          "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                          "components" : [
+                                            0,
+                                            0,
+                                            0,
+                                            1
+                                          ]
+                                        },
+                                        "borderWidth" : 0,
+                                        "bounds" : {
+                                          "height" : 16,
+                                          "width" : 67,
+                                          "x" : 0,
+                                          "y" : 0
+                                        },
+                                        "class" : "NSViewBackingLayer",
+                                        "compositingFilter" : null,
+                                        "cornerRadius" : 0,
+                                        "filters" : null,
+                                        "frame" : {
+                                          "height" : 16,
+                                          "width" : 67,
+                                          "x" : 27,
+                                          "y" : 4
+                                        },
+                                        "isHidden" : false,
+                                        "opacity" : 1,
+                                        "sublayers" : [
+                                          {
+                                            "backgroundFilters" : null,
+                                            "borderColor" : {
+                                              "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                              "components" : [
+                                                0,
+                                                0,
+                                                0,
+                                                1
+                                              ]
+                                            },
+                                            "borderWidth" : 0,
+                                            "bounds" : {
+                                              "height" : 16,
+                                              "width" : 67,
+                                              "x" : 0,
+                                              "y" : 0
+                                            },
+                                            "class" : "NSViewBackingLayer",
+                                            "compositingFilter" : null,
+                                            "cornerRadius" : 0,
+                                            "filters" : null,
+                                            "frame" : {
+                                              "height" : 16,
+                                              "width" : 67,
+                                              "x" : 0,
+                                              "y" : 0
+                                            },
+                                            "isHidden" : false,
+                                            "opacity" : 1,
+                                            "sublayers" : [
+                                              {
+                                                "backgroundFilters" : null,
+                                                "borderColor" : {
+                                                  "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                                  "components" : [
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    1
+                                                  ]
+                                                },
+                                                "borderWidth" : 0,
+                                                "bounds" : {
+                                                  "height" : 24,
+                                                  "width" : 95,
+                                                  "x" : -12,
+                                                  "y" : -4
+                                                },
+                                                "class" : "_TtCC6AppKit26NSViewBackingLayerContentsP33_936B6E90B4E319ADDB011517F9EF5EC612ContentLayer",
+                                                "compositingFilter" : null,
+                                                "cornerRadius" : 0,
+                                                "filters" : null,
+                                                "frame" : {
+                                                  "height" : 24,
+                                                  "width" : 95,
+                                                  "x" : -12,
+                                                  "y" : -4
+                                                },
+                                                "isHidden" : false,
+                                                "opacity" : 1,
+                                                "sublayers" : [
+
+                                                ]
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "backgroundFilters" : null,
+                                "borderColor" : {
+                                  "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                  "components" : [
+                                    0,
+                                    0,
+                                    0,
+                                    1
+                                  ]
+                                },
+                                "borderWidth" : 0,
+                                "bounds" : {
+                                  "height" : 24,
+                                  "width" : 230,
+                                  "x" : 0,
+                                  "y" : 0
+                                },
+                                "class" : "NSViewBackingLayer",
+                                "compositingFilter" : null,
+                                "cornerRadius" : 0,
+                                "filters" : null,
+                                "frame" : {
+                                  "height" : 24,
+                                  "width" : 230,
+                                  "x" : 0,
+                                  "y" : 53
+                                },
+                                "isHidden" : false,
+                                "opacity" : 1,
+                                "sublayers" : [
+                                  {
+                                    "backgroundFilters" : null,
+                                    "borderColor" : {
+                                      "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                      "components" : [
+                                        0,
+                                        0,
+                                        0,
+                                        1
+                                      ]
+                                    },
+                                    "borderWidth" : 0,
+                                    "bounds" : {
+                                      "height" : 24,
+                                      "width" : 230,
+                                      "x" : 0,
+                                      "y" : 0
+                                    },
+                                    "class" : "CALayer",
+                                    "compositingFilter" : null,
+                                    "cornerRadius" : 0,
+                                    "filters" : null,
+                                    "frame" : {
+                                      "height" : 24,
+                                      "width" : 230,
+                                      "x" : 0,
+                                      "y" : 0
+                                    },
+                                    "isHidden" : false,
+                                    "opacity" : 1,
+                                    "sublayers" : [
+
+                                    ]
+                                  },
+                                  {
+                                    "backgroundFilters" : null,
+                                    "borderColor" : {
+                                      "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                      "components" : [
+                                        0,
+                                        0,
+                                        0,
+                                        1
+                                      ]
+                                    },
+                                    "borderWidth" : 0,
+                                    "bounds" : {
+                                      "height" : 24,
+                                      "width" : 230,
+                                      "x" : 0,
+                                      "y" : 0
+                                    },
+                                    "class" : "NSViewBackingLayer",
+                                    "compositingFilter" : null,
+                                    "cornerRadius" : 0,
+                                    "filters" : null,
+                                    "frame" : {
+                                      "height" : 24,
+                                      "width" : 230,
+                                      "x" : 0,
+                                      "y" : 0
+                                    },
+                                    "isHidden" : false,
+                                    "opacity" : 1,
+                                    "sublayers" : [
+                                      {
+                                        "backgroundFilters" : null,
+                                        "borderColor" : {
+                                          "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                          "components" : [
+                                            0,
+                                            0,
+                                            0,
+                                            1
+                                          ]
+                                        },
+                                        "borderWidth" : 0,
+                                        "bounds" : {
+                                          "height" : 16,
+                                          "width" : 67,
+                                          "x" : 0,
+                                          "y" : 0
+                                        },
+                                        "class" : "NSViewBackingLayer",
+                                        "compositingFilter" : null,
+                                        "cornerRadius" : 0,
+                                        "filters" : null,
+                                        "frame" : {
+                                          "height" : 16,
+                                          "width" : 67,
+                                          "x" : 27,
+                                          "y" : 4
+                                        },
+                                        "isHidden" : false,
+                                        "opacity" : 1,
+                                        "sublayers" : [
+                                          {
+                                            "backgroundFilters" : null,
+                                            "borderColor" : {
+                                              "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                              "components" : [
+                                                0,
+                                                0,
+                                                0,
+                                                1
+                                              ]
+                                            },
+                                            "borderWidth" : 0,
+                                            "bounds" : {
+                                              "height" : 16,
+                                              "width" : 67,
+                                              "x" : 0,
+                                              "y" : 0
+                                            },
+                                            "class" : "NSViewBackingLayer",
+                                            "compositingFilter" : null,
+                                            "cornerRadius" : 0,
+                                            "filters" : null,
+                                            "frame" : {
+                                              "height" : 16,
+                                              "width" : 67,
+                                              "x" : 0,
+                                              "y" : 0
+                                            },
+                                            "isHidden" : false,
+                                            "opacity" : 1,
+                                            "sublayers" : [
+                                              {
+                                                "backgroundFilters" : null,
+                                                "borderColor" : {
+                                                  "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                                  "components" : [
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    1
+                                                  ]
+                                                },
+                                                "borderWidth" : 0,
+                                                "bounds" : {
+                                                  "height" : 24,
+                                                  "width" : 92,
+                                                  "x" : -12,
+                                                  "y" : -4
+                                                },
+                                                "class" : "_TtCC6AppKit26NSViewBackingLayerContentsP33_936B6E90B4E319ADDB011517F9EF5EC612ContentLayer",
+                                                "compositingFilter" : null,
+                                                "cornerRadius" : 0,
+                                                "filters" : null,
+                                                "frame" : {
+                                                  "height" : 24,
+                                                  "width" : 92,
+                                                  "x" : -12,
+                                                  "y" : -4
+                                                },
+                                                "isHidden" : false,
+                                                "opacity" : 1,
+                                                "sublayers" : [
+
+                                                ]
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "backgroundFilters" : null,
+                                "borderColor" : {
+                                  "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                  "components" : [
+                                    0,
+                                    0,
+                                    0,
+                                    1
+                                  ]
+                                },
+                                "borderWidth" : 0,
+                                "bounds" : {
+                                  "height" : 24,
+                                  "width" : 230,
+                                  "x" : 0,
+                                  "y" : 0
+                                },
+                                "class" : "NSViewBackingLayer",
+                                "compositingFilter" : null,
+                                "cornerRadius" : 0,
+                                "filters" : null,
+                                "frame" : {
+                                  "height" : 24,
+                                  "width" : 230,
+                                  "x" : 0,
+                                  "y" : 77
+                                },
+                                "isHidden" : false,
+                                "opacity" : 1,
+                                "sublayers" : [
+                                  {
+                                    "backgroundFilters" : null,
+                                    "borderColor" : {
+                                      "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                      "components" : [
+                                        0,
+                                        0,
+                                        0,
+                                        1
+                                      ]
+                                    },
+                                    "borderWidth" : 0,
+                                    "bounds" : {
+                                      "height" : 24,
+                                      "width" : 230,
+                                      "x" : 0,
+                                      "y" : 0
+                                    },
+                                    "class" : "CALayer",
+                                    "compositingFilter" : null,
+                                    "cornerRadius" : 0,
+                                    "filters" : null,
+                                    "frame" : {
+                                      "height" : 24,
+                                      "width" : 230,
+                                      "x" : 0,
+                                      "y" : 0
+                                    },
+                                    "isHidden" : false,
+                                    "opacity" : 1,
+                                    "sublayers" : [
+
+                                    ]
+                                  },
+                                  {
+                                    "backgroundFilters" : null,
+                                    "borderColor" : {
+                                      "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                      "components" : [
+                                        0,
+                                        0,
+                                        0,
+                                        1
+                                      ]
+                                    },
+                                    "borderWidth" : 0,
+                                    "bounds" : {
+                                      "height" : 24,
+                                      "width" : 230,
+                                      "x" : 0,
+                                      "y" : 0
+                                    },
+                                    "class" : "NSViewBackingLayer",
+                                    "compositingFilter" : null,
+                                    "cornerRadius" : 0,
+                                    "filters" : null,
+                                    "frame" : {
+                                      "height" : 24,
+                                      "width" : 230,
+                                      "x" : 0,
+                                      "y" : 0
+                                    },
+                                    "isHidden" : false,
+                                    "opacity" : 1,
+                                    "sublayers" : [
+                                      {
+                                        "backgroundFilters" : null,
+                                        "borderColor" : {
+                                          "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                          "components" : [
+                                            0,
+                                            0,
+                                            0,
+                                            1
+                                          ]
+                                        },
+                                        "borderWidth" : 0,
+                                        "bounds" : {
+                                          "height" : 16,
+                                          "width" : 67,
+                                          "x" : 0,
+                                          "y" : 0
+                                        },
+                                        "class" : "NSViewBackingLayer",
+                                        "compositingFilter" : null,
+                                        "cornerRadius" : 0,
+                                        "filters" : null,
+                                        "frame" : {
+                                          "height" : 16,
+                                          "width" : 67,
+                                          "x" : 27,
+                                          "y" : 4
+                                        },
+                                        "isHidden" : false,
+                                        "opacity" : 1,
+                                        "sublayers" : [
+                                          {
+                                            "backgroundFilters" : null,
+                                            "borderColor" : {
+                                              "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                              "components" : [
+                                                0,
+                                                0,
+                                                0,
+                                                1
+                                              ]
+                                            },
+                                            "borderWidth" : 0,
+                                            "bounds" : {
+                                              "height" : 16,
+                                              "width" : 67,
+                                              "x" : 0,
+                                              "y" : 0
+                                            },
+                                            "class" : "NSViewBackingLayer",
+                                            "compositingFilter" : null,
+                                            "cornerRadius" : 0,
+                                            "filters" : null,
+                                            "frame" : {
+                                              "height" : 16,
+                                              "width" : 67,
+                                              "x" : 0,
+                                              "y" : 0
+                                            },
+                                            "isHidden" : false,
+                                            "opacity" : 1,
+                                            "sublayers" : [
+                                              {
+                                                "backgroundFilters" : null,
+                                                "borderColor" : {
+                                                  "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                                  "components" : [
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    1
+                                                  ]
+                                                },
+                                                "borderWidth" : 0,
+                                                "bounds" : {
+                                                  "height" : 24,
+                                                  "width" : 86,
+                                                  "x" : -12,
+                                                  "y" : -4
+                                                },
+                                                "class" : "_TtCC6AppKit26NSViewBackingLayerContentsP33_936B6E90B4E319ADDB011517F9EF5EC612ContentLayer",
+                                                "compositingFilter" : null,
+                                                "cornerRadius" : 0,
+                                                "filters" : null,
+                                                "frame" : {
+                                                  "height" : 24,
+                                                  "width" : 86,
+                                                  "x" : -12,
+                                                  "y" : -4
+                                                },
+                                                "isHidden" : false,
+                                                "opacity" : 1,
+                                                "sublayers" : [
+
+                                                ]
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "backgroundFilters" : null,
+            "borderColor" : {
+              "color_space" : "Optional(kCGColorSpaceSRGB)",
+              "components" : [
+                0,
+                0,
+                0,
+                1
+              ]
+            },
+            "borderWidth" : 0,
+            "bounds" : {
+              "height" : 106,
+              "width" : 230,
+              "x" : 0,
+              "y" : 0
+            },
+            "class" : "NSViewBackingLayer",
+            "compositingFilter" : null,
+            "cornerRadius" : 0,
+            "filters" : null,
+            "frame" : {
+              "height" : 106,
+              "width" : 230,
+              "x" : 0,
+              "y" : 0
+            },
+            "isHidden" : false,
+            "opacity" : 1,
+            "sublayers" : [
+              {
+                "backgroundFilters" : null,
+                "borderColor" : {
+                  "color_space" : "Optional(kCGColorSpaceSRGB)",
+                  "components" : [
+                    0,
+                    0,
+                    0,
+                    1
+                  ]
+                },
+                "borderWidth" : 0,
+                "bounds" : {
+                  "height" : 106,
+                  "width" : 230,
+                  "x" : 0,
+                  "y" : 0
+                },
+                "class" : "CALayer",
+                "compositingFilter" : null,
+                "cornerRadius" : 0,
+                "filters" : null,
+                "frame" : {
+                  "height" : 106,
+                  "width" : 230,
+                  "x" : 0,
+                  "y" : 0
+                },
+                "isHidden" : false,
+                "opacity" : 1,
+                "sublayers" : [
+                  {
+                    "backgroundFilters" : null,
+                    "borderColor" : {
+                      "color_space" : "Optional(kCGColorSpaceSRGB)",
+                      "components" : [
+                        0,
+                        0,
+                        0,
+                        1
+                      ]
+                    },
+                    "borderWidth" : 0,
+                    "bounds" : {
+                      "height" : 106,
+                      "width" : 230,
+                      "x" : 0,
+                      "y" : 0
+                    },
+                    "class" : "SwiftUI.SDFLayer",
+                    "compositingFilter" : null,
+                    "cornerRadius" : 0,
+                    "filters" : null,
+                    "frame" : {
+                      "height" : 106,
+                      "width" : 230,
+                      "x" : 0,
+                      "y" : 0
+                    },
+                    "isHidden" : false,
+                    "opacity" : 1,
+                    "sublayers" : [
+                      {
+                        "backgroundFilters" : null,
+                        "borderColor" : {
+                          "color_space" : "Optional(kCGColorSpaceSRGB)",
+                          "components" : [
+                            0,
+                            0,
+                            0,
+                            1
+                          ]
+                        },
+                        "borderWidth" : 0,
+                        "bounds" : {
+                          "height" : 0,
+                          "width" : 0,
+                          "x" : 0,
+                          "y" : 0
+                        },
+                        "class" : "CALayer",
+                        "compositingFilter" : null,
+                        "cornerRadius" : 0,
+                        "filters" : null,
+                        "frame" : {
+                          "height" : 0,
+                          "width" : 0,
+                          "x" : 0,
+                          "y" : 0
+                        },
+                        "isHidden" : false,
+                        "opacity" : 1,
+                        "sublayers" : [
+                          {
+                            "backgroundFilters" : null,
+                            "borderColor" : {
+                              "color_space" : "Optional(kCGColorSpaceSRGB)",
+                              "components" : [
+                                0,
+                                0,
+                                0,
+                                1
+                              ]
+                            },
+                            "borderWidth" : 0,
+                            "bounds" : {
+                              "height" : 106,
+                              "width" : 230,
+                              "x" : 0,
+                              "y" : 0
+                            },
+                            "class" : "CALayer",
+                            "compositingFilter" : null,
+                            "cornerRadius" : 0,
+                            "filters" : null,
+                            "frame" : {
+                              "height" : 106,
+                              "width" : 230,
+                              "x" : 0,
+                              "y" : 0
+                            },
+                            "isHidden" : false,
+                            "opacity" : 1,
+                            "sublayers" : [
+                              {
+                                "backgroundFilters" : null,
+                                "borderColor" : null,
+                                "borderWidth" : 0,
+                                "bounds" : {
+                                  "height" : 106,
+                                  "width" : 230,
+                                  "x" : 0,
+                                  "y" : 0
+                                },
+                                "class" : "CALayer",
+                                "compositingFilter" : null,
+                                "cornerRadius" : 12,
+                                "filters" : [
+                                  "vibrantColorMatrix"
+                                ],
+                                "frame" : {
+                                  "height" : 106,
+                                  "width" : 230,
+                                  "x" : 0,
+                                  "y" : 0
+                                },
+                                "isHidden" : false,
+                                "opacity" : 1,
+                                "sublayers" : [
+
+                                ]
+                              },
+                              {
+                                "backgroundFilters" : null,
+                                "borderColor" : {
+                                  "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                  "components" : [
+                                    0,
+                                    0,
+                                    0,
+                                    1
+                                  ]
+                                },
+                                "borderWidth" : 0,
+                                "bounds" : {
+                                  "height" : 106,
+                                  "width" : 230,
+                                  "x" : 0,
+                                  "y" : 0
+                                },
+                                "class" : "CALayer",
+                                "compositingFilter" : null,
+                                "cornerRadius" : 12,
+                                "filters" : null,
+                                "frame" : {
+                                  "height" : 106,
+                                  "width" : 230,
+                                  "x" : 0,
+                                  "y" : 0
+                                },
+                                "isHidden" : false,
+                                "opacity" : 1,
+                                "sublayers" : [
+                                  {
+                                    "backgroundFilters" : null,
+                                    "borderColor" : {
+                                      "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                      "components" : [
+                                        0,
+                                        0,
+                                        0,
+                                        1
+                                      ]
+                                    },
+                                    "borderWidth" : 0,
+                                    "bounds" : {
+                                      "height" : 106,
+                                      "width" : 230,
+                                      "x" : 0,
+                                      "y" : 0
+                                    },
+                                    "class" : "_TtCE6AppKitCSo17NSGlassEffectViewP33_92F0BB6107B916AA04C9A991F505A16411PortalLayer",
+                                    "compositingFilter" : null,
+                                    "cornerRadius" : 0,
+                                    "filters" : null,
+                                    "frame" : {
+                                      "height" : 106,
+                                      "width" : 230,
+                                      "x" : 0,
+                                      "y" : 0
+                                    },
+                                    "isHidden" : false,
+                                    "opacity" : 1,
+                                    "sublayers" : [
+
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "backgroundFilters" : null,
+                        "borderColor" : {
+                          "color_space" : "Optional(kCGColorSpaceSRGB)",
+                          "components" : [
+                            0,
+                            0,
+                            0,
+                            1
+                          ]
+                        },
+                        "borderWidth" : 0,
+                        "bounds" : {
+                          "height" : 106,
+                          "width" : 230,
+                          "x" : 0,
+                          "y" : 0
+                        },
+                        "class" : "CALayer",
+                        "compositingFilter" : null,
+                        "cornerRadius" : 0,
+                        "filters" : null,
+                        "frame" : {
+                          "height" : 106,
+                          "width" : 230,
+                          "x" : 0,
+                          "y" : 0
+                        },
+                        "isHidden" : false,
+                        "opacity" : 1,
+                        "sublayers" : [
+                          {
+                            "backgroundFilters" : null,
+                            "borderColor" : {
+                              "color_space" : "Optional(kCGColorSpaceSRGB)",
+                              "components" : [
+                                0,
+                                0,
+                                0,
+                                1
+                              ]
+                            },
+                            "borderWidth" : 0,
+                            "bounds" : {
+                              "height" : 106,
+                              "width" : 230,
+                              "x" : 0,
+                              "y" : 0
+                            },
+                            "class" : "CABackdropLayer",
+                            "compositingFilter" : null,
+                            "cornerRadius" : 0,
+                            "filters" : [
+                              "glassBackground"
+                            ],
+                            "frame" : {
+                              "height" : 106,
+                              "width" : 230,
+                              "x" : 0,
+                              "y" : 0
+                            },
+                            "isHidden" : false,
+                            "opacity" : 1,
+                            "sublayers" : [
+                              {
+                                "backgroundFilters" : null,
+                                "borderColor" : {
+                                  "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                  "components" : [
+                                    0,
+                                    0,
+                                    0,
+                                    1
+                                  ]
+                                },
+                                "borderWidth" : 0,
+                                "bounds" : {
+                                  "height" : 106,
+                                  "width" : 230,
+                                  "x" : 0,
+                                  "y" : 0
+                                },
+                                "class" : "CASDFLayer",
+                                "compositingFilter" : null,
+                                "cornerRadius" : 0,
+                                "filters" : null,
+                                "frame" : {
+                                  "height" : 106,
+                                  "width" : 230,
+                                  "x" : 0,
+                                  "y" : 0
+                                },
+                                "isHidden" : false,
+                                "opacity" : 1,
+                                "sublayers" : [
+                                  {
+                                    "backgroundFilters" : null,
+                                    "borderColor" : {
+                                      "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                      "components" : [
+                                        0,
+                                        0,
+                                        0,
+                                        1
+                                      ]
+                                    },
+                                    "borderWidth" : 0,
+                                    "bounds" : {
+                                      "height" : 0,
+                                      "width" : 0,
+                                      "x" : 0,
+                                      "y" : 0
+                                    },
+                                    "class" : "CALayer",
+                                    "compositingFilter" : null,
+                                    "cornerRadius" : 0,
+                                    "filters" : null,
+                                    "frame" : {
+                                      "height" : 0,
+                                      "width" : 0,
+                                      "x" : 0,
+                                      "y" : 0
+                                    },
+                                    "isHidden" : false,
+                                    "opacity" : 1,
+                                    "sublayers" : [
+                                      {
+                                        "backgroundFilters" : null,
+                                        "borderColor" : {
+                                          "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                          "components" : [
+                                            0,
+                                            0,
+                                            0,
+                                            1
+                                          ]
+                                        },
+                                        "borderWidth" : 0,
+                                        "bounds" : {
+                                          "height" : 106,
+                                          "width" : 230,
+                                          "x" : 0,
+                                          "y" : 0
+                                        },
+                                        "class" : "CASDFElementLayer",
+                                        "compositingFilter" : null,
+                                        "cornerRadius" : 12,
+                                        "filters" : null,
+                                        "frame" : {
+                                          "height" : 106,
+                                          "width" : 230,
+                                          "x" : 0,
+                                          "y" : 0
+                                        },
+                                        "isHidden" : false,
+                                        "opacity" : 1,
+                                        "sublayers" : [
+
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "backgroundFilters" : null,
+                            "borderColor" : {
+                              "color_space" : "Optional(kCGColorSpaceSRGB)",
+                              "components" : [
+                                0,
+                                0,
+                                0,
+                                1
+                              ]
+                            },
+                            "borderWidth" : 0,
+                            "bounds" : {
+                              "height" : 106,
+                              "width" : 230,
+                              "x" : 0,
+                              "y" : 0
+                            },
+                            "class" : "_TtC7SwiftUIP33_05C1F5BE6EE7940FED05100EA822F7B314SDFPortalLayer",
+                            "compositingFilter" : null,
+                            "cornerRadius" : 0,
+                            "filters" : null,
+                            "frame" : {
+                              "height" : 106,
+                              "width" : 230,
+                              "x" : 0,
+                              "y" : 0
+                            },
+                            "isHidden" : false,
+                            "opacity" : 1,
+                            "sublayers" : [
+
+                            ]
+                          },
+                          {
+                            "backgroundFilters" : null,
+                            "borderColor" : {
+                              "color_space" : "Optional(kCGColorSpaceSRGB)",
+                              "components" : [
+                                0,
+                                0,
+                                0,
+                                1
+                              ]
+                            },
+                            "borderWidth" : 0,
+                            "bounds" : {
+                              "height" : 106,
+                              "width" : 230,
+                              "x" : 0,
+                              "y" : 0
+                            },
+                            "class" : "CASDFLayer",
+                            "compositingFilter" : null,
+                            "cornerRadius" : 0,
+                            "filters" : [
+                              "vibrantColorMatrix"
+                            ],
+                            "frame" : {
+                              "height" : 106,
+                              "width" : 230,
+                              "x" : 0,
+                              "y" : 0
+                            },
+                            "isHidden" : false,
+                            "opacity" : 1,
+                            "sublayers" : [
+                              {
+                                "backgroundFilters" : null,
+                                "borderColor" : {
+                                  "color_space" : "Optional(kCGColorSpaceSRGB)",
+                                  "components" : [
+                                    0,
+                                    0,
+                                    0,
+                                    1
+                                  ]
+                                },
+                                "borderWidth" : 0,
+                                "bounds" : {
+                                  "height" : 0,
+                                  "width" : 0,
+                                  "x" : 0,
+                                  "y" : 0
+                                },
+                                "class" : "_TtC7SwiftUIP33_05C1F5BE6EE7940FED05100EA822F7B314SDFPortalLayer",
+                                "compositingFilter" : null,
+                                "cornerRadius" : 0,
+                                "filters" : null,
+                                "frame" : {
+                                  "height" : 0,
+                                  "width" : 0,
+                                  "x" : 0,
+                                  "y" : 0
+                                },
+                                "isHidden" : false,
+                                "opacity" : 1,
+                                "sublayers" : [
+
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "windowLevel" : 101,
+  "windowNumber" : 160
+}

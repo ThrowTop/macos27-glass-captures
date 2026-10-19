@@ -1,0 +1,32 @@
+{
+  "appearance" : "light-contrast",
+  "attempts" : [
+    {
+      "attempt" : 1,
+      "error" : "no visible menu window during tracking",
+      "opened" : false
+    },
+    {
+      "attempt" : 2,
+      "error" : "no visible menu window during tracking",
+      "opened" : false
+    },
+    {
+      "attempt" : 3,
+      "error" : "no visible menu window during tracking",
+      "opened" : false
+    }
+  ],
+  "background" : "plain",
+  "captures" : [
+
+  ],
+  "hostRuntime" : null,
+  "menuWindows" : [
+
+  ],
+  "opened" : false,
+  "openError" : "no visible menu window during tracking",
+  "source" : "appkit-popup",
+  "stage" : "menus"
+}
