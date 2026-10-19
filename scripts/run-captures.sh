@@ -95,7 +95,8 @@ run_case() {
 # Outline-only filters run a dedicated AppKit probe instead of the control capture matrix.
 if [[ "$FILTER" != menu-outline-window && "$FILTER" != menu-outline && \
       "$FILTER" != menu-outline-recover && "$FILTER" != menu-outline-recover-cases && \
-      "$FILTER" != menu-outline-recover-swiftui && "$FILTER" != window-shape ]]; then
+      "$FILTER" != menu-outline-recover-swiftui && "$FILTER" != window-shape && \
+      "$FILTER" != text-probe ]]; then
   for appearance in light dark; do
     for background in plain grid; do
       run_case nsswitch "$appearance" "$background" regular on hold default
@@ -381,6 +382,21 @@ PY
   fi
 done
 
+# Text rasterization references.
+if [[ "$FILTER" == text-probe ]]; then
+  mkdir -p out/menu-outline
+  for pass in light dark; do
+    echo "TEXT PROBE PASS name=$pass" >> out/log.txt
+    if ! perl -e 'alarm shift; exec @ARGV' 90 /usr/bin/open -W -n -a "$APP" --args \
+        --text-probe-mode --probe-appearance "$pass" --probe-out "$ROOT/out/menu-outline" \
+        --out "$ROOT/out" >> out/log.txt 2>&1; then
+      echo "TEXT PROBE PASS FAILED name=$pass" >> out/log.txt
+      FAILURES=$((FAILURES + 1))
+    fi
+    killall GlassCaptures >/dev/null 2>&1 || true
+  done
+fi
+
 # Window silhouettes per toolbar style. A pass that times out is killed with its app.
 if [[ "$FILTER" == window-shape ]]; then
   mkdir -p out/menu-outline
@@ -520,7 +536,7 @@ with open('out/manifest.json', 'w') as f:
     json.dump(parts, f, indent=2, sort_keys=True)
 required = set() if filter_name in ('menu-outline-window', 'menu-outline', 'menu-outline-recover',
                                     'menu-outline-recover-cases', 'menu-outline-recover-swiftui',
-                                    'window-shape') else {
+                                    'window-shape', 'text-probe') else {
     (a, b) for a in ('light', 'dark') for b in ('plain', 'grid')
 }
 phases = {'idle', 'held'}

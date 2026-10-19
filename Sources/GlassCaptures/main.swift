@@ -1215,7 +1215,8 @@ if (CommandLine.arguments.contains("--menu-outline-window-mode") ||
     CommandLine.arguments.contains("--menu-outline-mode") ||
     CommandLine.arguments.contains("--menu-outline-menu-only-mode") ||
     CommandLine.arguments.contains("--menu-outline-contour-only-mode") ||
-    CommandLine.arguments.contains("--window-shape-mode")),
+    CommandLine.arguments.contains("--window-shape-mode") ||
+    CommandLine.arguments.contains("--text-probe-mode")),
    let appearanceIndex = CommandLine.arguments.firstIndex(of: "--probe-appearance"),
    let outputIndex = CommandLine.arguments.firstIndex(of: "--probe-out"),
    appearanceIndex + 1 < CommandLine.arguments.count, outputIndex + 1 < CommandLine.arguments.count {
@@ -1245,6 +1246,8 @@ if (CommandLine.arguments.contains("--menu-outline-window-mode") ||
         do {
             if CommandLine.arguments.contains("--window-shape-mode") {
                 try runWindowShapeProbe(appearance: appearance, output: output)
+            } else if CommandLine.arguments.contains("--text-probe-mode") {
+                try runTextProbe(appearance: appearance, output: output)
             } else if contourOnly, let windowBackground, let windowState {
                 try runMenuOutlineSingleContourProbe(appearance: appearance, background: windowBackground,
                                                      state: windowState, output: output)

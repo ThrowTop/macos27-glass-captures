@@ -860,3 +860,81 @@ func runWindowShapeProbe(appearance: String, output path: String) throws {
     }
     backdrop.close()
 }
+
+
+// Text rasterization references: system-font labels as AppKit draws them on screen, and the same
+// strings drawn by CoreText with font smoothing on and off, so the smoothing dilation can be isolated.
+private final class TextSmoothingView: NSView {
+    var smoothing = true
+    var sizes: [CGFloat] = []
+    var textColor: NSColor = .labelColor
+    override var isFlipped: Bool { true }
+    override func draw(_ dirtyRect: NSRect) {
+        guard let context = NSGraphicsContext.current?.cgContext else { return }
+        context.setShouldSmoothFonts(smoothing)
+        context.setAllowsFontSmoothing(true)
+        var y: CGFloat = 4
+        for size in sizes {
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: size), .foregroundColor: textColor]
+            NSAttributedString(string: "Checkbox Radio", attributes: attributes)
+                .draw(at: CGPoint(x: 6, y: y))
+            y += ceil(size * 1.6)
+        }
+    }
+}
+
+func runTextProbe(appearance: String, output path: String) throws {
+    let output = URL(fileURLWithPath: path, isDirectory: true)
+    let dark = appearance.hasPrefix("dark")
+    NSApp.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+    let folder = output.appendingPathComponent("text/\(appearance)", isDirectory: true)
+    try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+    let sizes: [CGFloat] = [9, 11, 13, 17, 22]
+    let screen = NSScreen.main?.frame ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
+    let frame = CGRect(x: screen.midX - 260, y: screen.midY - 160, width: 520, height: 320)
+    let window = NSWindow(contentRect: frame, styleMask: [.titled, .closable], backing: .buffered, defer: false)
+    window.isReleasedWhenClosed = false
+    window.title = "Text probe \(appearance)"
+    window.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+    let root = NSView(frame: CGRect(origin: .zero, size: frame.size))
+    root.wantsLayer = true
+    root.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+    var labelsFrame: [[String: Any]] = []
+    var y = frame.height - 8
+    for size in sizes {
+        let label = NSTextField(labelWithString: "Checkbox Radio")
+        label.font = NSFont.systemFont(ofSize: size)
+        label.sizeToFit()
+        y -= ceil(size * 1.6)
+        label.frame.origin = CGPoint(x: 8, y: y)
+        root.addSubview(label)
+        labelsFrame.append(["size": size, "frame": probeRect(label.frame)])
+    }
+    for (index, smoothing) in [true, false].enumerated() {
+        let view = TextSmoothingView(frame: CGRect(x: 200 + CGFloat(index) * 160, y: 8, width: 150, height: 300))
+        view.smoothing = smoothing
+        view.sizes = sizes
+        root.addSubview(view)
+    }
+    window.contentView = root
+    window.makeKeyAndOrderFront(nil)
+    window.orderFrontRegardless()
+    NSApp.activate(ignoringOtherApps: true)
+    RunLoop.main.run(until: Date().addingTimeInterval(0.4))
+    let cg = outlineCGWindowImage(window, folder.appendingPathComponent("cgwindow.png"))
+    if let rep = root.bitmapImageRepForCachingDisplay(in: root.bounds) {
+        root.cacheDisplay(in: root.bounds, to: rep)
+        try rep.representation(using: .png, properties: [:])?
+            .write(to: folder.appendingPathComponent("cachedisplay.png"))
+    }
+    try writeJSON(["appearance": appearance, "contentFrame": probeRect(root.frame),
+                   "windowFrame": probeRect(window.frame), "labels": labelsFrame,
+                   "smoothingViews": [["smoothing": true, "x": 200], ["smoothing": false, "x": 360]],
+                   "pixelScale": window.backingScaleFactor, "cgWindow": cg,
+                   "labelColor": safeDescription(NSColor.labelColor.usingColorSpace(.sRGB)) ?? NSNull(),
+                   "fontSmoothingDefault": UserDefaults.standard.object(forKey: "AppleFontSmoothing") ?? NSNull()],
+                  to: folder.appendingPathComponent("case.json"))
+    record("text-probe \(appearance) cg=\(cg["error"] ?? "ok")")
+    window.close()
+}
