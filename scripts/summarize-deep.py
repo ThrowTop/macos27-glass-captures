@@ -190,15 +190,16 @@ def glass_grouping_section(data):
         backdrops=[x for x in entries if str(x.get('class','')).startswith('CABackdropLayer')]
         sdf=[x for x in entries if str(x.get('class','')).startswith('CASDFLayer')]
         elements=[x for x in entries if str(x.get('class','')).startswith('CASDFElementLayer')]
-        lines.append(f"- `{case}`: CABackdropLayer={len(backdrops)}, CASDFLayer={len(sdf)}, CASDFElementLayer={len(elements)}")
+        details=[]
         for layer in backdrops:
-            lines.append(f"  - backdrop path={layer.get('path')} groupName={layer_prop(layer,'groupName')} groupNamespace={layer_prop(layer,'groupNamespace')} marginWidth={layer_prop(layer,'marginWidth')} frame={rectstr(layer.get('frame'))}")
+            details.append(f"backdrop(groupName={layer_prop(layer,'groupName')}, groupNamespace={layer_prop(layer,'groupNamespace')}, marginWidth={layer_prop(layer,'marginWidth')}, frame={rectstr(layer.get('frame'))})")
         for layer in sdf:
             effect=layer.get('effect',{}) or {}
-            smoothness=layer_prop(layer,'smoothness')
-            lines.append(f"  - sdf path={layer.get('path')} smoothness={smoothness} effect={effect.get('class')} frame={rectstr(layer.get('frame'))}")
+            details.append(f"SDF(smoothness={layer_prop(layer,'smoothness')}, effect={effect.get('class')}, frame={rectstr(layer.get('frame'))})")
         for layer in elements:
-            lines.append(f"  - sdfElement path={layer.get('path')} operation={layer_prop(layer,'operation')} mode={layer_prop(layer,'mode')} frame={rectstr(layer.get('frame'))}")
+            details.append(f"element(operation={layer_prop(layer,'operation')}, mode={layer_prop(layer,'mode')}, frame={rectstr(layer.get('frame'))})")
+        lines.append(f"- `{case}`: CABackdropLayer={len(backdrops)}, CASDFLayer={len(sdf)}, CASDFElementLayer={len(elements)}; "
+                     + ('; '.join(details) if details else 'no glass layers found'))
     return lines
 
 def main(run):
