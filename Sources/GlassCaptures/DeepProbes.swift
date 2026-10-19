@@ -266,6 +266,14 @@ private func probeVerticalSliderTicks(window: NSWindow, root: NSView, folder: UR
 
 // MARK: - Slider over-drag timeline
 
+private func postMouse(_ type: NSEvent.EventType, at p: CGPoint, window: NSWindow) {
+    guard let e = NSEvent.mouseEvent(with: type, location: p, modifierFlags: [],
+                                     timestamp: ProcessInfo.processInfo.systemUptime,
+                                     windowNumber: window.windowNumber, context: nil, eventNumber: 0,
+                                     clickCount: 1, pressure: type == .leftMouseUp ? 0 : 1) else { return }
+    NSApp.postEvent(e, atStart: false)
+}
+
 private func sendMouse(_ type: NSEvent.EventType, at p: CGPoint, window: NSWindow,
                        recorder: ProbeRecorder, id: String) {
     guard let e = NSEvent.mouseEvent(with: type, location: p, modifierFlags: [],
