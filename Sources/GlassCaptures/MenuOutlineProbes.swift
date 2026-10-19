@@ -711,21 +711,30 @@ private func outlineCaptureWindowContour(appearance: String, background: String,
     sink?.close(); window.close(); backdrop.close()
 }
 
-func runMenuOutlineProbe(appearance: String, output path: String) throws {
+func runMenuOutlineProbe(appearance: String, output path: String,
+                         menuFilter: String? = nil) throws {
     let output = URL(fileURLWithPath: path, isDirectory: true)
     NSApp.appearance = NSAppearance(named: appearance.hasPrefix("dark") ? .darkAqua : .aqua)
-    try runMenuOutlineWindowProbe(appearance: appearance, output: path)
-    for background in ["white", "black"] {
-        for state in ["active", "inactive"] {
-            try outlineCaptureWindowContour(appearance: appearance, background: background,
-                                            state: state, output: output)
+    if menuFilter == nil {
+        try runMenuOutlineWindowProbe(appearance: appearance, output: path)
+        for background in ["white", "black"] {
+            for state in ["active", "inactive"] {
+                try outlineCaptureWindowContour(appearance: appearance, background: background,
+                                                state: state, output: output)
+            }
         }
     }
-    for background in ["plain", "photo"] {
-        for source in ["appkit-popup", "appkit-pulldown", "context", "swiftui-picker",
-                       "swiftui-menu", "combobox", "submenu"] {
+    let menuCases: [(String, String)]
+    if menuFilter == "light-contrast-photo-missing" {
+        menuCases = ["combobox", "submenu", "swiftui-menu", "swiftui-picker"].map { ("photo", $0) }
+    } else {
+        menuCases = ["plain", "photo"].flatMap { background in
+            ["appkit-popup", "appkit-pulldown", "context", "swiftui-picker",
+             "swiftui-menu", "combobox", "submenu"].map { (background, $0) }
+        }
+    }
+    for (background, source) in menuCases {
             try outlineRunMenuCase(source: source, appearance: appearance,
                                    background: background, output: output)
-        }
     }
 }

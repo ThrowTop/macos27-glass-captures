@@ -93,7 +93,7 @@ run_case() {
 
 # Completion gate first: regular on switches in both appearances and both backgrounds.
 # Outline-only filters run a dedicated AppKit probe instead of the control capture matrix.
-if [[ "$FILTER" != menu-outline-window && "$FILTER" != menu-outline ]]; then
+if [[ "$FILTER" != menu-outline-window && "$FILTER" != menu-outline && "$FILTER" != menu-outline-recover ]]; then
   for appearance in light dark; do
     for background in plain grid; do
       run_case nsswitch "$appearance" "$background" regular on hold default
@@ -308,15 +308,19 @@ PY
 done
 
 # Step 1 runner-effects validation, isolated from the main control capture matrix.
-if [[ "$FILTER" == menu-outline-window || "$FILTER" == menu-outline ]]; then
+if [[ "$FILTER" == menu-outline-window || "$FILTER" == menu-outline || "$FILTER" == menu-outline-recover ]]; then
   mkdir -p out/menu-outline
   mode_flag=--menu-outline-window-mode
   timeout_seconds=120
+  passes=(light dark light-contrast dark-contrast)
   if [[ "$FILTER" == menu-outline ]]; then
     mode_flag=--menu-outline-mode
     timeout_seconds=1450
+  elif [[ "$FILTER" == menu-outline-recover ]]; then
+    passes=(light-contrast dark-contrast)
+    timeout_seconds=1450
   fi
-  for pass in light dark light-contrast dark-contrast; do
+  for pass in "${passes[@]}"; do
     contrast=false
     [[ "$pass" == *-contrast ]] && contrast=true
     defaults write com.apple.universalaccess increaseContrast -bool "$contrast"
@@ -324,8 +328,13 @@ if [[ "$FILTER" == menu-outline-window || "$FILTER" == menu-outline ]]; then
     killall cfprefsd >/dev/null 2>&1 || true
     pass_dir="$ROOT/out/menu-outline"
     echo "MENU OUTLINE WINDOW PASS name=$pass increaseContrast=$contrast" >> out/log.txt
+    app_args=("$mode_flag" --probe-appearance "$pass" --probe-out "$pass_dir")
+    if [[ "$FILTER" == menu-outline-recover && "$pass" == light-contrast ]]; then
+      app_args=(--menu-outline-menu-only-mode --probe-appearance "$pass" --probe-out "$pass_dir" \
+                --probe-menu-filter light-contrast-photo-missing)
+    fi
     if ! perl -e 'alarm shift; exec @ARGV' "$timeout_seconds" /usr/bin/open -W -n -a "$APP" --args \
-        "$mode_flag" --probe-appearance "$pass" --probe-out "$pass_dir" >> out/log.txt 2>&1; then
+        "${app_args[@]}" >> out/log.txt 2>&1; then
       echo "MENU OUTLINE WINDOW PASS FAILED name=$pass" >> out/log.txt
       FAILURES=$((FAILURES + 1))
     fi

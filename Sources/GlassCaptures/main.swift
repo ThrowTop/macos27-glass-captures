@@ -1217,7 +1217,8 @@ if let i = CommandLine.arguments.firstIndex(of: "--env-out"), i + 1 < CommandLin
     catch { record("display environment failed: \(error)"); exit(1) }
 }
 if (CommandLine.arguments.contains("--menu-outline-window-mode") ||
-    CommandLine.arguments.contains("--menu-outline-mode")),
+    CommandLine.arguments.contains("--menu-outline-mode") ||
+    CommandLine.arguments.contains("--menu-outline-menu-only-mode")),
    let appearanceIndex = CommandLine.arguments.firstIndex(of: "--probe-appearance"),
    let outputIndex = CommandLine.arguments.firstIndex(of: "--probe-out"),
    appearanceIndex + 1 < CommandLine.arguments.count, outputIndex + 1 < CommandLine.arguments.count {
@@ -1225,6 +1226,10 @@ if (CommandLine.arguments.contains("--menu-outline-window-mode") ||
     let appearance = CommandLine.arguments[appearanceIndex + 1]
     let output = CommandLine.arguments[outputIndex + 1]
     let fullMenuOutline = CommandLine.arguments.contains("--menu-outline-mode")
+    let menuOnly = CommandLine.arguments.contains("--menu-outline-menu-only-mode")
+    let menuFilterIndex = CommandLine.arguments.firstIndex(of: "--probe-menu-filter")
+    let menuFilter = menuFilterIndex.flatMap { $0 + 1 < CommandLine.arguments.count
+        ? CommandLine.arguments[$0 + 1] : nil }
     final class MenuOutlineLaunchDelegate: NSObject, NSApplicationDelegate {
         let start: () -> Void
         init(start: @escaping () -> Void) { self.start = start }
@@ -1234,7 +1239,9 @@ if (CommandLine.arguments.contains("--menu-outline-window-mode") ||
     }
     let delegate = MenuOutlineLaunchDelegate {
         do {
-            if fullMenuOutline { try runMenuOutlineProbe(appearance: appearance, output: output) }
+            if fullMenuOutline || menuOnly {
+                try runMenuOutlineProbe(appearance: appearance, output: output, menuFilter: menuFilter)
+            }
             else { try runMenuOutlineWindowProbe(appearance: appearance, output: output) }
             exit(0)
         }
