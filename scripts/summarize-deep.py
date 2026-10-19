@@ -96,6 +96,29 @@ def visual_bar_position(path,meta,d,orientation):
 def luminance(path):
     im=Image.open(path).convert('RGB'); px=list(im.getdata())
     return sum(.2126*r+.7152*g+.0722*b for r,g,b in px)/len(px)
+def rgbstr(rgb): return '('+', '.join(str(v) for v in rgb[:3])+')'
+def role_pixels(path, frame, title_rect):
+    """Read 1x screenshot samples using button-local AppKit coordinates."""
+    try: im=Image.open(path).convert('RGB')
+    except Exception as e: return f'image unavailable ({e})'
+    w,h=im.size
+    def pixel(x,y):
+        px=max(0,min(w-1,round(x))); py=max(0,min(h-1,round(h-y)))
+        return im.getpixel((px,py))
+    fx,fy=frame.get('x',0),frame.get('y',0)
+    fw,fh=frame.get('width',0),frame.get('height',0)
+    tx,ty=title_rect.get('x',0),title_rect.get('y',0)
+    tw,th=title_rect.get('width',0),title_rect.get('height',0)
+    center=pixel(fx+fw/2,fy+fh/2)
+    fill=pixel(fx+tx+4,fy+ty+th/2)
+    x0=max(0,math.floor(fx+tx)); x1=min(w,math.ceil(fx+tx+tw))
+    y0=max(0,math.floor(h-(fy+ty+th))); y1=min(h,math.ceil(h-(fy+ty)))
+    darkest=None; darkest_luma=None
+    for y in range(y0,y1):
+        for x in range(x0,x1):
+            c=im.getpixel((x,y)); lum=.2126*c[0]+.7152*c[1]+.0722*c[2]
+            if darkest_luma is None or lum<darkest_luma: darkest,darkest_luma=c,lum
+    return f'center RGB={rgbstr(center)}; title-left+4 RGB={rgbstr(fill)}; darkest title RGB={rgbstr(darkest) if darkest else "—"}'
 def flatten_views(v, out):
     if not isinstance(v,dict): return
     out.append(v)
@@ -118,6 +141,24 @@ def main(run):
         jp=candidates[0]; d=json.loads(jp.read_text(encoding='utf-8')); folder=jp.parent/'deep'
         parts.append(f'## {passname}\n')
         parts.append(f"### Window\n\n`deep.window`: `{json.dumps(val(d,'deep.window'),separators=(',',':'))}`\n")
+        parts.append('\n### Push widths\n')
+        parts.append('| Size | Title | Frame width | Intrinsic width | TitleRect x / width |')
+        parts.append('|---|---|---:|---:|---:|')
+        for size in ('mini','small','regular','large','extraLarge'):
+            for title,slug in [('OK','ok'),('A','a'),('Cancel','cancel'),('Button','button'),('Save Changes','saveChanges')]:
+                ident=f'pushWidth.{size}.{slug}'
+                frame=val(d,ident+'.frame',{}) or {}; intrinsic=val(d,ident+'.intrinsicContentSize',{}) or {}
+                title_rect=val(d,ident+'.titleRect',{}) or {}
+                parts.append(f"| {size} | {title} | {fmt(frame.get('width'))} | {fmt(intrinsic.get('width'))} | {fmt(title_rect.get('x'))} / {fmt(title_rect.get('width'))} |")
+        parts.append('\n### Roles\n')
+        for size in ('regular','large'):
+            for title in ('Delete','OK'):
+                for variant in ('plain','default','destructive','destructiveDefault','tinted'):
+                    ident=f'role.{size}.{title}.{variant}'
+                    shot=val(d,ident+'.screenshot',{}) or {}; frame=val(d,ident+'.frame',{}) or {}
+                    title_rect=val(d,ident+'.titleRect',{}) or {}
+                    pixels=role_pixels(folder/'roles'/shot.get('file',''),frame,title_rect)
+                    parts.append(f"- `{ident}`: {pixels}")
         image_rows=[]
         images=sorted(set(folder.glob('slider*.png')) | set(folder.glob('sliderDrag*.png')))
         for f in images:

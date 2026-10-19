@@ -702,6 +702,91 @@ private func captureControlRender(kind: String, sizeName: String, size: NSContro
     container.removeFromSuperview()
 }
 
+// Push button measurements and role appearances.
+private func probePushButtons(window: NSWindow, root: NSView, folder: URL, recorder: ProbeRecorder) {
+    let sizes = ["mini", "small", "regular", "large", "extraLarge"]
+    let titles: [(String, String)] = [("OK", "ok"), ("A", "a"), ("Cancel", "cancel"),
+                                     ("Button", "button"), ("Save Changes", "saveChanges")]
+    for sizeName in sizes {
+        guard let size = controlSize(sizeName) else { continue }
+        for (title, slug) in titles {
+            let id = "pushWidth.\(sizeName).\(slug)"
+            guard recorder.guarded(id, {
+                let button = NSButton(title: title, target: nil, action: nil)
+                button.bezelStyle = .push
+                button.controlSize = size
+                button.font = NSFont.systemFont(ofSize: NSFont.systemFontSize(for: size))
+                button.sizeToFit()
+                recorder.put("\(id).frame", probeRect(button.frame))
+                recorder.put("\(id).intrinsicContentSize", probeSize(button.intrinsicContentSize))
+                let insets = button.alignmentRectInsets
+                recorder.put("\(id).alignmentRectInsets", ["top": insets.top, "left": insets.left,
+                             "bottom": insets.bottom, "right": insets.right])
+                if let cell = button.cell as? NSButtonCell {
+                    recorder.put("\(id).titleRect", probeRect(cell.titleRect(forBounds: button.bounds)))
+                } else {
+                    recorder.missing("\(id).titleRect", "button cell unavailable")
+                }
+            }) else { continue }
+        }
+    }
+
+    let roleVariants = ["plain", "default", "destructive", "destructiveDefault", "tinted"]
+    let roles = [("Delete", "Delete"), ("OK", "OK")]
+    let imageFolder = folder.appendingPathComponent("roles", isDirectory: true)
+    do { try FileManager.default.createDirectory(at: imageFolder, withIntermediateDirectories: true) }
+    catch { recorder.missing("role.folder", "could not create role folder: \(error)"); return }
+
+    window.makeKeyAndOrderFront(nil)
+    window.displayIfNeeded(); settle(); settle()
+    for sizeName in ["regular", "large"] {
+        guard let size = controlSize(sizeName) else { continue }
+        for (title, titleSlug) in roles {
+            for variant in roleVariants {
+                let id = "role.\(sizeName).\(titleSlug).\(variant)"
+                var container: NSView?
+                var button: NSButton?
+                guard recorder.guarded(id, {
+                    let made = NSButton(title: title, target: nil, action: nil)
+                    made.bezelStyle = .push
+                    made.controlSize = size
+                    made.font = NSFont.systemFont(ofSize: NSFont.systemFontSize(for: size))
+                    switch variant {
+                    case "default": made.keyEquivalent = "\\r"
+                    case "destructive": made.hasDestructiveAction = true
+                    case "destructiveDefault":
+                        made.hasDestructiveAction = true
+                        made.keyEquivalent = "\\r"
+                    case "tinted": made.bezelColor = .systemRed
+                    default: break
+                    }
+                    made.sizeToFit()
+                    let box = NSView(frame: CGRect(x: 10, y: 10,
+                                                   width: made.frame.width + 48,
+                                                   height: made.frame.height + 48))
+                    made.frame = CGRect(origin: CGPoint(x: 24, y: 24), size: made.frame.size)
+                    box.addSubview(made)
+                    root.addSubview(box)
+                    container = box; button = made
+                }), let container, let button else { continue }
+                window.displayIfNeeded(); settle(); settle()
+                recorder.put("\(id).frame", probeRect(button.frame))
+                if let cell = button.cell as? NSButtonCell {
+                    recorder.put("\(id).titleRect", probeRect(cell.titleRect(forBounds: button.bounds)))
+                } else {
+                    recorder.missing("\(id).titleRect", "button cell unavailable")
+                }
+                let shotRect = window.convertToScreen(container.convert(container.bounds, to: nil))
+                recorder.put("\(id).screenshot", captureScreen(shotRect,
+                             to: imageFolder.appendingPathComponent("\(id).png")))
+                recorder.put("\(id).cache2x", cacheRender(container, scale: 2,
+                             to: imageFolder.appendingPathComponent("\(id)@2x-cache.png")))
+                container.removeFromSuperview()
+            }
+        }
+    }
+}
+
 func runDeepProbes(window: NSWindow, root: NSView, output: URL) throws {
     let recorder = ProbeRecorder()
     bringOnScreen(window, recorder: recorder)
@@ -719,6 +804,7 @@ func runDeepProbes(window: NSWindow, root: NSView, output: URL) throws {
     record("deep probes slider drag complete count=\(recorder.values.count)")
     probeMenusOpen(window: window, root: root, folder: folder, recorder: recorder)
     probeControlRenders(window: window, root: root, folder: folder, recorder: recorder)
+    probePushButtons(window: window, root: root, folder: folder, recorder: recorder)
     try writeJSON(recorder.values, to: url)
     record("deep probes complete count=\(recorder.values.count)")
 }
