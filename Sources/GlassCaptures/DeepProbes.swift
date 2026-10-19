@@ -154,7 +154,9 @@ private func runtimeSDFObject(_ object: AnyObject, depth: Int = 0) -> [String: A
             for index in 0..<Int(count) {
                 let key = String(cString: property_getName(list[index]))
                 guard let raw = SafeValueForKey(object, key) else {
-                    properties[key] = runtimeKVC(object, key)
+                    let result = runtimeKVC(object, key)
+                    if key.hasPrefix("_"), result["error"] != nil { continue }
+                    properties[key] = result
                     continue
                 }
                 if depth < 2, let nested = raw as AnyObject?,
