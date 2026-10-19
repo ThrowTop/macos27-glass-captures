@@ -385,16 +385,25 @@ done
 # Scroll pocket under a toolbar.
 if [[ "$FILTER" == scroll-pocket ]]; then
   mkdir -p out/menu-outline
-  for pass in light dark; do
-    echo "SCROLL POCKET PASS name=$pass" >> out/log.txt
-    if ! perl -e 'alarm shift; exec @ARGV' 120 /usr/bin/open -W -n -a "$APP" --args \
-        --scroll-pocket-mode --probe-appearance "$pass" --probe-out "$ROOT/out/menu-outline" \
-        --out "$ROOT/out" >> out/log.txt 2>&1; then
-      echo "SCROLL POCKET PASS FAILED name=$pass" >> out/log.txt
-      FAILURES=$((FAILURES + 1))
-    fi
-    killall GlassCaptures >/dev/null 2>&1 || true
+  for transparency in normal reduced; do
+    reduce_transparency=false
+    if [[ "$transparency" == reduced ]]; then reduce_transparency=true; fi
+    defaults write com.apple.universalaccess reduceTransparency -bool "$reduce_transparency"
+    killall cfprefsd >/dev/null 2>&1 || true
+    sleep 2
+    for pass in light dark; do
+      echo "SCROLL POCKET PASS name=$pass transparency=$transparency" >> out/log.txt
+      if ! perl -e 'alarm shift; exec @ARGV' 120 /usr/bin/open -W -n -a "$APP" --args \
+          --scroll-pocket-mode --probe-appearance "$pass" --probe-out "$ROOT/out/menu-outline" \
+          --out "$ROOT/out" >> out/log.txt 2>&1; then
+        echo "SCROLL POCKET PASS FAILED name=$pass transparency=$transparency" >> out/log.txt
+        FAILURES=$((FAILURES + 1))
+      fi
+      killall GlassCaptures >/dev/null 2>&1 || true
+    done
   done
+  defaults write com.apple.universalaccess reduceTransparency -bool false
+  killall cfprefsd >/dev/null 2>&1 || true
 fi
 
 # Text rasterization references.

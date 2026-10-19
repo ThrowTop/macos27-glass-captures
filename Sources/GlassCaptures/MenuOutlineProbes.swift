@@ -1037,72 +1037,195 @@ private func pocketLayerTree(_ layer: CALayer, depth: Int = 0) -> [String: Any] 
 }
 
 private func pocketViews(_ view: NSView, into list: inout [NSView]) {
-    if NSStringFromClass(type(of: view)).contains("Pocket") { list.append(view) }
+    let name = NSStringFromClass(type(of: view))
+    if name.contains("Pocket") && !name.contains("PocketDocumentView") { list.append(view) }
     for child in view.subviews { pocketViews(child, into: &list) }
+}
+
+private func pocketViewTree(_ view: NSView, window: NSWindow, depth: Int = 0) -> [String: Any] {
+    var entry: [String: Any] = [
+        "class": NSStringFromClass(type(of: view)),
+        "frameInWindow": probeRect(view.convert(view.bounds, to: nil)),
+        "bounds": probeRect(view.bounds), "isHidden": view.isHidden, "alphaValue": view.alphaValue,
+        "layer": view.layer.map { pocketLayerTree($0) } ?? NSNull()]
+    if let scroll = view as? NSScrollView {
+        entry["scrollView"] = [
+            "contentInsets": ["top": scroll.contentInsets.top, "left": scroll.contentInsets.left,
+                              "bottom": scroll.contentInsets.bottom, "right": scroll.contentInsets.right],
+            "automaticallyAdjustsContentInsets": scroll.automaticallyAdjustsContentInsets,
+            "contentBounds": probeRect(scroll.contentView.bounds),
+            "contentFrameInWindow": probeRect(scroll.contentView.convert(scroll.contentView.bounds, to: nil)),
+            "hasVerticalScroller": scroll.hasVerticalScroller,
+            "verticalScroller": scroll.verticalScroller.map { pocketViewTree($0, window: window, depth: depth + 1) } ?? NSNull()]
+    }
+    if depth < 18 {
+        entry["subviews"] = view.subviews.map { pocketViewTree($0, window: window, depth: depth + 1) }
+    }
+    return entry
+}
+
+private func pocketRuntimeValues(_ object: NSObject, keys: [String]) -> [String: Any] {
+    var values: [String: Any] = [:]
+    for key in keys {
+        var error: NSString?
+        let value = SafeInvoke({ object.value(forKey: key) }, &error)
+        values[key] = error == nil ? (value.flatMap { safeDescription($0) } ?? NSNull())
+                                   : "unavailable: \(error!)"
+    }
+    return values
+}
+
+private func pocketDocumentView(size: CGSize) -> PocketDocumentView {
+    let document = PocketDocumentView(frame: CGRect(origin: .zero,
+        size: CGSize(width: size.width, height: 2400)))
+    return document
+}
+
+private func pocketScrollView(size: CGSize) -> NSScrollView {
+    let scroll = NSScrollView(frame: CGRect(origin: .zero, size: size))
+    scroll.autoresizingMask = [.width, .height]
+    scroll.hasVerticalScroller = true
+    scroll.drawsBackground = true
+    scroll.documentView = pocketDocumentView(size: size)
+    return scroll
+}
+
+private func pocketViewController(_ view: NSView) -> NSViewController {
+    let controller = NSViewController()
+    controller.view = view
+    return controller
 }
 
 func runScrollPocketProbe(appearance: String, output path: String) throws {
     let output = URL(fileURLWithPath: path, isDirectory: true)
     let dark = appearance.hasPrefix("dark")
+    let transparency = NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency ? "reduced" : "normal"
     NSApp.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
     let screen = NSScreen.main?.frame ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
     let delegate = WindowShapeToolbarDelegate()
-    for style in ["default", "hard", "soft"] {
-        let frame = CGRect(x: screen.midX - 320, y: screen.midY - 240, width: 640, height: 480)
-        let window = NSWindow(contentRect: frame,
-            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
-            backing: .buffered, defer: false)
-        window.isReleasedWhenClosed = false
-        window.title = "Scroll pocket \(style)"
-        window.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
-        let toolbar = NSToolbar(identifier: "pocket.\(style)")
-        toolbar.delegate = delegate
-        window.toolbar = toolbar
-        window.toolbarStyle = .unified
-        let scroll = NSScrollView(frame: CGRect(origin: .zero, size: frame.size))
-        scroll.autoresizingMask = [.width, .height]
-        scroll.hasVerticalScroller = true
-        scroll.drawsBackground = true
-        let document = PocketDocumentView(frame: CGRect(x: 0, y: 0, width: 640, height: 2400))
-        scroll.documentView = document
-        window.contentView = scroll
-        if style != "default" {
-            let selector = NSSelectorFromString("setScrollPocketStyle:onEdge:")
-            if scroll.responds(to: selector) {
-                typealias SetStyle = @convention(c) (AnyObject, Selector, Int, Int) -> Void
-                let function = unsafeBitCast(scroll.method(for: selector), to: SetStyle.self)
-                for edge in 0..<4 { function(scroll, selector, style == "hard" ? 2 : 1, edge) }
+    for style in ["automatic", "hard", "soft"] {
+        for role in ["main", "sidebar", "inspector"] {
+            let frame = CGRect(x: screen.midX - 450, y: screen.midY - 310, width: 900, height: 620)
+            let window = NSWindow(contentRect: frame,
+                styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
+                backing: .buffered, defer: false)
+            window.isReleasedWhenClosed = false
+            window.title = "Scroll pocket \(role) \(style)"
+            window.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+            let toolbar = NSToolbar(identifier: "pocket.\(style).\(role)")
+            toolbar.delegate = delegate
+            window.toolbar = toolbar
+            window.toolbarStyle = .unified
+
+            let target: NSScrollView
+            switch role {
+            case "sidebar":
+                let side = pocketScrollView(size: frame.size)
+                let content = pocketViewController(pocketDocumentView(size: frame.size))
+                let controller = NSSplitViewController()
+                controller.splitView.isVertical = true
+                controller.addSplitViewItem(NSSplitViewItem(sidebarWithViewController: pocketViewController(side)))
+                controller.addSplitViewItem(NSSplitViewItem(viewController: content))
+                window.contentViewController = controller
+                target = side
+            case "inspector":
+                let main = pocketScrollView(size: frame.size)
+                let inspector = pocketScrollView(size: frame.size)
+                let item = NSSplitViewItem(inspectorWithViewController: pocketViewController(inspector))
+                item.isCollapsed = false
+                let controller = NSSplitViewController()
+                controller.splitView.isVertical = true
+                controller.addSplitViewItem(NSSplitViewItem(viewController: pocketViewController(main)))
+                controller.addSplitViewItem(item)
+                window.contentViewController = controller
+                target = inspector
+            default:
+                let scroll = pocketScrollView(size: frame.size)
+                window.contentView = scroll
+                target = scroll
             }
-        }
-        window.makeKeyAndOrderFront(nil)
-        window.orderFrontRegardless()
-        NSApp.activate(ignoringOtherApps: true)
-        RunLoop.main.run(until: Date().addingTimeInterval(0.4))
-        for (state, offset) in [("rest", CGFloat(0)), ("scrolled", CGFloat(160))] {
-            let folder = output.appendingPathComponent("scroll-pocket/\(appearance)/\(style)/\(state)",
-                                                       isDirectory: true)
-            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-            let top = -scroll.contentInsets.top
-            scroll.contentView.scroll(to: CGPoint(x: 0, y: top + offset))
-            scroll.reflectScrolledClipView(scroll.contentView)
-            RunLoop.main.run(until: Date().addingTimeInterval(1.2))
-            let cg = outlineCGWindowImage(window, folder.appendingPathComponent("cgwindow.png"))
-            var pockets: [NSView] = []
-            pocketViews(window.contentView?.superview ?? scroll, into: &pockets)
-            let dump: [[String: Any]] = pockets.map { view in
-                ["class": NSStringFromClass(type(of: view)),
-                 "frameInWindow": probeRect(view.convert(view.bounds, to: nil)),
-                 "isHidden": view.isHidden, "alphaValue": view.alphaValue,
-                 "layer": view.layer.map { pocketLayerTree($0) } ?? NSNull()]
+
+            if style != "automatic" {
+                let selector = NSSelectorFromString("setScrollPocketStyle:onEdge:")
+                if target.responds(to: selector) {
+                    typealias SetStyle = @convention(c) (AnyObject, Selector, Int, Int) -> Void
+                    let function = unsafeBitCast(target.method(for: selector), to: SetStyle.self)
+                    for edge in 0..<4 { function(target, selector, style == "hard" ? 2 : 1, edge) }
+                }
             }
-            try writeJSON(["appearance": appearance, "style": style, "state": state,
-                           "scrollOffset": offset, "contentInsets": ["top": scroll.contentInsets.top],
-                           "windowFrame": probeRect(window.frame),
-                           "contentLayoutRect": probeRect(window.contentLayoutRect),
-                           "pixelScale": window.backingScaleFactor, "cgWindow": cg, "pockets": dump],
-                          to: folder.appendingPathComponent("case.json"))
-            record("scroll-pocket \(appearance)/\(style)/\(state) pockets=\(pockets.count) cg=\(cg["error"] ?? "ok")")
+            window.makeKeyAndOrderFront(nil)
+            window.orderFrontRegardless()
+            NSApp.activate(ignoringOtherApps: true)
+            RunLoop.main.run(until: Date().addingTimeInterval(0.4))
+
+            // Static references include the full view/layer tree; main-content motion samples use
+            // the 0.5 pt increments requested by the capture task.
+            let snapshots: [(String, CGFloat, Bool)] = [
+                ("rest", 0, true), ("scrolled", 160, true)]
+                + (role == "main" ? (1...8).map { ("motion", CGFloat(160) + CGFloat($0) * 0.5, false) } : [])
+            for (state, offset, includeTree) in snapshots {
+                let folder: URL
+                if state == "motion" {
+                    folder = output.appendingPathComponent(
+                        "scroll-pocket/\(appearance)/\(transparency)/\(style)/\(role)/motion",
+                        isDirectory: true)
+                } else {
+                    folder = output.appendingPathComponent(
+                        "scroll-pocket/\(appearance)/\(transparency)/\(style)/\(role)/\(state)",
+                        isDirectory: true)
+                }
+                try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                let top = -target.contentInsets.top
+                target.contentView.scroll(to: CGPoint(x: 0, y: top + offset))
+                target.reflectScrolledClipView(target.contentView)
+                RunLoop.main.run(until: Date().addingTimeInterval(includeTree ? 1.2 : 0.3))
+
+                let imageName = state == "motion" ? String(format: "offset-%05.1f.png", Double(offset)) : "cgwindow.png"
+                let cg = outlineCGWindowImage(window, folder.appendingPathComponent(imageName))
+                var pockets: [NSView] = []
+                pocketViews(window.contentView?.superview ?? target, into: &pockets)
+                var recordValues: [String: Any] = [
+                    "appearance": appearance, "reduceTransparency": transparency == "reduced",
+                    "style": style, "role": role, "state": state, "scrollOffset": offset,
+                    "contentInsets": ["top": target.contentInsets.top],
+                    "contentBounds": probeRect(target.contentView.bounds),
+                    "windowFrame": probeRect(window.frame),
+                    "contentLayoutRect": probeRect(window.contentLayoutRect),
+                    "titlebarAppearsTransparent": window.titlebarAppearsTransparent,
+                    "pixelScale": window.backingScaleFactor, "cgWindow": cg,
+                    "pocketProperties": pockets.map { pocketRuntimeValues($0, keys: [
+                        "edge", "style", "allowsSeparator", "_showSeparatorsOnHardPocket",
+                        "backdropGroupName", "prefersSolidColorHardPocket", "allowsColorSchemeAdaptivity"]) }]
+                if includeTree {
+                    let root = window.contentView?.superview ?? window.contentView ?? target
+                    recordValues["viewAndLayerTree"] = pocketViewTree(root, window: window)
+                    recordValues["pockets"] = pockets.map { [
+                        "class": NSStringFromClass(type(of: $0)),
+                        "frameInWindow": probeRect($0.convert($0.bounds, to: nil)),
+                        "isHidden": $0.isHidden, "alphaValue": $0.alphaValue,
+                        "layer": $0.layer.map { pocketLayerTree($0) } ?? NSNull()] as [String: Any] }
+                    var titlebarViews: [String: Any] = [:]
+                    for key in ["titlebarView", "_titlebarView", "_titlebarContainerView"] {
+                        var error: NSString?
+                        if let value = SafeInvoke({ (window as NSObject).value(forKey: key) }, &error) {
+                            if let view = value as? NSView {
+                                titlebarViews[key] = pocketViewTree(view, window: window)
+                            } else {
+                                titlebarViews[key] = safeDescription(value) ?? NSNull()
+                            }
+                        } else {
+                            titlebarViews[key] = error.map { "unavailable: \($0)" } ?? NSNull()
+                        }
+                    }
+                    recordValues["titlebarViews"] = titlebarViews
+                }
+                let jsonURL = state == "motion"
+                    ? folder.appendingPathComponent(String(format: "offset-%05.1f.json", Double(offset)))
+                    : folder.appendingPathComponent("case.json")
+                try writeJSON(recordValues, to: jsonURL)
+                record("scroll-pocket \(appearance)/\(transparency)/\(style)/\(role)/\(state) offset=\(offset) pockets=\(pockets.count) cg=\(cg["error"] ?? "ok")")
+            }
+            window.close()
         }
-        window.close()
     }
 }
