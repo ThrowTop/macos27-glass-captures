@@ -82,15 +82,28 @@ private func presentationSample(_ layer: CALayer, path: String, depth: Int, maxi
 
 // Runtime property dump used only while a menu window is open. KVC is performed inside
 // SafeInvoke so an exception is retained alongside the property name.
+private func runtimeValue(_ value: Any?) -> Any? {
+    guard let value else { return nil }
+    if let boxed = value as? NSValue,
+       String(cString: boxed.objCType).hasPrefix("{CAColorMatrix=") {
+        var components = [Float](repeating: 0, count: 20)
+        components.withUnsafeMutableBytes { bytes in
+            if let base = bytes.baseAddress { boxed.getValue(base, size: bytes.count) }
+        }
+        return components
+    }
+    return safeDescription(value)
+}
+
 private func runtimeKVC(_ object: AnyObject, _ key: String) -> [String: Any] {
     if let value = SafeValueForKey(object, key) {
-        return ["value": safeDescription(value)]
+        return ["value": runtimeValue(value) ?? NSNull()]
     }
     var error: NSString?
     let result = SafeInvoke({ object.value(forKey: key) }, &error)
     if let error { return ["error": error as String] }
     guard let result else { return ["value": NSNull()] }
-    return ["value": safeDescription(result)]
+    return ["value": runtimeValue(result) ?? NSNull()]
 }
 
 private func runtimeProperties(_ object: AnyObject, upTo stopClass: AnyClass? = nil,
@@ -132,6 +145,33 @@ private func runtimeFilter(_ object: AnyObject) -> [String: Any] {
             "properties": runtimeProperties(object, classOnly: true)]
 }
 
+private func runtimeSDFObject(_ object: AnyObject, depth: Int = 0) -> [String: Any] {
+    var properties: [String: Any] = [:]
+    var current: AnyClass? = type(of: object)
+    while let cls = current, cls !== NSObject.self {
+        var count: UInt32 = 0
+        if let list = class_copyPropertyList(cls, &count) {
+            for index in 0..<Int(count) {
+                let key = String(cString: property_getName(list[index]))
+                guard let raw = SafeValueForKey(object, key) else {
+                    properties[key] = runtimeKVC(object, key)
+                    continue
+                }
+                if depth < 2, let nested = raw as AnyObject?,
+                   NSStringFromClass(type(of: nested)).hasPrefix("CASDF") {
+                    properties[key] = ["value": runtimeValue(raw) ?? NSNull(),
+                                       "object": runtimeSDFObject(nested, depth: depth + 1)]
+                } else {
+                    properties[key] = ["value": runtimeValue(raw) ?? NSNull()]
+                }
+            }
+            free(list)
+        }
+        current = class_getSuperclass(cls)
+    }
+    return ["class": NSStringFromClass(type(of: object)), "properties": properties]
+}
+
 private func menuLayerProperties(_ root: CALayer, depth: Int = 0, path: String = "0") -> [[String: Any]] {
     var entries: [[String: Any]] = []
     let cls = NSStringFromClass(type(of: root))
@@ -143,9 +183,13 @@ private func menuLayerProperties(_ root: CALayer, depth: Int = 0, path: String =
     let matchesClass = cls.hasPrefix("CASDF") || cls.hasPrefix("CABackdrop") ||
         cls.hasPrefix("SwiftUI.SDF") || cls.contains("Portal")
     if matchesClass || !filters.isEmpty {
-        entries.append(["path": path, "class": cls,
-                        "properties": runtimeProperties(root, upTo: CALayer.self),
-                        "filters": filters.map(runtimeFilter)])
+        var entry: [String: Any] = ["path": path, "class": cls,
+                                    "properties": runtimeProperties(root, upTo: CALayer.self),
+                                    "filters": filters.map(runtimeFilter), "effect": [:]]
+        if cls.hasPrefix("CASDF"), let effect = SafeValueForKey(root, "effect") as AnyObject? {
+            entry["effect"] = runtimeSDFObject(effect)
+        }
+        entries.append(entry)
     }
     if depth < 16 {
         for (index, child) in (root.sublayers ?? []).enumerated() {

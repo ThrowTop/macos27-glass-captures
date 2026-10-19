@@ -144,6 +144,22 @@ def numeric_or_color(value, key=''):
         return any(numeric_or_color(v,k) for k,v in value.items())
     if isinstance(value,(list,tuple)): return any(numeric_or_color(v,key) for v in value)
     return 'color' in key.lower() or 'cgcolor' in str(value).lower()
+def effect_property_lines(props, prefix=''):
+    """Yield numeric effect properties and decoded CAColorMatrix rows."""
+    for key,value in props.items():
+        name=f'{prefix}.{key}' if prefix else key
+        if isinstance(value,dict):
+            if 'object' in value and isinstance(value['object'],dict):
+                yield from effect_property_lines(value['object'].get('properties',{}),name+'.object')
+            inner=value.get('value')
+            if isinstance(inner,list) and len(inner)==20 and all(isinstance(x,(int,float)) for x in inner):
+                for row in range(4):
+                    cells=' '.join(f'{float(x):.4f}' for x in inner[row*5:(row+1)*5])
+                    yield f'{name}[{row}]={cells}'
+            elif numeric_or_color(inner,key):
+                yield f'{name}={short(json.dumps(inner,separators=(",",":"),ensure_ascii=False))}'
+        elif numeric_or_color(value,key):
+            yield f'{name}={short(json.dumps(value,separators=(",",":"),ensure_ascii=False))}'
 def main(run):
     root=Path(run); parts=[]; glass_entries=[]
     for passname in ('light','dark'):
@@ -272,6 +288,15 @@ def main(run):
     glass_lines=min(len(glass_entries),glass_limit)
     for passname,mid,entry in glass_entries:
         if glass_lines>=glass_limit: break
+        effect=entry.get('effect',{})
+        if isinstance(effect,dict) and effect.get('class'):
+            parts.append(f"  - `{passname}.{mid}` effect class `{effect['class']}`")
+            glass_lines+=1
+            for description in effect_property_lines(effect.get('properties',{})):
+                if glass_lines>=glass_limit: break
+                parts.append(f"  - `{passname}.{mid}` effect.{description}")
+                glass_lines+=1
+            if glass_lines>=glass_limit: break
         groups=[('layer',entry.get('properties',{}))]
         for fi,filt in enumerate(entry.get('filters',[])):
             groups.extend([(f'filter[{fi}].properties',filt.get('properties',{})),
