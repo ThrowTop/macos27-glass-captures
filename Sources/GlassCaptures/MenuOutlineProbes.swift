@@ -897,9 +897,8 @@ func runTextProbe(appearance: String, output path: String) throws {
     window.isReleasedWhenClosed = false
     window.title = "Text probe \(appearance)"
     window.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
-    let root = NSView(frame: CGRect(origin: .zero, size: frame.size))
-    root.wantsLayer = true
-    root.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+    let root = OutlineSolidView(frame: CGRect(origin: .zero, size: frame.size))
+    root.color = .windowBackgroundColor
     var labelsFrame: [[String: Any]] = []
     var y = frame.height - 8
     for size in sizes {
