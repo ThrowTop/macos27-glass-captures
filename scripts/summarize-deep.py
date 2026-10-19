@@ -144,22 +144,34 @@ def numeric_or_color(value, key=''):
         return any(numeric_or_color(v,k) for k,v in value.items())
     if isinstance(value,(list,tuple)): return any(numeric_or_color(v,key) for v in value)
     return 'color' in key.lower() or 'cgcolor' in str(value).lower()
-def effect_property_lines(props, prefix=''):
+def effect_property_lines(props, prefix='', matrix_mode='all'):
     """Yield numeric effect properties and decoded CAColorMatrix rows."""
     for key,value in props.items():
         name=f'{prefix}.{key}' if prefix else key
         if isinstance(value,dict):
             if 'object' in value and isinstance(value['object'],dict):
-                yield from effect_property_lines(value['object'].get('properties',{}),name+'.object')
+                yield from effect_property_lines(value['object'].get('properties',{}),name+'.object',matrix_mode)
             inner=value.get('value')
-            if isinstance(inner,list) and len(inner)==20 and all(isinstance(x,(int,float)) for x in inner):
+            is_matrix=isinstance(inner,list) and len(inner)==20 and all(isinstance(x,(int,float)) for x in inner)
+            if is_matrix and matrix_mode!='exclude':
                 for row in range(4):
                     cells=' '.join(f'{float(x):.4f}' for x in inner[row*5:(row+1)*5])
                     yield f'{name}[{row}]={cells}'
-            elif numeric_or_color(inner,key):
+            elif not is_matrix and matrix_mode!='only' and numeric_or_color(inner,key):
                 yield f'{name}={short(json.dumps(inner,separators=(",",":"),ensure_ascii=False))}'
-        elif numeric_or_color(value,key):
+        elif matrix_mode!='only' and numeric_or_color(value,key):
             yield f'{name}={short(json.dumps(value,separators=(",",":"),ensure_ascii=False))}'
+def effect_property_chunks(props, maximum=118):
+    fields=list(effect_property_lines(props,matrix_mode='exclude'))
+    line=''
+    for field in fields:
+        addition=field if not line else ', '+field
+        if line and len(line)+len(addition)>maximum:
+            yield line
+            line=field
+        else:
+            line+=addition
+    if line: yield line
 def main(run):
     root=Path(run); parts=[]; glass_entries=[]
     for passname in ('light','dark'):
@@ -286,28 +298,42 @@ def main(run):
             names.append(str(n))
         parts.append(f"- `{passname}.{mid}` path `{entry.get('path')}` class `{entry.get('class')}` filters: {', '.join(names) or 'none'}")
     glass_lines=min(len(glass_entries),glass_limit)
+    pass_order={'light':0,'dark':1,'light-contrast':2,'dark-contrast':3}
+    context_entries=sorted((x for x in glass_entries if x[1]=='context' and x[0] in ('light','dark')),
+                           key=lambda x:pass_order[x[0]])
+    # Put effect identities and values before the backdrop filter's long list of numeric inputs.
     for passname,mid,entry in glass_entries:
-        if glass_lines>=glass_limit: break
         effect=entry.get('effect',{})
-        if isinstance(effect,dict) and effect.get('class'):
+        if isinstance(effect,dict) and effect.get('class') and glass_lines<glass_limit:
             parts.append(f"  - `{passname}.{mid}` effect class `{effect['class']}`")
             glass_lines+=1
-            for description in effect_property_lines(effect.get('properties',{})):
-                if glass_lines>=glass_limit: break
-                parts.append(f"  - `{passname}.{mid}` effect.{description}")
-                glass_lines+=1
+    for passname,mid,entry in glass_entries:
+        if not entry.get('effect',{}).get('class'): continue
+        effect=entry.get('effect',{})
+        for description in effect_property_chunks(effect.get('properties',{})) if isinstance(effect,dict) else ():
             if glass_lines>=glass_limit: break
+            parts.append(f"  - `{passname}.{mid}` effect.properties {description}")
+            glass_lines+=1
+    for passname,mid,entry in sorted(glass_entries,key=lambda x:(x[1]!='context',pass_order.get(x[0],9))):
         groups=[('layer',entry.get('properties',{}))]
         for fi,filt in enumerate(entry.get('filters',[])):
             groups.extend([(f'filter[{fi}].properties',filt.get('properties',{})),
                            (f'filter[{fi}].inputs',filt.get('inputs',{}))])
         for group_name,props in groups:
-            for key,value in props.items():
+            for description in effect_property_lines(props,matrix_mode='only'):
                 if glass_lines>=glass_limit: break
-                if isinstance(value,dict) and 'value' in value: value=value['value']
-                if numeric_or_color(value,key):
-                    parts.append(f"  - `{passname}.{mid}` {group_name}.{key}={short(json.dumps(value,separators=(',',':'),ensure_ascii=False))}")
-                    glass_lines+=1
+                parts.append(f"  - `{passname}.{mid}` {group_name}.{description}")
+                glass_lines+=1
+    for passname,mid,entry in sorted(glass_entries,key=lambda x:(x[1]!='context',pass_order.get(x[0],9))):
+        groups=[('layer',entry.get('properties',{}))]
+        for fi,filt in enumerate(entry.get('filters',[])):
+            groups.extend([(f'filter[{fi}].properties',filt.get('properties',{})),
+                           (f'filter[{fi}].inputs',filt.get('inputs',{}))])
+        for group_name,props in groups:
+            for description in effect_property_lines(props,matrix_mode='exclude'):
+                if glass_lines>=glass_limit: break
+                parts.append(f"  - `{passname}.{mid}` {group_name}.{description}")
+                glass_lines+=1
     parts.append('\n## Renders (all probe passes)\n')
     for passname in ('light','dark','light-contrast','dark-contrast'):
         candidates=list(root.glob(f'**/probes/{passname}/deep.json'))
