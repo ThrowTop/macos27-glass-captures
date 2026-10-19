@@ -865,7 +865,7 @@ final class CaptureSession {
                 if writePNG(sub, to: cropURL) { cropPath = cropURL.path }
             }
         }
-        if phase == "idle" || phase == "held-0500ms" || phase == "drag-held-0500ms" || phase.hasPrefix("abl-") {
+        if phase == "idle" || phase == "held" || phase == "drag-held" || phase.hasPrefix("abl-") {
             let layerURL = folder.appendingPathComponent("layers-\(phase).json")
             do {
                 if let layer = window.contentView?.superview?.layer {
@@ -929,7 +929,7 @@ final class CaptureSession {
     }
 
     func saveManifest() throws {
-        let heldName = options.interaction == "drag" ? "drag-held-0500ms" : "held-0500ms"
+        let heldName = options.interaction == "drag" ? "drag-held" : "held"
         let idle = try? Data(contentsOf: folder.appendingPathComponent("idle-crop.png"))
         let held = try? Data(contentsOf: folder.appendingPathComponent("\(heldName)-crop.png"))
         for i in results.indices {
@@ -1163,9 +1163,9 @@ final class CaptureSession {
         let dragPoint = CGPoint(x: start.x + 8 * direction, y: start.y)
         let isDrag = options.interaction == "drag"
         mouseDownTime = Date()
-        let held: [(TimeInterval, String)] = isDrag
-            ? [(0.1,"held-0100ms"),(0.25,"held-0250ms"),(0.5,"drag-held-0500ms"),(1.0,"held-1000ms")]
-            : [(0.1,"held-0100ms"),(0.25,"held-0250ms"),(0.5,"held-0500ms"),(1.0,"held-1000ms")]
+        // Static references only: one capture once the press has settled and one once the
+        // release has settled. Animation timing comes from the binaries, not from the runner.
+        let heldPhase = isDrag ? "drag-held" : "held"
         var timers: [Timer] = []
         if isDrag {
             let timer = Timer(timeInterval: 0.05, repeats: false) { [self] _ in send(.leftMouseDragged, at: dragPoint) }
@@ -1173,15 +1173,13 @@ final class CaptureSession {
             RunLoop.main.add(timer, forMode: .default)
             timers.append(timer)
         }
-        for (delay, phase) in held {
-            let timer = Timer(timeInterval: delay, repeats: false) { [self] _ in
-                capture(phase)
-                if delay == 1.0 { send(.leftMouseUp, at: isDrag ? dragPoint : start) }
-            }
-            RunLoop.main.add(timer, forMode: .eventTracking)
-            RunLoop.main.add(timer, forMode: .default)
-            timers.append(timer)
+        let heldTimer = Timer(timeInterval: 0.5, repeats: false) { [self] _ in
+            capture(heldPhase)
+            send(.leftMouseUp, at: isDrag ? dragPoint : start)
         }
+        RunLoop.main.add(heldTimer, forMode: .eventTracking)
+        RunLoop.main.add(heldTimer, forMode: .default)
+        timers.append(heldTimer)
         send(.leftMouseDown, at: start)
         trackingDurationMS = Int(Date().timeIntervalSince(mouseDownTime!) * 1000)
         record("mouseDown sendEvent returned t_ms=\(trackingDurationMS)")
@@ -1194,18 +1192,15 @@ final class CaptureSession {
         }
         // A control that does not enter tracking may return before the timers. Keep the
         // event loop live so its failure is visible in the images and manifest.
-        if mouseUpTime == nil { RunLoop.main.run(until: Date().addingTimeInterval(1.5)) }
+        if mouseUpTime == nil { RunLoop.main.run(until: Date().addingTimeInterval(1.0)) }
         guard let release = mouseUpTime else {
             record("mouse-up timer did not fire; no released captures")
             try saveManifest()
             throw NSError(domain: "GlassCaptures", code: 5, userInfo: [NSLocalizedDescriptionKey: "mouse-up timer did not fire"])
         }
-        for (delay, phase) in [(0.05,"released-0050ms"),(0.1,"released-0100ms"),
-                               (0.2,"released-0200ms"),(0.35,"released-0350ms"),(0.6,"released-0600ms")] {
-            let deadline = release.addingTimeInterval(delay)
-            if deadline > Date() { RunLoop.main.run(until: deadline) }
-            capture(phase)
-        }
+        let settled = release.addingTimeInterval(0.6)
+        if settled > Date() { RunLoop.main.run(until: settled) }
+        capture("released")
         try saveManifest()
         record("case end appActive=\(NSApp.isActive) key=\(window.isKeyWindow) frontmostPID=\(NSWorkspace.shared.frontmostApplication?.processIdentifier ?? -1)")
         _ = timers

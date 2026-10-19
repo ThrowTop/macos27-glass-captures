@@ -391,14 +391,11 @@ incomplete = []
 for case in scheduled:
     matching = [e for e in parts if all(e.get('accessibility_axis' if key == 'accessibility' else key, 'default') == case[key] for key in keys)]
     expected = {'idle'} if case['interaction'] == 'idle' else {
-        'idle', 'held-0100ms', 'held-0250ms', 'held-1000ms',
-        'released-0050ms', 'released-0100ms', 'released-0200ms',
-        'released-0350ms', 'released-0600ms',
-        'drag-held-0500ms' if case['interaction'] == 'drag' else 'held-0500ms'
+        'idle', 'released', 'drag-held' if case['interaction'] == 'drag' else 'held'
     }
     got = {e['phase'] for e in matching if e.get('success') and not e.get('obstructed')
            and e.get('background_image') and os.path.isfile(e['background_image'])
-           and (e.get('phase') not in ('idle', 'held-0500ms', 'drag-held-0500ms')
+           and (e.get('phase') not in ('idle', 'held', 'drag-held')
                 or e.get('layers') and os.path.isfile(e['layers']))}
     missing_phases = sorted(expected - got)
     if missing_phases:
@@ -427,7 +424,7 @@ with open('out/manifest.json', 'w') as f:
 required = set() if filter_name in ('menu-outline-window', 'menu-outline') else {
     (a, b) for a in ('light', 'dark') for b in ('plain', 'grid')
 }
-phases = {'idle', 'held-0100ms', 'held-0250ms', 'held-0500ms', 'held-1000ms'}
+phases = {'idle', 'held'}
 missing = []
 for appearance, background in required:
     entries = [e for e in parts if e['scenario'] == 'nsswitch' and e['size'] == 'regular'
@@ -446,9 +443,9 @@ for appearance, background in required:
         def digest(name):
             with open(stem + name, 'rb') as f:
                 return hashlib.sha256(f.read()).digest()
-        if digest('idle-crop.png') == digest('held-0500ms-crop.png'):
+        if digest('idle-crop.png') == digest('held-crop.png'):
             missing.append(f'{appearance}/{background}: held switch pixels match idle')
-    layer = f'out/nsswitch/{appearance}-default-regular-on-hold/{background}/layers-held-0500ms.json'
+    layer = f'out/nsswitch/{appearance}-default-regular-on-hold/{background}/layers-held.json'
     if not os.path.isfile(layer):
         missing.append(f'{appearance}/{background}: missing held layer dump')
 with open('out/gate.txt', 'w') as f:
