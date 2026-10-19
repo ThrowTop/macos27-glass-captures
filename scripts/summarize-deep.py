@@ -142,23 +142,28 @@ def main(run):
         parts.append(f'## {passname}\n')
         parts.append(f"### Window\n\n`deep.window`: `{json.dumps(val(d,'deep.window'),separators=(',',':'))}`\n")
         parts.append('\n### Push widths\n')
-        parts.append('| Size | Title | Frame width | Intrinsic width | TitleRect x / width |')
-        parts.append('|---|---|---:|---:|---:|')
+        width_titles=[('OK','ok'),('A','a'),('Cancel','cancel'),('Button','button'),('Save Changes','saveChanges')]
+        parts.append('| Size | '+' | '.join(f'{title} frame/intrinsic; titleRect x/width' for title,_ in width_titles)+' |')
+        parts.append('|---|'+'---:|'*len(width_titles))
         for size in ('mini','small','regular','large','extraLarge'):
-            for title,slug in [('OK','ok'),('A','a'),('Cancel','cancel'),('Button','button'),('Save Changes','saveChanges')]:
+            cells=[]
+            for title,slug in width_titles:
                 ident=f'pushWidth.{size}.{slug}'
                 frame=val(d,ident+'.frame',{}) or {}; intrinsic=val(d,ident+'.intrinsicContentSize',{}) or {}
                 title_rect=val(d,ident+'.titleRect',{}) or {}
-                parts.append(f"| {size} | {title} | {fmt(frame.get('width'))} | {fmt(intrinsic.get('width'))} | {fmt(title_rect.get('x'))} / {fmt(title_rect.get('width'))} |")
+                cells.append(f"{fmt(frame.get('width'))}/{fmt(intrinsic.get('width'))}; {fmt(title_rect.get('x'))}/{fmt(title_rect.get('width'))}")
+            parts.append(f"| {size} | "+' | '.join(cells)+' |')
         parts.append('\n### Roles\n')
         for size in ('regular','large'):
             for title in ('Delete','OK'):
+                entries=[]
                 for variant in ('plain','default','destructive','destructiveDefault','tinted'):
                     ident=f'role.{size}.{title}.{variant}'
                     shot=val(d,ident+'.screenshot',{}) or {}; frame=val(d,ident+'.frame',{}) or {}
                     title_rect=val(d,ident+'.titleRect',{}) or {}
                     pixels=role_pixels(folder/'roles'/shot.get('file',''),frame,title_rect)
-                    parts.append(f"- `{ident}`: {pixels}")
+                    entries.append(f"{variant} {pixels}")
+                parts.append(f"- `{size}.{title}`: "+' | '.join(entries))
         image_rows=[]
         images=sorted(set(folder.glob('slider*.png')) | set(folder.glob('sliderDrag*.png')))
         for f in images:
