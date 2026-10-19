@@ -176,18 +176,21 @@ def main(run):
             paths=[x[1] for x in sorted(scores,reverse=True)[:6]]
             parts.append(f"- `{end}` tracking={val(d,p+'.tracking')} finalValue={fmt(val(d,p+'.finalValue'))}; changing paths={paths}")
             if samples:
+                details=[]
                 for target in target_times:
                     s=nearest_sample(samples,target)
                     cols=[f"t={target:.2f} (sample {fmt(s.get('t'))}) value={fmt(s.get('doubleValue'))}"]
                     for path in paths:
                         x=next((z for z in s.get('layers',[]) if z.get('path')==path),{})
                         if x: cols.append(f"{path}:f={rectstr(x.get('frame'))}")
-                    parts.append('  - '+'; '.join(cols))
-                for target in (0.5,0.75):
-                    s=nearest_sample(samples,target)
-                    for wi,overlay in enumerate(s.get('overlayWindows',[])):
-                        layers=','.join(f"{x.get('path')}:{rectstr(x.get('frame'))}" for x in overlay.get('layers',[]))
-                        parts.append(f"  - overlay t={target:.2f} (sample {fmt(s.get('t'))}) window[{wi}] frame={rectstr(overlay.get('frame'))}; layers=[{layers}]")
+                    if target in (0.5,0.75):
+                        overlays=[]
+                        for wi,overlay in enumerate(s.get('overlayWindows',[])):
+                            layers=','.join(f"{x.get('path')}:{rectstr(x.get('frame'))}" for x in overlay.get('layers',[]))
+                            overlays.append(f"window[{wi}]={rectstr(overlay.get('frame'))} layers=[{layers}]")
+                        cols.append('overlays=['+('; '.join(overlays) if overlays else 'none')+']')
+                    details.append('; '.join(cols))
+                parts.append('  timeline: '+'<br>'.join(details))
     out='\n'.join(parts)+'\n'; lines=out.splitlines()
     if len(lines)>150: out='\n'.join(lines[:149]+['[truncated at 150 lines]'])+'\n'
     dest=root/'deep-summary.md'; dest.write_text(out,encoding='utf-8'); print(dest)
