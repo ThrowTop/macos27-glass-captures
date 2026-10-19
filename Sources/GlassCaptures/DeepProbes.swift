@@ -762,11 +762,11 @@ private func probePushButtons(window: NSWindow, root: NSView, folder: URL, recor
                     made.controlSize = size
                     made.font = NSFont.systemFont(ofSize: NSFont.systemFontSize(for: size))
                     switch variant {
-                    case "default": made.keyEquivalent = "\\r"
+                    case "default": made.keyEquivalent = "\r"
                     case "destructive": made.hasDestructiveAction = true
                     case "destructiveDefault":
                         made.hasDestructiveAction = true
-                        made.keyEquivalent = "\\r"
+                        made.keyEquivalent = "\r"
                     case "tinted": made.bezelColor = .systemRed
                     default: break
                     }
