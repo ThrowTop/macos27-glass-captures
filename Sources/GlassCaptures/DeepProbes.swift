@@ -862,9 +862,13 @@ private func groupingCapsule() -> some View {
 
 @available(macOS 26.0, *)
 private func probeGlassGrouping(window: NSWindow, root: NSView, folder: URL, recorder: ProbeRecorder) {
-    let cases: [(String, Int?, Int)] = ( [0, 8, 24].flatMap { spacing in
-        [0, 6, 16, 40].map { gap in ("grouping.swiftui.s\(spacing).g\(gap)", spacing, gap) }
-    } + [6, 40].map { ("grouping.swiftui.none.g\($0)", nil, $0) })
+    var cases: [(String, Int?, Int)] = []
+    for spacing in [0, 8, 24] {
+        for gap in [0, 6, 16, 40] {
+            cases.append(("grouping.swiftui.s\(spacing).g\(gap)", spacing, gap))
+        }
+    }
+    for gap in [6, 40] { cases.append(("grouping.swiftui.none.g\(gap)", nil, gap)) }
 
     for (id, spacing, gap) in cases {
         var box: NSView?
