@@ -632,6 +632,76 @@ private func parkCursor() {
     CGWarpMouseCursorPosition(CGPoint(x: screen.maxX - 12, y: screen.maxY - 12))
 }
 
+// Stable raster references for every control used by the getter probes. The screen
+// capture keeps the native 1x result; cacheDisplay gives a same-size 2x reference.
+private func probeControlRenders(window: NSWindow, root: NSView, folder: URL, recorder: ProbeRecorder) {
+    let kinds = ["button", "checkbox", "radio", "popup", "pulldown", "textfield", "search-empty",
+                 "search-abc", "stepper", "slider", "progress", "switch", "segmented",
+                 "colorwell-default", "colorwell-minimal", "colorwell-expanded", "combobox",
+                 "datepicker", "levelindicator", "pathcontrol", "disclosure"]
+    let sizes = ["mini", "small", "regular", "large", "extraLarge"]
+    let renderFolder = folder.appendingPathComponent("render", isDirectory: true)
+    do { try FileManager.default.createDirectory(at: renderFolder, withIntermediateDirectories: true) }
+    catch { recorder.missing("render.folder", "could not create render folder: \(error)"); return }
+
+    for sizeName in sizes {
+        guard let size = controlSize(sizeName) else { continue }
+        for kind in kinds {
+            let states = (kind == "checkbox" || kind == "radio") ? ["off", "on", "mixed"]
+                : kind == "switch" ? ["off", "on"]
+                : kind == "search-empty" ? ["empty"]
+                : kind == "search-abc" ? ["abc"] : ["default"]
+            for state in states {
+                let madeState = kind == "search-empty" ? "off" : kind == "search-abc" ? "on" : state
+                let publicKind = kind.hasPrefix("search-") ? "searchfield" : kind
+                let suffix = kind == "search-empty" ? ".empty" : kind == "search-abc" ? ".abc"
+                    : state == "default" ? "" : ".\(state)"
+                captureControlRender(kind: kind, sizeName: sizeName, size: size, state: madeState,
+                                     id: "render.\(publicKind).\(sizeName)\(suffix)",
+                                     disabled: false, window: window, root: root,
+                                     folder: renderFolder, recorder: recorder)
+            }
+        }
+    }
+    let disabled: [(String, String)] = [("button", "default"), ("checkbox", "on"), ("popup", "default"),
+                                        ("segmented", "default"), ("switch", "on")]
+    guard let regular = controlSize("regular") else { return }
+    for (kind, state) in disabled {
+        captureControlRender(kind: kind, sizeName: "regular", size: regular, state: state,
+                             id: "render.\(kind).regular\(state == "default" ? "" : ".\(state)").disabled",
+                             disabled: true, window: window, root: root,
+                             folder: renderFolder, recorder: recorder)
+    }
+}
+
+private func captureControlRender(kind: String, sizeName: String, size: NSControl.ControlSize,
+                                  state: String, id: String, disabled: Bool, window: NSWindow,
+                                  root: NSView, folder: URL, recorder: ProbeRecorder) {
+    var container: NSView?
+    var control: NSView?
+    guard recorder.guarded(id, {
+        guard let made = makeProbeControl(kind, size: size, state: state) else {
+            recorder.missing(id, "control unavailable"); return
+        }
+        if disabled, let native = made as? NSControl { native.isEnabled = false }
+        let frame = made.frame
+        let box = NSView(frame: CGRect(x: 10, y: 10, width: frame.width + 48, height: frame.height + 48))
+        made.frame = CGRect(origin: CGPoint(x: 24, y: 24), size: frame.size)
+        box.addSubview(made)
+        root.addSubview(box)
+        container = box; control = made
+    }), let container, let control else { return }
+    window.displayIfNeeded(); settle(); settle()
+    let controlFrame = probeRect(control.frame)
+    recorder.put("\(id).controlFrame", controlFrame)
+    let shotRect = window.convertToScreen(container.convert(container.bounds, to: nil))
+    recorder.put("\(id).screenshot", captureScreen(shotRect,
+                 to: folder.appendingPathComponent("\(id).png")))
+    recorder.put("\(id).cache2x", cacheRender(container, scale: 2,
+                 to: folder.appendingPathComponent("\(id)@2x.png")))
+    container.removeFromSuperview()
+}
+
 func runDeepProbes(window: NSWindow, root: NSView, output: URL) throws {
     let recorder = ProbeRecorder()
     bringOnScreen(window, recorder: recorder)
@@ -648,6 +718,7 @@ func runDeepProbes(window: NSWindow, root: NSView, output: URL) throws {
     try? writeJSON(recorder.values, to: url)
     record("deep probes slider drag complete count=\(recorder.values.count)")
     probeMenusOpen(window: window, root: root, folder: folder, recorder: recorder)
+    probeControlRenders(window: window, root: root, folder: folder, recorder: recorder)
     try writeJSON(recorder.values, to: url)
     record("deep probes complete count=\(recorder.values.count)")
 }

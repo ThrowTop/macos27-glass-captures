@@ -151,6 +151,37 @@ def main(run):
             dx=(mw.get('frame',{}).get('x',0)-bf.get('x',0)) if isinstance(bf,dict) and mw else None
             gap=(bf.get('y',0)-(mw.get('frame',{}).get('y',0)+mw.get('frame',{}).get('height',0))) if isinstance(bf,dict) and mw else None
             parts.append(f"- `{mid}` button={rectstr(bf)} font={json.dumps(val(d,p+'.buttonFont'),separators=(',',':'))}; menu={rectstr(mw.get('frame'))} dx={fmt(dx)} gap={fmt(gap)}; rowH={fmt((row or {}).get('frame',{}).get('height'))}; textX={fmt((tf or {}).get('frame',{}).get('x'))} textFont={json.dumps((tf or {}).get('font'),separators=(',',':'))}; highlighted={val(d,p+'.highlightedItem')}")
+        parts.append('\n### Renders\n')
+        render_ids=sorted(k[:-len('.screenshot')] for k in d
+                          if k.startswith('render.') and k.endswith('.screenshot'))
+        transparent=[]; uniform=[]; regular_by_kind={}
+        for ident in render_ids:
+            shot=val(d,ident+'.screenshot',{}) or {}; cache=val(d,ident+'.cache2x',{}) or {}
+            shot_path=folder/'render'/shot.get('file','')
+            cache_path=folder/'render'/cache.get('file','')
+            try:
+                with Image.open(cache_path) as im:
+                    if im.convert('RGBA').getchannel('A').getextrema()==(0,0): transparent.append(ident)
+            except Exception as e:
+                transparent.append(f'{ident} (unreadable 2x: {e})')
+            try:
+                with Image.open(shot_path) as im:
+                    if len(set(im.convert('RGBA').getdata()))==1: uniform.append(ident)
+            except Exception as e:
+                uniform.append(f'{ident} (unreadable 1x: {e})')
+            bits=ident.split('.')
+            if len(bits)>=3 and bits[2]=='regular':
+                kind=bits[1]
+                state='.'.join(bits[3:]) or 'default'
+                try:
+                    with Image.open(cache_path) as im: dims=f'{im.width}×{im.height}'
+                except Exception: dims='unavailable'
+                regular_by_kind.setdefault(kind,[]).append(f'{state}={dims}')
+        parts.append(f'- Render ids: {len(render_ids)}')
+        parts.append(f'- Fully transparent 2×: {transparent}')
+        parts.append(f'- Uniform 1×: {uniform}')
+        for kind in sorted(regular_by_kind):
+            parts.append(f'- Regular {kind}: '+', '.join(regular_by_kind[kind]))
         parts.append('\n### Menu timeline\n')
         for mid in menuids:
             p='openMenu.'+mid; descriptions=[]

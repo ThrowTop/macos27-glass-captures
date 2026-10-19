@@ -147,7 +147,7 @@ private func captureControl(_ control: NSView, id: String, recorder: ProbeRecord
     else { recorder.missing("\(id).layers", "control has no layer") }
 }
 
-private func makeProbeControl(_ kind: String, size: NSControl.ControlSize, state: String) -> NSView? {
+func makeProbeControl(_ kind: String, size: NSControl.ControlSize, state: String) -> NSView? {
     let c: NSView
     switch kind {
     case "button":
