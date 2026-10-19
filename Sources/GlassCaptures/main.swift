@@ -1216,13 +1216,15 @@ if let i = CommandLine.arguments.firstIndex(of: "--env-out"), i + 1 < CommandLin
     do { try writeDisplayEnvironment(to: CommandLine.arguments[i + 1]); exit(0) }
     catch { record("display environment failed: \(error)"); exit(1) }
 }
-if CommandLine.arguments.contains("--menu-outline-window-mode"),
+if (CommandLine.arguments.contains("--menu-outline-window-mode") ||
+    CommandLine.arguments.contains("--menu-outline-mode")),
    let appearanceIndex = CommandLine.arguments.firstIndex(of: "--probe-appearance"),
    let outputIndex = CommandLine.arguments.firstIndex(of: "--probe-out"),
    appearanceIndex + 1 < CommandLine.arguments.count, outputIndex + 1 < CommandLine.arguments.count {
     NSApplication.shared.setActivationPolicy(.regular)
     let appearance = CommandLine.arguments[appearanceIndex + 1]
     let output = CommandLine.arguments[outputIndex + 1]
+    let fullMenuOutline = CommandLine.arguments.contains("--menu-outline-mode")
     final class MenuOutlineLaunchDelegate: NSObject, NSApplicationDelegate {
         let start: () -> Void
         init(start: @escaping () -> Void) { self.start = start }
@@ -1231,7 +1233,11 @@ if CommandLine.arguments.contains("--menu-outline-window-mode"),
         }
     }
     let delegate = MenuOutlineLaunchDelegate {
-        do { try runMenuOutlineWindowProbe(appearance: appearance, output: output); exit(0) }
+        do {
+            if fullMenuOutline { try runMenuOutlineProbe(appearance: appearance, output: output) }
+            else { try runMenuOutlineWindowProbe(appearance: appearance, output: output) }
+            exit(0)
+        }
         catch { record("menu-outline window probe failed: \(error)"); exit(1) }
     }
     NSApp.delegate = delegate

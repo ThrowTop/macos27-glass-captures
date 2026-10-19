@@ -310,8 +310,13 @@ done
 # Step 1 runner-effects validation, isolated from the main control capture matrix.
 if [[ "$FILTER" == menu-outline-window || "$FILTER" == menu-outline ]]; then
   mkdir -p out/menu-outline
+  mode_flag=--menu-outline-window-mode
+  timeout_seconds=120
+  if [[ "$FILTER" == menu-outline ]]; then
+    mode_flag=--menu-outline-mode
+    timeout_seconds=1450
+  fi
   for pass in light dark light-contrast dark-contrast; do
-    appearance="${pass%%-*}"
     contrast=false
     [[ "$pass" == *-contrast ]] && contrast=true
     defaults write com.apple.universalaccess increaseContrast -bool "$contrast"
@@ -319,8 +324,8 @@ if [[ "$FILTER" == menu-outline-window || "$FILTER" == menu-outline ]]; then
     killall cfprefsd >/dev/null 2>&1 || true
     pass_dir="$ROOT/out/menu-outline"
     echo "MENU OUTLINE WINDOW PASS name=$pass increaseContrast=$contrast" >> out/log.txt
-    if ! perl -e 'alarm shift; exec @ARGV' 120 /usr/bin/open -W -n -a "$APP" --args \
-        --menu-outline-window-mode --probe-appearance "$appearance" --probe-out "$pass_dir" >> out/log.txt 2>&1; then
+    if ! perl -e 'alarm shift; exec @ARGV' "$timeout_seconds" /usr/bin/open -W -n -a "$APP" --args \
+        "$mode_flag" --probe-appearance "$pass" --probe-out "$pass_dir" >> out/log.txt 2>&1; then
       echo "MENU OUTLINE WINDOW PASS FAILED name=$pass" >> out/log.txt
       FAILURES=$((FAILURES + 1))
     fi

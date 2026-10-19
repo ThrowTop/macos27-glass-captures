@@ -4,12 +4,61 @@ import ScreenCaptureKit
 import SafeKVC
 import CoreGraphics
 import Darwin
+import SwiftUI
 
 private final class OutlineSolidView: NSView {
     var color: NSColor = .white
     override func draw(_ dirtyRect: NSRect) {
         color.setFill()
         bounds.fill()
+    }
+}
+
+private final class OutlinePatternView: NSView {
+    var kind = "plain"
+    override func draw(_ dirtyRect: NSRect) {
+        if kind == "photo", let url = Bundle.main.url(forResource: "photo", withExtension: "png"),
+           let image = NSImage(contentsOf: url) {
+            image.draw(in: bounds, from: .zero, operation: .sourceOver, fraction: 1)
+            return
+        }
+        if kind == "checker8" || kind == "photo" {
+            NSColor.white.setFill(); bounds.fill()
+            NSColor.black.setFill()
+            for y in stride(from: CGFloat(0), to: bounds.height, by: 8) {
+                for x in stride(from: CGFloat(0), to: bounds.width, by: 8)
+                    where (Int(x / 8) + Int(y / 8)) % 2 == 0 {
+                    CGRect(x: x, y: y, width: 8, height: 8).fill()
+                }
+            }
+        } else {
+            NSColor.windowBackgroundColor.setFill(); bounds.fill()
+        }
+    }
+}
+
+private struct OutlinePickerProbeView: View {
+    @State private var choice = "English"
+    var body: some View {
+        Picker("Captions", selection: $choice) {
+            Text("English").tag("English")
+            Text("Swedish").tag("Swedish")
+            Text("German").tag("German")
+        }
+        .pickerStyle(.menu)
+    }
+}
+
+private struct OutlineMenuButtonProbeView: View {
+    var body: some View {
+        Menu("Captions") {
+            Button("English") {}
+            Button("Swedish") {}
+            Menu("More languages") {
+                Button("German") {}
+                Button("French") {}
+            }
+        }
     }
 }
 
@@ -89,6 +138,7 @@ private func outlineCaptureSingleWindow(_ window: NSWindow, _ url: URL) -> [Stri
     let number = CGWindowID(window.windowNumber)
     let windowSize = window.frame.size
     let scale = NSScreen.main?.backingScaleFactor ?? 1
+    let shadowPadding: CGFloat = window.hasShadow ? 112 : 0
     Task.detached {
         do {
             let content = try await SCShareableContent.current
@@ -98,11 +148,10 @@ private func outlineCaptureSingleWindow(_ window: NSWindow, _ url: URL) -> [Stri
             }
             let filter = SCContentFilter(desktopIndependentWindow: source)
             let configuration = SCStreamConfiguration()
-            // The window-style filter returns the shadow in addition to the frame.
-            // A 56 pt allowance on each side matches the legacy framing extent and
-            // prevents SCStreamConfiguration from scaling the window down to fit.
-            configuration.width = max(1, Int(ceil((windowSize.width + 112) * scale)))
-            configuration.height = max(1, Int(ceil((windowSize.height + 112) * scale)))
+            // The window-style filter returns framing effects in addition to the frame.
+            // A 56 pt allowance on each side matches the runner's legacy framing extent.
+            configuration.width = max(1, Int(ceil((windowSize.width + shadowPadding) * scale)))
+            configuration.height = max(1, Int(ceil((windowSize.height + shadowPadding) * scale)))
             configuration.showsCursor = false
             configuration.shouldBeOpaque = false
             configuration.ignoreShadowsSingleWindow = false
@@ -169,6 +218,19 @@ private func outlineLayerTree(_ layer: CALayer, depth: Int = 0) -> [String: Any]
     return entry
 }
 
+private func outlineGlassLayers(_ layer: CALayer, into entries: inout [[String: Any]], depth: Int = 0) {
+    let cls = NSStringFromClass(type(of: layer))
+    if ["Glass", "SDF", "Backdrop", "Portal"].contains(where: cls.contains) {
+        entries.append(["class": cls, "frame": probeRect(layer.frame), "bounds": probeRect(layer.bounds),
+                        "cornerRadius": layer.cornerRadius, "borderWidth": layer.borderWidth,
+                        "borderColor": layer.borderColor.flatMap { safeDescription($0) } ?? NSNull(),
+                        "filters": safeDescription(layer.filters) ?? NSNull(),
+                        "backgroundFilters": safeDescription(layer.backgroundFilters) ?? NSNull()])
+    }
+    guard depth < 14 else { return }
+    for child in layer.sublayers ?? [] { outlineGlassLayers(child, into: &entries, depth: depth + 1) }
+}
+
 private func outlineRuntimeDump(_ window: NSWindow) -> [String: Any] {
     let selector = NSSelectorFromString("shadowParameters")
     var shadowError: NSString?
@@ -205,10 +267,24 @@ private func outlineRuntimeDump(_ window: NSWindow) -> [String: Any] {
         abs($0.width - expectedContentScreen.width) < 0.5 &&
         abs($0.height - expectedContentScreen.height) < 0.5
     } ?? false
+    var glassLayers: [[String: Any]] = []
+    if let tree { outlineGlassLayers(tree, into: &glassLayers) }
+    let rootBounds = tree.map { $0.bounds } ?? .zero
+    let glassViewFills = glassLayers.isEmpty ? NSNull() as Any : glassLayers.contains { entry in
+        guard let frame = entry["frame"] as? [String: CGFloat] else { return false }
+        return abs((frame["x"] ?? 0) - rootBounds.minX) < 0.5 &&
+            abs((frame["y"] ?? 0) - rootBounds.minY) < 0.5 &&
+            abs((frame["width"] ?? 0) - rootBounds.width) < 0.5 &&
+            abs((frame["height"] ?? 0) - rootBounds.height) < 0.5
+    }
     return [
         "windowNumber": window.windowNumber,
         "class": NSStringFromClass(type(of: window)),
         "frame": probeRect(window.frame),
+        "windowLevel": window.level.rawValue,
+        "isKeyWindow": window.isKeyWindow,
+        "isMainWindow": window.isMainWindow,
+        "effectiveAppearance": window.effectiveAppearance.name.rawValue,
         "hasShadow": window.hasShadow,
         "shadowOptions": outlineKVC(window, "shadowOptions"),
         "shadowParameters": shadowJSON,
@@ -220,6 +296,8 @@ private func outlineRuntimeDump(_ window: NSWindow) -> [String: Any] {
         "contentViewFrameScreen": contentScreen.map { probeRect($0) } as Any? ?? NSNull(),
         "expectedContentFrameScreen": probeRect(expectedContentScreen),
         "contentViewFillsWindowContentArea": contentFills,
+        "glassRelatedLayers": glassLayers,
+        "glassViewFillsWindowExactly": glassViewFills,
         "topLayerTree": tree.map { outlineLayerTree($0) as Any } ?? NSNull()
     ]
 }
@@ -241,6 +319,269 @@ private func outlineCGWindowImage(_ window: NSWindow, _ url: URL) -> [String: An
             "alphaExtrema": outlineAlphaExtrema(image)]
 }
 
+private func outlineMenuWindows(excluding baseline: Set<Int>) -> [NSWindow] {
+    NSApp.windows.filter { $0.isVisible && !baseline.contains($0.windowNumber) }
+}
+
+private func outlineMouseEvent(_ type: NSEvent.EventType, window: NSWindow, point: CGPoint) -> NSEvent? {
+    NSEvent.mouseEvent(with: type, location: point, modifierFlags: [],
+                       timestamp: ProcessInfo.processInfo.systemUptime,
+                       windowNumber: window.windowNumber, context: nil, eventNumber: 0,
+                       clickCount: 1, pressure: type == .leftMouseUp ? 0 : 1)
+}
+
+private func outlineSendMouse(_ type: NSEvent.EventType, window: NSWindow, point: CGPoint) {
+    guard let event = outlineMouseEvent(type, window: window, point: point) else { return }
+    window.sendEvent(event)
+}
+
+private func outlineSendEscape(to window: NSWindow) {
+    guard let event = NSEvent.keyEvent(with: .keyDown, modifierFlags: [],
+                                       timestamp: ProcessInfo.processInfo.systemUptime,
+                                       windowNumber: window.windowNumber, context: nil,
+                                       characters: "\u{1b}", charactersIgnoringModifiers: "\u{1b}",
+                                       isARepeat: false, keyCode: 53) else { return }
+    window.sendEvent(event)
+}
+
+private func outlineMenuRowCenters(_ view: NSView, into centers: inout [CGPoint]) {
+    let name = NSStringFromClass(type(of: view))
+    let frame = view.convert(view.bounds, to: nil)
+    if (name.contains("MenuItem") || name.contains("TableRow")) &&
+        frame.height >= 12 && frame.height <= 44 && frame.width > 60 {
+        centers.append(CGPoint(x: frame.midX, y: frame.midY))
+    }
+    for child in view.subviews { outlineMenuRowCenters(child, into: &centers) }
+}
+
+private func outlineHoverFirstMenuItem(_ window: NSWindow) {
+    guard let content = window.contentView?.superview ?? window.contentView else { return }
+    var centers: [CGPoint] = []
+    outlineMenuRowCenters(content, into: &centers)
+    guard let point = centers.first else { return }
+    let screenPoint = window.convertToScreen(CGRect(origin: point, size: .zero)).origin
+    let cgPoint = CGPoint(x: screenPoint.x, y: (NSScreen.main?.frame.maxY ?? 768) - screenPoint.y)
+    CGWarpMouseCursorPosition(cgPoint)
+    CGEvent(mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: cgPoint,
+            mouseButton: .left)?.post(tap: .cghidEventTap)
+}
+
+private func outlineCaptureMenuWindowSet(source: String, attempt: Int, appearance: String,
+                                         background: String, host: NSWindow,
+                                         menuWindows: [NSWindow], folder: URL) throws -> [String: Any] {
+    guard !menuWindows.isEmpty else { throw NSError(domain: "MenuOutline", code: 3,
+        userInfo: [NSLocalizedDescriptionKey: "no visible menu windows to capture"]) }
+    var union = CGRect.null
+    for menuWindow in menuWindows { union = union.union(menuWindow.frame) }
+    let displayRect = union.insetBy(dx: -56, dy: -56)
+    let display = outlineCaptureDisplay(displayRect, folder.appendingPathComponent("attempt-\(attempt)-display.png"))
+    var captures: [[String: Any]] = []
+    var windows: [[String: Any]] = []
+    for (index, menuWindow) in menuWindows.enumerated() {
+        let runtimeName = "attempt-\(attempt)-runtime-\(index).json"
+        let runtime = outlineRuntimeDump(menuWindow)
+        try writeJSON(runtime, to: folder.appendingPathComponent(runtimeName))
+        let name = "menu-window-\(index)"
+        let displayCapture: [String: Any] = [
+            "window": name, "method": "display", "file": display["file"] ?? NSNull(),
+            "error": display["error"] ?? NSNull(), "shapeFrame": probeRect(menuWindow.frame),
+            "cropScreenRect": display["cropScreenRect"] ?? NSNull(),
+            "scale": display["scale"] ?? host.backingScaleFactor,
+            "imagePixels": display["imagePixels"] ?? NSNull(), "runtime": runtimeName,
+            "pixelScale": host.backingScaleFactor, "windowState": "active"
+        ]
+        captures.append(displayCapture)
+        let singleName = "attempt-\(attempt)-window-\(index)-single.png"
+        var single = outlineCaptureSingleWindow(menuWindow, folder.appendingPathComponent(singleName))
+        single["window"] = name; single["method"] = "single-window"
+        single["shapeFrame"] = probeRect(menuWindow.frame); single["runtime"] = runtimeName
+        single["pixelScale"] = host.backingScaleFactor; single["windowState"] = "active"
+        captures.append(single)
+        let cgName = "attempt-\(attempt)-window-\(index)-cgwindow.png"
+        var cg = outlineCGWindowImage(menuWindow, folder.appendingPathComponent(cgName))
+        cg["window"] = name; cg["method"] = "cgwindow"
+        cg["shapeFrame"] = probeRect(menuWindow.frame); cg["runtime"] = runtimeName
+        cg["pixelScale"] = host.backingScaleFactor; cg["windowState"] = "active"
+        captures.append(cg)
+        windows.append(["name": name, "runtime": runtimeName,
+                        "windowNumber": menuWindow.windowNumber,
+                        "class": NSStringFromClass(type(of: menuWindow)),
+                        "frame": probeRect(menuWindow.frame)])
+    }
+    let hostRuntimeName = "attempt-\(attempt)-host-runtime.json"
+    try writeJSON(outlineRuntimeDump(host), to: folder.appendingPathComponent(hostRuntimeName))
+    return ["attempt": attempt, "appearance": appearance, "background": background,
+            "source": source, "opened": true, "menuWindows": windows,
+            "hostRuntime": hostRuntimeName, "displayRect": probeRect(displayRect),
+            "captures": captures]
+}
+
+private func outlineRunMenuCase(source: String, appearance: String, background: String,
+                                output: URL) throws {
+    let folder = output.appendingPathComponent("menus/\(appearance)/\(background)/\(source)",
+                                               isDirectory: true)
+    try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+    let screen = NSScreen.main?.frame ?? CGRect(x: 0, y: 0, width: 1024, height: 768)
+    let hostFrame = CGRect(x: screen.midX - 360, y: screen.midY - 270, width: 720, height: 540)
+    let host = NSWindow(contentRect: hostFrame, styleMask: [.titled, .closable], backing: .buffered, defer: false)
+    host.isReleasedWhenClosed = false
+    host.title = "Menu outline \(source) \(background)"
+    host.appearance = NSAppearance(named: appearance.hasPrefix("dark") ? .darkAqua : .aqua)
+    host.backgroundColor = .windowBackgroundColor
+    host.hasShadow = true
+    let root = OutlinePatternView(frame: CGRect(origin: .zero, size: hostFrame.size))
+    root.kind = background
+    root.wantsLayer = true
+    root.autoresizingMask = [.width, .height]
+    host.contentView = root
+    host.makeKeyAndOrderFront(nil)
+    host.orderFrontRegardless()
+    NSApp.activate(ignoringOtherApps: true)
+    RunLoop.main.run(until: Date().addingTimeInterval(0.25))
+
+    var nativeMenu: NSMenu?
+    var clickPoint: CGPoint?
+    var presenter: (() -> Void)?
+    var submenu = false
+    var control: NSView?
+    let controlFrame = CGRect(x: 245, y: 265, width: 230, height: 40)
+
+    switch source {
+    case "appkit-popup", "appkit-pulldown", "submenu":
+        let pullsDown = source == "appkit-pulldown"
+        let button = NSPopUpButton(frame: controlFrame, pullsDown: pullsDown)
+        button.controlSize = .regular
+        button.font = .systemFont(ofSize: NSFont.systemFontSize(for: .regular))
+        if pullsDown {
+            button.addItem(withTitle: "Actions")
+            button.addItems(withTitles: ["Duplicate", "Rename", "Move to Trash"])
+        } else {
+            button.addItems(withTitles: ["English", "Swedish", "German", "French"])
+            button.selectItem(at: 0)
+        }
+        if source == "submenu", let menu = button.menu, let parent = menu.item(at: 0) {
+            let child = NSMenu(title: "Caption language")
+            child.addItems(withTitles: ["English", "Swedish", "German"])
+            menu.setSubmenu(child, for: parent)
+            submenu = true
+        }
+        root.addSubview(button); control = button; nativeMenu = button.menu
+        presenter = { button.performClick(nil) }
+    case "context":
+        let anchor = NSView(frame: CGRect(x: 350, y: 270, width: 24, height: 24))
+        root.addSubview(anchor); control = anchor
+        let menu = NSMenu(title: "Context outline")
+        menu.addItem(withTitle: "Open", action: nil, keyEquivalent: "")
+        menu.addItem(withTitle: "Share", action: nil, keyEquivalent: "")
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(withTitle: "Quick Look", action: nil, keyEquivalent: "")
+        nativeMenu = menu
+        let point = anchor.convert(CGPoint(x: anchor.bounds.midX, y: anchor.bounds.midY), to: nil)
+        let event = NSEvent.mouseEvent(with: .rightMouseDown, location: point, modifierFlags: [],
+                                       timestamp: ProcessInfo.processInfo.systemUptime,
+                                       windowNumber: host.windowNumber, context: nil,
+                                       eventNumber: 0, clickCount: 1, pressure: 1)
+        presenter = { if let event { NSMenu.popUpContextMenu(menu, with: event, for: anchor) } }
+    case "swiftui-picker":
+        let hosting = NSHostingView(rootView: OutlinePickerProbeView())
+        let fit = hosting.fittingSize
+        hosting.frame = CGRect(x: (hostFrame.width - fit.width) / 2,
+                               y: (hostFrame.height - fit.height) / 2,
+                               width: fit.width, height: fit.height)
+        root.addSubview(hosting); control = hosting
+        clickPoint = hosting.convert(CGPoint(x: hosting.bounds.midX, y: hosting.bounds.midY), to: nil)
+    case "swiftui-menu":
+        let hosting = NSHostingView(rootView: OutlineMenuButtonProbeView())
+        let fit = hosting.fittingSize
+        hosting.frame = CGRect(x: (hostFrame.width - fit.width) / 2,
+                               y: (hostFrame.height - fit.height) / 2,
+                               width: fit.width, height: fit.height)
+        root.addSubview(hosting); control = hosting
+        clickPoint = hosting.convert(CGPoint(x: hosting.bounds.midX, y: hosting.bounds.midY), to: nil)
+    case "combobox":
+        let combo = NSComboBox(frame: controlFrame)
+        combo.addItems(withObjectValues: ["English", "Swedish", "German", "French"])
+        combo.isEditable = false
+        combo.selectItem(at: 0)
+        root.addSubview(combo); control = combo
+        clickPoint = combo.convert(CGPoint(x: combo.bounds.maxX - 12, y: combo.bounds.midY), to: nil)
+    default:
+        host.close()
+        throw NSError(domain: "MenuOutline", code: 4,
+                      userInfo: [NSLocalizedDescriptionKey: "unknown menu source \(source)"])
+    }
+    host.displayIfNeeded()
+    if let control { control.displayIfNeeded() }
+
+    var attempts: [[String: Any]] = []
+    var final: [String: Any] = [:]
+    var didOpen = false
+    for attempt in 1...3 where !didOpen {
+        let baseline = Set(NSApp.windows.map { $0.windowNumber })
+        let attemptResult = OutlineBox<[String: Any]?>(nil)
+        let hover = Timer(timeInterval: 0.55, repeats: false) { _ in
+            if submenu, let menuWindow = outlineMenuWindows(excluding: baseline).first {
+                outlineHoverFirstMenuItem(menuWindow)
+            }
+        }
+        let captureTimer = Timer(timeInterval: submenu ? 1.0 : 0.7, repeats: false) { _ in
+            let menuWindows = outlineMenuWindows(excluding: baseline)
+            if !menuWindows.isEmpty {
+                do {
+                    attemptResult.value = try outlineCaptureMenuWindowSet(
+                        source: source, attempt: attempt, appearance: appearance, background: background,
+                        host: host, menuWindows: menuWindows, folder: folder)
+                } catch { attemptResult.value = ["attempt": attempt, "opened": true, "error": String(describing: error)] }
+            } else {
+                attemptResult.value = ["attempt": attempt, "opened": false,
+                                       "error": "no visible menu window during tracking"]
+            }
+            if let nativeMenu { nativeMenu.cancelTracking() }
+            else { outlineSendEscape(to: NSApp.keyWindow ?? host) }
+            for menuWindow in outlineMenuWindows(excluding: baseline) { menuWindow.orderOut(nil) }
+        }
+        let fallback = Timer(timeInterval: 10, repeats: false) { _ in
+            if let nativeMenu { nativeMenu.cancelTrackingWithoutAnimation() }
+            else { outlineSendEscape(to: NSApp.keyWindow ?? host) }
+        }
+        for timer in [hover, captureTimer, fallback] {
+            RunLoop.main.add(timer, forMode: .eventTracking)
+            RunLoop.main.add(timer, forMode: .common)
+        }
+        if let point = clickPoint {
+            let mouseUp = Timer(timeInterval: 0.12, repeats: false) { _ in
+                outlineSendMouse(.leftMouseUp, window: host, point: point)
+            }
+            RunLoop.main.add(mouseUp, forMode: .eventTracking)
+            RunLoop.main.add(mouseUp, forMode: .common)
+            outlineSendMouse(.leftMouseDown, window: host, point: point)
+        } else { presenter?() }
+        if attemptResult.value == nil {
+            RunLoop.main.run(until: Date().addingTimeInterval(2.0))
+        }
+        [hover, captureTimer, fallback].forEach { $0.invalidate() }
+        if let result = attemptResult.value {
+            attempts.append(result)
+            final = result
+            didOpen = (result["opened"] as? Bool) == true && result["captures"] != nil
+        } else {
+            attempts.append(["attempt": attempt, "opened": false,
+                             "error": "tracking callback did not produce a capture result"])
+        }
+    }
+
+    let caseEntry: [String: Any] = [
+        "stage": "menus", "source": source, "appearance": appearance,
+        "background": background, "opened": didOpen, "attempts": attempts,
+        "menuWindows": final["menuWindows"] ?? [], "hostRuntime": final["hostRuntime"] ?? NSNull(),
+        "captures": final["captures"] ?? [], "openError": didOpen ? NSNull() :
+            (attempts.last?["error"] ?? "menu did not open after three attempts")
+    ]
+    try writeJSON(caseEntry, to: folder.appendingPathComponent("case.json"))
+    record("menu-outline source=\(source) pass=\(appearance) background=\(background) opened=\(didOpen)")
+    host.close()
+}
+
 private func outlineCaptureNormalWindow(_ window: NSWindow, background: String, output: URL,
                                        pass: String) throws {
     let folder = output.appendingPathComponent("step1/\(pass)/\(background)", isDirectory: true)
@@ -255,6 +596,7 @@ private func outlineCaptureNormalWindow(_ window: NSWindow, background: String, 
     let entry: [String: Any] = [
         "stage": "step1", "appearance": pass, "backdrop": background,
         "shape": "normal titled NSWindow", "windowFrame": probeRect(window.frame),
+        "windowState": "active",
         "pixelScale": window.backingScaleFactor,
         "display": display, "singleWindow": single, "cgWindow": cg,
         "runtime": "runtime.json"
@@ -299,5 +641,89 @@ func runMenuOutlineWindowProbe(appearance: String, output path: String) throws {
         RunLoop.main.run(until: Date().addingTimeInterval(0.35))
         try outlineCaptureNormalWindow(window, background: colorName, output: output, pass: appearance)
         window.close(); backdrop.close()
+    }
+}
+
+private func outlineCaptureWindowContour(appearance: String, background: String, state: String,
+                                         output: URL) throws {
+    let folder = output.appendingPathComponent("window-contour/\(appearance)/\(background)/\(state)",
+                                               isDirectory: true)
+    try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+    let screen = NSScreen.main?.frame ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
+    let backdropColor: NSColor = background == "white" ? .white : .black
+    let backdrop = NSWindow(contentRect: screen, styleMask: .borderless, backing: .buffered, defer: false)
+    backdrop.isReleasedWhenClosed = false
+    backdrop.backgroundColor = backdropColor
+    backdrop.hasShadow = false
+    let backfill = OutlineSolidView(frame: CGRect(origin: .zero, size: screen.size))
+    backfill.color = backdropColor; backfill.wantsLayer = true
+    backdrop.contentView = backfill
+    backdrop.orderFrontRegardless()
+
+    let frame = CGRect(x: screen.midX - 320, y: screen.midY - 230, width: 640, height: 460)
+    let window = NSWindow(contentRect: frame, styleMask: [.titled, .closable, .miniaturizable, .resizable],
+                          backing: .buffered, defer: false)
+    window.isReleasedWhenClosed = false
+    window.title = "Window contour \(state) \(background)"
+    window.backgroundColor = background == "white" ? .black : .white
+    window.hasShadow = true
+    window.appearance = NSAppearance(named: appearance.hasPrefix("dark") ? .darkAqua : .aqua)
+    let content = OutlineSolidView(frame: CGRect(origin: .zero, size: frame.size))
+    content.autoresizingMask = [.width, .height]
+    content.wantsLayer = true
+    content.color = background == "white" ? .black : .white
+    window.contentView = content
+    window.makeKeyAndOrderFront(nil)
+    window.orderFrontRegardless()
+    NSApp.activate(ignoringOtherApps: true)
+    RunLoop.main.run(until: Date().addingTimeInterval(0.25))
+
+    var sink: NSWindow?
+    if state == "inactive" {
+        let keyWindow = NSWindow(contentRect: CGRect(x: screen.minX + 20, y: screen.minY + 18,
+                                                      width: 128, height: 64),
+                                 styleMask: [.titled], backing: .buffered, defer: false)
+        keyWindow.isReleasedWhenClosed = false
+        keyWindow.title = "Key sink"
+        keyWindow.hasShadow = false
+        keyWindow.backgroundColor = .windowBackgroundColor
+        keyWindow.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
+        sink = keyWindow
+        RunLoop.main.run(until: Date().addingTimeInterval(0.2))
+    }
+    let displayRect = window.frame.insetBy(dx: -64, dy: -64).intersection(screen)
+    let display = outlineCaptureDisplay(displayRect, folder.appendingPathComponent("display.png"))
+    let single = outlineCaptureSingleWindow(window, folder.appendingPathComponent("single-window.png"))
+    let cg = outlineCGWindowImage(window, folder.appendingPathComponent("cgwindow.png"))
+    let runtime = outlineRuntimeDump(window)
+    try writeJSON(runtime, to: folder.appendingPathComponent("runtime.json"))
+    let entry: [String: Any] = [
+        "stage": "window-contour", "appearance": appearance, "background": background,
+        "windowState": state, "shape": "normal titled NSWindow", "windowFrame": probeRect(window.frame),
+        "pixelScale": window.backingScaleFactor, "display": display,
+        "singleWindow": single, "cgWindow": cg, "runtime": "runtime.json",
+        "isKeyWindow": window.isKeyWindow
+    ]
+    try writeJSON(entry, to: folder.appendingPathComponent("case.json"))
+    sink?.close(); window.close(); backdrop.close()
+}
+
+func runMenuOutlineProbe(appearance: String, output path: String) throws {
+    let output = URL(fileURLWithPath: path, isDirectory: true)
+    NSApp.appearance = NSAppearance(named: appearance.hasPrefix("dark") ? .darkAqua : .aqua)
+    try runMenuOutlineWindowProbe(appearance: appearance, output: path)
+    for background in ["white", "black"] {
+        for state in ["active", "inactive"] {
+            try outlineCaptureWindowContour(appearance: appearance, background: background,
+                                            state: state, output: output)
+        }
+    }
+    for background in ["plain", "photo"] {
+        for source in ["appkit-popup", "appkit-pulldown", "context", "swiftui-picker",
+                       "swiftui-menu", "combobox", "submenu"] {
+            try outlineRunMenuCase(source: source, appearance: appearance,
+                                   background: background, output: output)
+        }
     }
 }

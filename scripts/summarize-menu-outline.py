@@ -20,22 +20,22 @@ def image_map(info, case, image, case_path):
     if isinstance(info.get("shapePixels"), dict):
         r = info["shapePixels"]
         return (float(r["x"]), float(r["y"]), float(r["width"]), float(r["height"]))
-    frame = case.get("windowFrame") or case.get("shapeFrame") or {}
+    frame = info.get("shapeFrame") or case.get("windowFrame") or case.get("shapeFrame") or {}
     if "cropScreenRect" in info:
         crop = info["cropScreenRect"]
-        scale = float(info.get("scale", case.get("pixelScale", 1)))
+        scale = float(info.get("scale", info.get("pixelScale", case.get("pixelScale", 1))))
         x = (frame["x"] - crop["x"]) * scale
         y = (crop["y"] + crop["height"] - frame["y"] - frame["height"]) * scale
         return x, y, frame["width"] * scale, frame["height"] * scale
-    scale = float(case.get("pixelScale", 1))
+    scale = float(info.get("pixelScale", case.get("pixelScale", 1)))
     width, height = frame["width"] * scale, frame["height"] * scale
     vertical_offset = 0.0
-    runtime_name = case.get("runtime")
+    runtime_name = info.get("runtime") or case.get("runtime")
     if runtime_name:
         try:
             runtime = json.loads((case_path.parent / runtime_name).read_text(encoding="utf-8"))
             parameters = runtime.get("shadowParameters", {})
-            state = "Inactive" if case.get("windowState") == "inactive" else "Active"
+            state = "Inactive" if info.get("windowState", case.get("windowState")) == "inactive" else "Active"
             vertical_offset = float(parameters.get(f"com.apple.WindowShadowVerticalOffset{state}", 0))
         except Exception:
             pass
