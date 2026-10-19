@@ -93,12 +93,59 @@ run_case() {
 
 # Completion gate first: regular on switches in both appearances and both backgrounds.
 # Outline-only filters run a dedicated AppKit probe instead of the control capture matrix.
-if [[ "$FILTER" != menu-outline-window && "$FILTER" != menu-outline && "$FILTER" != menu-outline-recover ]]; then
+if [[ "$FILTER" != menu-outline-window && "$FILTER" != menu-outline && \
+      "$FILTER" != menu-outline-recover && "$FILTER" != menu-outline-recover-cases ]]; then
   for appearance in light dark; do
     for background in plain grid; do
       run_case nsswitch "$appearance" "$background" regular on hold default
     done
   done
+fi
+
+# Recover individual missing captures in isolated app instances. A stuck menu
+# interaction cannot prevent the remaining appearance cases from being written.
+if [[ "$FILTER" == menu-outline-recover-cases ]]; then
+  mkdir -p out/menu-outline
+  defaults write com.apple.universalaccess reduceTransparency -bool false
+  recovery_dir="$ROOT/out/menu-outline"
+  run_outline_app() {
+    local label="$1"
+    shift
+    echo "MENU OUTLINE RECOVERY CASE name=$label" >> out/log.txt
+    killall GlassCaptures >/dev/null 2>&1 || true
+    killall cfprefsd >/dev/null 2>&1 || true
+    if ! perl -e 'alarm shift; exec @ARGV' 120 /usr/bin/open -W -n -a "$APP" --args \
+        "$@" --probe-out "$recovery_dir" --out "$ROOT/out" >> out/log.txt 2>&1; then
+      echo "MENU OUTLINE RECOVERY CASE FAILED name=$label" >> out/log.txt
+      FAILURES=$((FAILURES + 1))
+    fi
+    killall GlassCaptures >/dev/null 2>&1 || true
+  sleep 1
+  }
+
+  defaults write com.apple.universalaccess increaseContrast -bool true
+  killall cfprefsd >/dev/null 2>&1 || true
+  run_outline_app "light-contrast/photo/swiftui-picker" --menu-outline-menu-only-mode \
+    --probe-appearance light-contrast --probe-menu-filter photo:swiftui-picker
+
+  defaults write com.apple.universalaccess increaseContrast -bool true
+  killall cfprefsd >/dev/null 2>&1 || true
+  run_outline_app "dark-contrast/step1" --menu-outline-window-mode --probe-appearance dark-contrast
+  for background in white black; do
+    for state in active inactive; do
+      run_outline_app "dark-contrast/window-contour/$background/$state" \
+        --menu-outline-contour-only-mode --probe-appearance dark-contrast \
+        --probe-window-background "$background" --probe-window-state "$state"
+    done
+  done
+  for background in plain photo; do
+    for source in appkit-popup appkit-pulldown context swiftui-picker swiftui-menu combobox submenu; do
+      run_outline_app "dark-contrast/$background/$source" --menu-outline-menu-only-mode \
+        --probe-appearance dark-contrast --probe-menu-filter "$background:$source"
+    done
+  done
+  defaults write com.apple.universalaccess increaseContrast -bool false
+  killall cfprefsd >/dev/null 2>&1 || true
 fi
 
 if [[ "$FILTER" != smoke ]]; then
@@ -317,6 +364,7 @@ if [[ "$FILTER" == menu-outline-window || "$FILTER" == menu-outline || "$FILTER"
     mode_flag=--menu-outline-mode
     timeout_seconds=1450
   elif [[ "$FILTER" == menu-outline-recover ]]; then
+    mode_flag=--menu-outline-mode
     passes=(light-contrast dark-contrast)
     timeout_seconds=1450
   fi
@@ -328,10 +376,10 @@ if [[ "$FILTER" == menu-outline-window || "$FILTER" == menu-outline || "$FILTER"
     killall cfprefsd >/dev/null 2>&1 || true
     pass_dir="$ROOT/out/menu-outline"
     echo "MENU OUTLINE WINDOW PASS name=$pass increaseContrast=$contrast" >> out/log.txt
-    app_args=("$mode_flag" --probe-appearance "$pass" --probe-out "$pass_dir")
+    app_args=("$mode_flag" --probe-appearance "$pass" --probe-out "$pass_dir" --out "$ROOT/out")
     if [[ "$FILTER" == menu-outline-recover && "$pass" == light-contrast ]]; then
       app_args=(--menu-outline-menu-only-mode --probe-appearance "$pass" --probe-out "$pass_dir" \
-                --probe-menu-filter light-contrast-photo-missing)
+                --probe-menu-filter light-contrast-photo-missing --out "$ROOT/out")
     fi
     if ! perl -e 'alarm shift; exec @ARGV' "$timeout_seconds" /usr/bin/open -W -n -a "$APP" --args \
         "${app_args[@]}" >> out/log.txt 2>&1; then
@@ -433,7 +481,8 @@ with open('out/quality-warnings.txt', 'w') as f:
     f.write('\n'.join(quality_warnings) + ('\n' if quality_warnings else ''))
 with open('out/manifest.json', 'w') as f:
     json.dump(parts, f, indent=2, sort_keys=True)
-required = set() if filter_name in ('menu-outline-window', 'menu-outline') else {
+required = set() if filter_name in ('menu-outline-window', 'menu-outline', 'menu-outline-recover',
+                                    'menu-outline-recover-cases') else {
     (a, b) for a in ('light', 'dark') for b in ('plain', 'grid')
 }
 phases = {'idle', 'held-0100ms', 'held-0250ms', 'held-0500ms', 'held-1000ms'}

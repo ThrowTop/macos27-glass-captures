@@ -1218,7 +1218,8 @@ if let i = CommandLine.arguments.firstIndex(of: "--env-out"), i + 1 < CommandLin
 }
 if (CommandLine.arguments.contains("--menu-outline-window-mode") ||
     CommandLine.arguments.contains("--menu-outline-mode") ||
-    CommandLine.arguments.contains("--menu-outline-menu-only-mode")),
+    CommandLine.arguments.contains("--menu-outline-menu-only-mode") ||
+    CommandLine.arguments.contains("--menu-outline-contour-only-mode")),
    let appearanceIndex = CommandLine.arguments.firstIndex(of: "--probe-appearance"),
    let outputIndex = CommandLine.arguments.firstIndex(of: "--probe-out"),
    appearanceIndex + 1 < CommandLine.arguments.count, outputIndex + 1 < CommandLine.arguments.count {
@@ -1227,8 +1228,15 @@ if (CommandLine.arguments.contains("--menu-outline-window-mode") ||
     let output = CommandLine.arguments[outputIndex + 1]
     let fullMenuOutline = CommandLine.arguments.contains("--menu-outline-mode")
     let menuOnly = CommandLine.arguments.contains("--menu-outline-menu-only-mode")
+    let contourOnly = CommandLine.arguments.contains("--menu-outline-contour-only-mode")
     let menuFilterIndex = CommandLine.arguments.firstIndex(of: "--probe-menu-filter")
     let menuFilter = menuFilterIndex.flatMap { $0 + 1 < CommandLine.arguments.count
+        ? CommandLine.arguments[$0 + 1] : nil }
+    let backgroundIndex = CommandLine.arguments.firstIndex(of: "--probe-window-background")
+    let windowBackground = backgroundIndex.flatMap { $0 + 1 < CommandLine.arguments.count
+        ? CommandLine.arguments[$0 + 1] : nil }
+    let stateIndex = CommandLine.arguments.firstIndex(of: "--probe-window-state")
+    let windowState = stateIndex.flatMap { $0 + 1 < CommandLine.arguments.count
         ? CommandLine.arguments[$0 + 1] : nil }
     final class MenuOutlineLaunchDelegate: NSObject, NSApplicationDelegate {
         let start: () -> Void
@@ -1239,7 +1247,10 @@ if (CommandLine.arguments.contains("--menu-outline-window-mode") ||
     }
     let delegate = MenuOutlineLaunchDelegate {
         do {
-            if fullMenuOutline || menuOnly {
+            if contourOnly, let windowBackground, let windowState {
+                try runMenuOutlineSingleContourProbe(appearance: appearance, background: windowBackground,
+                                                     state: windowState, output: output)
+            } else if fullMenuOutline || menuOnly {
                 try runMenuOutlineProbe(appearance: appearance, output: output, menuFilter: menuFilter)
             }
             else { try runMenuOutlineWindowProbe(appearance: appearance, output: output) }

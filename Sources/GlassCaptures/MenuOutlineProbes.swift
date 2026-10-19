@@ -95,8 +95,10 @@ private func outlineCaptureDisplay(_ rect: CGRect, _ url: URL) -> [String: Any] 
                 let title = (window.title ?? "").lowercased()
                 let owner = (window.owningApplication?.applicationName ?? "").lowercased()
                 return owner.contains("usernotificationcenter") ||
+                    owner.contains("universalaccessauthwarn") ||
                     title.contains("private window picker") ||
-                    title.contains("screen and audio") || title.contains("screen recording")
+                    title.contains("screen and audio") || title.contains("screen recording") ||
+                    title.contains("device control and data access")
             }
             excludedNames.value = excluded.map {
                 "\($0.owningApplication?.applicationName ?? "unknown"): \($0.title ?? "")"
@@ -421,6 +423,7 @@ private func outlineRunMenuCase(source: String, appearance: String, background: 
     let folder = output.appendingPathComponent("menus/\(appearance)/\(background)/\(source)",
                                                isDirectory: true)
     try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+    record("menu-outline begin source=\(source) pass=\(appearance) background=\(background)")
     let screen = NSScreen.main?.frame ?? CGRect(x: 0, y: 0, width: 1024, height: 768)
     let hostFrame = CGRect(x: screen.midX - 360, y: screen.midY - 270, width: 720, height: 540)
     let host = NSWindow(contentRect: hostFrame, styleMask: [.titled, .closable], backing: .buffered, defer: false)
@@ -518,7 +521,19 @@ private func outlineRunMenuCase(source: String, appearance: String, background: 
     var attempts: [[String: Any]] = []
     var final: [String: Any] = [:]
     var didOpen = false
+    let caseURL = folder.appendingPathComponent("case.json")
+    func writeProgress(_ error: Any = "menu-open probe in progress") throws {
+        try writeJSON(["stage": "menus", "source": source, "appearance": appearance,
+                       "background": background, "opened": false, "attempts": attempts,
+                       "menuWindows": final["menuWindows"] ?? [], "hostRuntime": final["hostRuntime"] ?? NSNull(),
+                       "captures": final["captures"] ?? [], "openError": error], to: caseURL)
+    }
+    try writeProgress()
     for attempt in 1...3 where !didOpen {
+        record("menu-outline attempt begin source=\(source) pass=\(appearance) background=\(background) attempt=\(attempt)")
+        let progressIndex = attempts.count
+        attempts.append(["attempt": attempt, "opened": false, "error": "attempt in progress"])
+        try writeProgress("attempt \(attempt) in progress")
         let baseline = Set(NSApp.windows.map { $0.windowNumber })
         let attemptResult = OutlineBox<[String: Any]?>(nil)
         let hover = Timer(timeInterval: 0.55, repeats: false) { _ in
@@ -539,12 +554,18 @@ private func outlineRunMenuCase(source: String, appearance: String, background: 
                                        "error": "no visible menu window during tracking"]
             }
             if let nativeMenu { nativeMenu.cancelTracking() }
-            else { outlineSendEscape(to: NSApp.keyWindow ?? host) }
+            else {
+                for menuWindow in outlineMenuWindows(excluding: baseline) { outlineSendEscape(to: menuWindow) }
+                outlineSendEscape(to: NSApp.keyWindow ?? host)
+            }
             for menuWindow in outlineMenuWindows(excluding: baseline) { menuWindow.orderOut(nil) }
         }
         let fallback = Timer(timeInterval: 10, repeats: false) { _ in
             if let nativeMenu { nativeMenu.cancelTrackingWithoutAnimation() }
-            else { outlineSendEscape(to: NSApp.keyWindow ?? host) }
+            else {
+                for menuWindow in outlineMenuWindows(excluding: baseline) { outlineSendEscape(to: menuWindow) }
+                outlineSendEscape(to: NSApp.keyWindow ?? host)
+            }
         }
         for timer in [hover, captureTimer, fallback] {
             RunLoop.main.add(timer, forMode: .eventTracking)
@@ -563,13 +584,15 @@ private func outlineRunMenuCase(source: String, appearance: String, background: 
         }
         [hover, captureTimer, fallback].forEach { $0.invalidate() }
         if let result = attemptResult.value {
-            attempts.append(result)
+            attempts[progressIndex] = result
             final = result
             didOpen = (result["opened"] as? Bool) == true && result["captures"] != nil
         } else {
-            attempts.append(["attempt": attempt, "opened": false,
-                             "error": "tracking callback did not produce a capture result"])
+            attempts[progressIndex] = ["attempt": attempt, "opened": false,
+                                       "error": "tracking callback did not produce a capture result"]
         }
+        try writeProgress(didOpen ? NSNull() : (attempts.last?["error"] ?? "menu did not open after three attempts"))
+        record("menu-outline attempt end source=\(source) pass=\(appearance) background=\(background) attempt=\(attempt) opened=\(didOpen)")
     }
 
     let caseEntry: [String: Any] = [
@@ -579,7 +602,7 @@ private func outlineRunMenuCase(source: String, appearance: String, background: 
         "captures": final["captures"] ?? [], "openError": didOpen ? NSNull() :
             (attempts.last?["error"] ?? "menu did not open after three attempts")
     ]
-    try writeJSON(caseEntry, to: folder.appendingPathComponent("case.json"))
+    try writeJSON(caseEntry, to: caseURL)
     record("menu-outline source=\(source) pass=\(appearance) background=\(background) opened=\(didOpen)")
     host.close()
 }
@@ -725,7 +748,10 @@ func runMenuOutlineProbe(appearance: String, output path: String,
         }
     }
     let menuCases: [(String, String)]
-    if menuFilter == "light-contrast-photo-missing" {
+    if let menuFilter, menuFilter.contains(":") {
+        let parts = menuFilter.split(separator: ":", maxSplits: 1).map(String.init)
+        menuCases = parts.count == 2 ? [(parts[0], parts[1])] : []
+    } else if menuFilter == "light-contrast-photo-missing" {
         menuCases = ["combobox", "submenu", "swiftui-menu", "swiftui-picker"].map { ("photo", $0) }
     } else {
         menuCases = ["plain", "photo"].flatMap { background in
@@ -737,4 +763,12 @@ func runMenuOutlineProbe(appearance: String, output path: String,
             try outlineRunMenuCase(source: source, appearance: appearance,
                                    background: background, output: output)
     }
+}
+
+func runMenuOutlineSingleContourProbe(appearance: String, background: String, state: String,
+                                      output path: String) throws {
+    NSApp.appearance = NSAppearance(named: appearance.hasPrefix("dark") ? .darkAqua : .aqua)
+    let output = URL(fileURLWithPath: path, isDirectory: true)
+    try outlineCaptureWindowContour(appearance: appearance, background: background,
+                                    state: state, output: output)
 }
