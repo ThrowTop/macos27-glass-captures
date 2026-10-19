@@ -174,6 +174,37 @@ final class CaptureToolbarItems: NSObject, NSToolbarDelegate {
     }
 }
 
+final class SegmentedLensToolbarItems: NSObject, NSToolbarDelegate {
+    private let itemID = NSToolbarItem.Identifier("segmented-lens-toolbar-control")
+    let control = NSSegmentedControl(labels: ["Material", "Optics", "Motion"],
+                                     trackingMode: .selectOne, target: nil, action: nil)
+
+    override init() {
+        super.init()
+        control.segmentStyle = .capsule
+        control.controlSize = .regular
+        for index in 0..<control.segmentCount { control.setWidth(96, forSegment: index) }
+        control.sizeToFit()
+        control.selectedSegment = 0
+    }
+
+    func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        [itemID, .flexibleSpace]
+    }
+
+    func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        [.flexibleSpace, itemID, .flexibleSpace]
+    }
+
+    func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier id: NSToolbarItem.Identifier,
+                 willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
+        guard id == itemID else { return nil }
+        let item = NSToolbarItem(itemIdentifier: id)
+        item.view = control
+        return item
+    }
+}
+
 struct SwitchView: View {
     @State var isOn: Bool
     var body: some View { Toggle("", isOn: $isOn).toggleStyle(.switch).labelsHidden() }
@@ -487,6 +518,7 @@ final class CaptureSession {
     let folder: URL
     let scale: CGFloat
     let toolbarItems: CaptureToolbarItems?
+    let segmentedLensToolbarItems: SegmentedLensToolbarItems?
     let splitController: NSSplitViewController?
     let popover: NSPopover?
     let menu: NSMenu?
@@ -510,11 +542,13 @@ final class CaptureSession {
             .appendingPathComponent(options.background)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let isToolbar = options.scenario == "toolbar-window"
+        let isSegmentedToolbar = options.scenario == "segmented-toolbar"
         let isSidebar = options.scenario == "sidebar-window"
         let w = CaptureWindow(contentRect: CGRect(x: 24, y: 24, width: 480, height: 300),
-                         styleMask: isToolbar || isSidebar ? [.titled, .fullSizeContentView] : [.borderless],
+                         styleMask: isToolbar || isSidebar || isSegmentedToolbar
+                            ? [.titled, .fullSizeContentView] : [.borderless],
                          backing: .buffered, defer: false)
-        if isToolbar || isSidebar {
+        if isToolbar || isSidebar || isSegmentedToolbar {
             w.setFrame(CGRect(x: 24, y: 24, width: 480, height: 300), display: false)
         }
         w.isReleasedWhenClosed = false
@@ -522,18 +556,26 @@ final class CaptureSession {
         w.hasShadow = false
         w.level = .normal
         var newToolbarItems: CaptureToolbarItems? = nil
+        var newSegmentedLensToolbarItems: SegmentedLensToolbarItems? = nil
         var newSplitController: NSSplitViewController? = nil
         var newPopover: NSPopover? = nil
         var newMenu: NSMenu? = nil
-        if isToolbar {
+        if isToolbar || isSegmentedToolbar {
             w.titleVisibility = .hidden
             w.titlebarAppearsTransparent = true
-            let items = CaptureToolbarItems()
-            let toolbar = NSToolbar(identifier: "capture-glass-toolbar")
-            toolbar.delegate = items
+            let toolbar = NSToolbar(identifier: isSegmentedToolbar
+                ? "segmented-lens-toolbar" : "capture-glass-toolbar")
             toolbar.displayMode = .iconOnly
+            if isSegmentedToolbar {
+                let items = SegmentedLensToolbarItems()
+                toolbar.delegate = items
+                newSegmentedLensToolbarItems = items
+            } else {
+                let items = CaptureToolbarItems()
+                toolbar.delegate = items
+                newToolbarItems = items
+            }
             w.toolbar = toolbar
-            newToolbarItems = items
         }
         w.appearance = NSAppearance(named: options.appearance == "dark" ? .darkAqua : .aqua)
         let bg = BackgroundView(frame: CGRect(x: 0, y: 0, width: 480, height: 300), kind: options.background)
@@ -568,6 +610,22 @@ final class CaptureSession {
             v.selectedSegment = options.state == "on" ? 1 : 0
             v.sizeToFit()
             c = v
+        case "segmented-lens":
+            let v = NSSegmentedControl(labels: ["Material", "Optics", "Motion"],
+                                       trackingMode: .selectOne, target: nil, action: nil)
+            v.segmentStyle = .capsule
+            v.controlSize = .regular
+            for index in 0..<v.segmentCount { v.setWidth(96, forSegment: index) }
+            v.selectedSegment = options.state == "on" ? 1 : 0
+            v.sizeToFit()
+            c = v
+        case "segmented-toolbar":
+            guard let items = newSegmentedLensToolbarItems else {
+                throw NSError(domain: "GlassCaptures", code: 10,
+                              userInfo: [NSLocalizedDescriptionKey: "segmented toolbar unavailable"])
+            }
+            items.control.selectedSegment = options.state == "on" ? 1 : 0
+            c = items.control
         case "nsbutton":
             let v = NSButton(title: "Button", target: nil, action: nil)
             v.bezelStyle = .rounded
@@ -747,6 +805,7 @@ final class CaptureSession {
         window = w
         scale = w.screen?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 1
         toolbarItems = newToolbarItems
+        segmentedLensToolbarItems = newSegmentedLensToolbarItems
         splitController = newSplitController
         popover = newPopover
         menu = newMenu
@@ -836,6 +895,23 @@ final class CaptureSession {
                                width: content.width, height: content.height)
         }
         let knob = knobFrame()
+        let segmentLabels: [[String: Any]] = (control as? NSSegmentedControl).map { segmented in
+            (0..<segmented.segmentCount).map { index in
+                let attributed = (segmented.cell as? NSSegmentedCell)?.attributedTitle(forSegment: index)
+                let foreground = attributed?.attribute(.foregroundColor, at: 0,
+                                                       effectiveRange: nil) as? NSColor
+                let resolved = foreground.map { color -> Any in
+                    var value: Any = NSNull()
+                    window.effectiveAppearance.performAsCurrentDrawingAppearance {
+                        value = probeColor(color, appearance: window.effectiveAppearance)
+                    }
+                    return value
+                } ?? NSNull()
+                return ["index": index, "title": segmented.label(forSegment: index),
+                        "selected": segmented.selectedSegment == index,
+                        "attributed_foreground": resolved]
+            }
+        } ?? []
         let workspace = NSWorkspace.shared
         let accessibility: [String: Bool] = [
             "increase_contrast": workspace.accessibilityDisplayShouldIncreaseContrast,
@@ -865,7 +941,10 @@ final class CaptureSession {
                 if writePNG(sub, to: cropURL) { cropPath = cropURL.path }
             }
         }
-        if phase == "idle" || phase == "held" || phase == "drag-held" || phase.hasPrefix("abl-") {
+        let segmentedLensScenario = options.scenario == "segmented-lens" ||
+            options.scenario == "segmented-toolbar"
+        if phase == "idle" || phase == "held" || phase == "drag-held" || phase.hasPrefix("abl-") ||
+            (segmentedLensScenario && phase == "released") {
             let layerURL = folder.appendingPathComponent("layers-\(phase).json")
             do {
                 if let layer = window.contentView?.superview?.layer {
@@ -920,6 +999,8 @@ final class CaptureSession {
             "background_obstructions": backgroundObstructions,
             "do_not_disturb": "not configured; obstruction check is authoritative",
             "control_value": (control as? NSSwitch).map { $0.state.rawValue } as Any? ?? NSNull(),
+            "segment_labels": segmentLabels,
+            "control_selected_segment": (control as? NSSegmentedControl)?.selectedSegment as Any? ?? NSNull(),
             "error": error as Any? ?? NSNull(), "image": method == "none" ? NSNull() : url.path as Any,
             "crop": cropPath as Any? ?? NSNull(), "sck_error": sckFailure as Any? ?? NSNull(),
             "layers": layerPath as Any? ?? NSNull()
@@ -1159,8 +1240,12 @@ final class CaptureSession {
         let f = control.convert(control.bounds, to: window.contentView)
         let start = knobFrame().map { CGPoint(x: $0.midX, y: $0.midY) }
             ?? CGPoint(x: f.midX, y: f.midY)
-        let direction: CGFloat = options.state == "on" ? -1 : 1
-        let dragPoint = CGPoint(x: start.x + 8 * direction, y: start.y)
+        let segmentedLensScenario = options.scenario == "segmented-lens" ||
+            options.scenario == "segmented-toolbar"
+        let direction: CGFloat = segmentedLensScenario ? 1 : options.state == "on" ? -1 : 1
+        let dragDistance = segmentedLensScenario
+            ? f.width / 6 : 8
+        let dragPoint = CGPoint(x: start.x + dragDistance * direction, y: start.y)
         let isDrag = options.interaction == "drag"
         mouseDownTime = Date()
         // Static references only: one capture once the press has settled and one once the

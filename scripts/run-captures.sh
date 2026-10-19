@@ -96,7 +96,8 @@ run_case() {
 if [[ "$FILTER" != menu-outline-window && "$FILTER" != menu-outline && \
       "$FILTER" != menu-outline-recover && "$FILTER" != menu-outline-recover-cases && \
       "$FILTER" != menu-outline-recover-swiftui && "$FILTER" != window-shape && \
-      "$FILTER" != text-probe && "$FILTER" != scroll-pocket ]]; then
+      "$FILTER" != text-probe && "$FILTER" != scroll-pocket && \
+      "$FILTER" != segmented-lens ]]; then
   for appearance in light dark; do
     for background in plain grid; do
       run_case nsswitch "$appearance" "$background" regular on hold default
@@ -425,6 +426,31 @@ if [[ "$FILTER" == window-shape ]]; then
   done
 fi
 
+# Native NSSegmentedControl references for the viewer's capsule selector.
+# Each static phase runs in its own bounded app process so a stuck tracking loop
+# cannot hold the hosted runner past the workflow limit.
+if [[ "$FILTER" == segmented-lens ]]; then
+  mkdir -p out/segmented-lens
+  for scenario in segmented-lens segmented-toolbar; do
+    for pass in light dark; do
+      for phase in idle hold drag; do
+        state=on
+        interaction="$phase"
+        if [[ "$phase" == idle ]]; then state=off; fi
+        echo "SEGMENTED LENS PASS scenario=$scenario appearance=$pass phase=$phase" >> out/log.txt
+        if ! perl -e 'alarm shift; exec @ARGV' 120 /usr/bin/open -W -n -a "$APP" --args \
+            --scenario "$scenario" --appearance "$pass" --background plain \
+            --size regular --state "$state" --interaction "$interaction" --out "$ROOT/out" \
+            >> out/log.txt 2>&1; then
+          echo "SEGMENTED LENS PASS FAILED scenario=$scenario appearance=$pass phase=$phase" >> out/log.txt
+          FAILURES=$((FAILURES + 1))
+        fi
+        killall GlassCaptures >/dev/null 2>&1 || true
+      done
+    done
+  done
+fi
+
 # Step 1 runner-effects validation, isolated from the main control capture matrix.
 if [[ "$FILTER" == menu-outline-window || "$FILTER" == menu-outline || "$FILTER" == menu-outline-recover ]]; then
   mkdir -p out/menu-outline
@@ -551,7 +577,7 @@ with open('out/manifest.json', 'w') as f:
     json.dump(parts, f, indent=2, sort_keys=True)
 required = set() if filter_name in ('menu-outline-window', 'menu-outline', 'menu-outline-recover',
                                     'menu-outline-recover-cases', 'menu-outline-recover-swiftui',
-                                    'window-shape', 'text-probe', 'scroll-pocket') else {
+                                    'window-shape', 'text-probe', 'scroll-pocket', 'segmented-lens') else {
     (a, b) for a in ('light', 'dark') for b in ('plain', 'grid')
 }
 phases = {'idle', 'held'}
@@ -609,6 +635,31 @@ print(f'scheduled cases: {len(scheduled)}; incomplete cases: {len(incomplete)}')
 print(f'held-crop quality warnings: {len(quality_warnings)}')
 PY
 
+if [[ "$FILTER" == segmented-lens ]]; then
+  python3 - <<'PY'
+import json, os
+with open('out/manifest.json') as f:
+    parts = json.load(f)
+missing = []
+for scenario in ('segmented-lens', 'segmented-toolbar'):
+    for appearance in ('light', 'dark'):
+        expected = [('idle', 'idle', 'off'), ('held', 'hold', 'on'),
+                    ('drag-held', 'drag', 'on'), ('released', 'drag', 'on')]
+        for phase, interaction, state in expected:
+            entries = [e for e in parts if e.get('scenario') == scenario and
+                       e.get('appearance') == appearance and e.get('interaction') == interaction and
+                       e.get('state') == state and e.get('phase') == phase and e.get('success')]
+            valid = [e for e in entries if e.get('image') and os.path.isfile(e['image']) and
+                     e.get('layers') and os.path.isfile(e['layers']) and
+                     len(e.get('segment_labels', [])) == 3]
+            if not valid:
+                missing.append(f'{scenario}/{appearance}/{phase}: missing image, layer tree, or label dump')
+with open('out/segmented-lens-gate.txt', 'w') as f:
+    f.write('PASS\n' if not missing else 'FAIL\n' + '\n'.join(missing) + '\n')
+print(open('out/segmented-lens-gate.txt').read())
+PY
+fi
+
 if [[ -s out/incomplete.txt ]]; then
   log show --last 10m --style compact \
     --predicate 'process == "GlassCaptures" OR process == "ReportCrash" OR eventMessage CONTAINS[c] "GlassCaptures"' \
@@ -618,6 +669,10 @@ fi
 echo "case failures: $FAILURES" >> out/env.txt
 echo "capture finished: $(date -u +%FT%TZ)" >> out/env.txt
 if grep -q '^PASS' out/gate.txt && grep -q '^PASS' out/recipe-gate.txt; then
+  if [[ "$FILTER" == segmented-lens ]]; then
+    grep -q '^PASS' out/segmented-lens-gate.txt && exit 0
+    exit 1
+  fi
   if [[ "$FILTER" == probes || ",$FILTER," == *,probes,* ]]; then
     grep -q '^PASS' out/probes-gate.txt && exit 0
     exit 1
