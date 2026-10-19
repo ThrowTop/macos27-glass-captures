@@ -159,6 +159,9 @@ def main(run):
                 descriptions.append(typ+': '+('none' if not rows else ' | '.join(f"t={fmt(t)} α={fmt(a)} root={fmt(o)} tr={fmt(tr)} server={fmt(sa)}" for t,a,o,tr,sa in rows)))
             parts.append('- '+mid+'; '+'; '.join(descriptions))
         parts.append('\n### Slider drag\n')
+        target_times=(0.1,0.2,0.3,0.4,0.5,0.75,1.05,1.2,1.5)
+        def nearest_sample(samples, target):
+            return min(samples, key=lambda x: abs((x.get('t') or 0)-target)) if samples else {}
         for end in ('maxEnd','minEnd'):
             p=f'sliderDrag.regular.{end}'; samples=val(d,p+'.timeline',[]) or []
             # identify layer paths that move most across samples
@@ -173,18 +176,18 @@ def main(run):
             paths=[x[1] for x in sorted(scores,reverse=True)[:6]]
             parts.append(f"- `{end}` tracking={val(d,p+'.tracking')} finalValue={fmt(val(d,p+'.finalValue'))}; changing paths={paths}")
             if samples:
-                inds=sorted(set(round(i*(len(samples)-1)/min(24,len(samples)-1)) for i in range(min(25,len(samples))))) if len(samples)>1 else [0]
-                table=[]
-                for i in inds:
-                    s=samples[i]; cols=[f"t={fmt(s.get('t'))} value={fmt(s.get('doubleValue'))}"]
+                for target in target_times:
+                    s=nearest_sample(samples,target)
+                    cols=[f"t={target:.2f} (sample {fmt(s.get('t'))}) value={fmt(s.get('doubleValue'))}"]
                     for path in paths:
                         x=next((z for z in s.get('layers',[]) if z.get('path')==path),{})
-                        if x: cols.append(f"{path}:f={rectstr(x.get('frame'))},tr={x.get('transform')}")
-                    if s.get('overlayWindows'): cols.append('overlays='+json.dumps(s['overlayWindows'],separators=(',',':')))
-                    table.append('; '.join(cols))
-                parts.append('  | t | doubleValue | layers and overlay windows |')
-                parts.append('  |---|---:|---|')
-                parts.append('  | '+'<br>'.join(table)+' |')
+                        if x: cols.append(f"{path}:f={rectstr(x.get('frame'))}")
+                    parts.append('  - '+'; '.join(cols))
+                for target in (0.5,0.75):
+                    s=nearest_sample(samples,target)
+                    for wi,overlay in enumerate(s.get('overlayWindows',[])):
+                        layers=','.join(f"{x.get('path')}:{rectstr(x.get('frame'))}" for x in overlay.get('layers',[]))
+                        parts.append(f"  - overlay t={target:.2f} (sample {fmt(s.get('t'))}) window[{wi}] frame={rectstr(overlay.get('frame'))}; layers=[{layers}]")
     out='\n'.join(parts)+'\n'; lines=out.splitlines()
     if len(lines)>150: out='\n'.join(lines[:149]+['[truncated at 150 lines]'])+'\n'
     dest=root/'deep-summary.md'; dest.write_text(out,encoding='utf-8'); print(dest)

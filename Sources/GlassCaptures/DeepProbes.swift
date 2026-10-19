@@ -266,22 +266,13 @@ private func probeVerticalSliderTicks(window: NSWindow, root: NSView, folder: UR
 
 // MARK: - Slider over-drag timeline
 
-private func postMouse(_ type: NSEvent.EventType, at p: CGPoint, window: NSWindow) {
+private func sendMouse(_ type: NSEvent.EventType, at p: CGPoint, window: NSWindow,
+                       recorder: ProbeRecorder, id: String) {
     guard let e = NSEvent.mouseEvent(with: type, location: p, modifierFlags: [],
                                      timestamp: ProcessInfo.processInfo.systemUptime,
                                      windowNumber: window.windowNumber, context: nil, eventNumber: 0,
                                      clickCount: 1, pressure: type == .leftMouseUp ? 0 : 1) else { return }
-    NSApp.postEvent(e, atStart: false)
-}
-
-private func postQuartzMouse(_ type: CGEventType, at p: CGPoint, window: NSWindow,
-                             recorder: ProbeRecorder, id: String) {
-    recorder.guarded("\(id).event.\(type.rawValue)", {
-        let screen = window.convertToScreen(CGRect(origin: p, size: .zero)).origin
-        let quartz = CGPoint(x: screen.x, y: primaryScreenFrame().maxY - screen.y)
-        CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: quartz,
-                mouseButton: .left)?.post(tap: .cghidEventTap)
-    })
+    recorder.guarded("\(id).event.\(type.rawValue)", { window.sendEvent(e) })
 }
 
 private func probeSliderDrag(window: NSWindow, root: NSView, folder: URL, recorder: ProbeRecorder) {
@@ -340,8 +331,8 @@ private func probeSliderDrag(window: NSWindow, root: NSView, folder: URL, record
         var timers: [Timer] = [sampler]
         for (delay, x) in steps {
             let timer = Timer(timeInterval: delay, repeats: false) { _ in
-                postQuartzMouse(.leftMouseDragged, at: CGPoint(x: x, y: start.y), window: window,
-                                recorder: recorder, id: id)
+                sendMouse(.leftMouseDragged, at: CGPoint(x: x, y: start.y), window: window,
+                          recorder: recorder, id: id)
             }
             RunLoop.main.add(timer, forMode: .common); timers.append(timer)
         }
@@ -351,25 +342,24 @@ private func probeSliderDrag(window: NSWindow, root: NSView, folder: URL, record
         }
         RunLoop.main.add(holdShot, forMode: .common); timers.append(holdShot)
         let release = Timer(timeInterval: 1.0, repeats: false) { _ in
-            postQuartzMouse(.leftMouseUp, at: CGPoint(x: endX + 100 * direction, y: start.y), window: window,
-                            recorder: recorder, id: id)
+            sendMouse(.leftMouseUp, at: CGPoint(x: endX + 100 * direction, y: start.y), window: window,
+                      recorder: recorder, id: id)
         }
         RunLoop.main.add(release, forMode: .common); timers.append(release)
         let downEvent = NSEvent.mouseEvent(with: .leftMouseDown, location: start, modifierFlags: [],
                                            timestamp: ProcessInfo.processInfo.systemUptime,
                                            windowNumber: window.windowNumber, context: nil, eventNumber: 0,
                                            clickCount: 1, pressure: 1)
-        var tracking = "none"
+        var tracking = "sendEvent gesture"
+        var downReturnedWithin20ms = false
         if let downEvent {
-            let sent = Date()
+            let sent = ProcessInfo.processInfo.systemUptime
             recorder.guarded("\(id).sendEvent", { window.sendEvent(downEvent) })
-            tracking = "window.sendEvent"
-            if Date().timeIntervalSince(sent) < 0.02 {
-                recorder.guarded("\(id).mouseDown", { s.mouseDown(with: downEvent) })
-                tracking = Date().timeIntervalSince(sent) < 0.02 ? "no tracking loop" : "control.mouseDown"
-            }
+            downReturnedWithin20ms = ProcessInfo.processInfo.systemUptime - sent < 0.02
+            tracking = downReturnedWithin20ms ? "sendEvent gesture" : "sendEvent tracking loop"
         }
         recorder.put("\(id).tracking", tracking)
+        recorder.put("\(id).mouseDownReturnedWithin20ms", downReturnedWithin20ms)
         recorder.put("\(id).trackingReturnedAt", Date().timeIntervalSince(began))
         // Settle after release while the sampler keeps running, then a late screenshot.
         let settleEnd = began.addingTimeInterval(1.6)
