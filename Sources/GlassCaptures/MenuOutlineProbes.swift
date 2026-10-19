@@ -3,6 +3,7 @@ import QuartzCore
 import ScreenCaptureKit
 import SafeKVC
 import CoreGraphics
+import Darwin
 
 private final class OutlineSolidView: NSView {
     var color: NSColor = .white
@@ -68,6 +69,8 @@ private func outlineCaptureSingleWindow(_ window: NSWindow, _ url: URL) -> [Stri
     let image = OutlineBox<CGImage?>(nil)
     let failure = OutlineBox<String?>(nil)
     let number = CGWindowID(window.windowNumber)
+    let windowSize = window.frame.size
+    let scale = NSScreen.main?.backingScaleFactor ?? 1
     Task.detached {
         do {
             let content = try await SCShareableContent.current
@@ -77,9 +80,8 @@ private func outlineCaptureSingleWindow(_ window: NSWindow, _ url: URL) -> [Stri
             }
             let filter = SCContentFilter(desktopIndependentWindow: source)
             let configuration = SCStreamConfiguration()
-            let scale = NSScreen.main?.backingScaleFactor ?? 1
-            configuration.width = max(1, Int(ceil(window.frame.width * scale)))
-            configuration.height = max(1, Int(ceil(window.frame.height * scale)))
+            configuration.width = max(1, Int(ceil(windowSize.width * scale)))
+            configuration.height = max(1, Int(ceil(windowSize.height * scale)))
             configuration.showsCursor = false
             configuration.shouldBeOpaque = false
             configuration.ignoreShadowsSingleWindow = false
@@ -151,8 +153,7 @@ private func outlineRuntimeDump(_ window: NSWindow) -> [String: Any] {
     var shadowError: NSString?
     let shadowValue: Any?
     if window.responds(to: selector) {
-        let object: AnyObject? = SafeInvoke({ window.perform(selector)?.takeUnretainedValue() }, &shadowError)
-        shadowValue = object
+        shadowValue = SafeInvoke({ window.perform(selector)?.takeUnretainedValue() }, &shadowError)
     } else {
         shadowValue = nil
     }
@@ -161,10 +162,10 @@ private func outlineRuntimeDump(_ window: NSWindow) -> [String: Any] {
     var glassResult: Any = ["reachable": false]
     let menuClassObject = NSMenu.self as AnyObject
     if let menuClass = menuClassObject as? NSObject, menuClass.responds(to: glassSelector) {
-        let object: AnyObject? = SafeInvoke({ menuClass.perform(glassSelector)?.takeUnretainedValue() }, &glassError)
+        let object = SafeInvoke({ menuClass.perform(glassSelector)?.takeUnretainedValue() }, &glassError)
         glassResult = ["reachable": true, "value": outlineSafeValue(object)]
     } else if window.responds(to: glassSelector) {
-        let object: AnyObject? = SafeInvoke({ window.perform(glassSelector)?.takeUnretainedValue() }, &glassError)
+        let object = SafeInvoke({ window.perform(glassSelector)?.takeUnretainedValue() }, &glassError)
         glassResult = ["reachable": true, "value": outlineSafeValue(object)]
     }
     let shadowJSON: Any
@@ -203,8 +204,15 @@ private func outlineRuntimeDump(_ window: NSWindow) -> [String: Any] {
 }
 
 private func outlineCGWindowImage(_ window: NSWindow, _ url: URL) -> [String: Any] {
-    guard let image = CGWindowListCreateImage(.null, .optionIncludingWindow,
-                                               CGWindowID(window.windowNumber), [.bestResolution]) else {
+    typealias LegacyCGWindowListCreateImage = @convention(c) (CGRect, UInt32, UInt32, UInt32) -> Unmanaged<CGImage>?
+    guard let library = dlopen("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics", RTLD_LAZY),
+          let symbol = dlsym(library, "CGWindowListCreateImage") else {
+        return ["error": "CGWindowListCreateImage symbol unavailable in CoreGraphics"]
+    }
+    let capture = unsafeBitCast(symbol, to: LegacyCGWindowListCreateImage.self)
+    guard let image = capture(.null, CGWindowListOption.optionIncludingWindow.rawValue,
+                              CGWindowID(window.windowNumber), CGWindowImageOption.bestResolution.rawValue)?
+        .takeRetainedValue() else {
         return ["error": "CGWindowListCreateImage returned nil"]
     }
     return ["file": url.lastPathComponent, "written": outlineWrite(image, url),
