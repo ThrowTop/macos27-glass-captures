@@ -44,7 +44,9 @@ private func outlineCaptureDisplay(_ rect: CGRect, _ url: URL) -> [String: Any] 
             visibleNames.value = names
             let excluded = content.windows.filter { window in
                 let title = (window.title ?? "").lowercased()
-                return title.contains("private window picker") ||
+                let owner = (window.owningApplication?.applicationName ?? "").lowercased()
+                return owner.contains("usernotificationcenter") ||
+                    title.contains("private window picker") ||
                     title.contains("screen and audio") || title.contains("screen recording")
             }
             excludedNames.value = excluded.map {
@@ -283,13 +285,13 @@ func runMenuOutlineWindowProbe(appearance: String, output path: String) throws {
                               backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
         window.title = "Window effects probe \(colorName)"
-        window.backgroundColor = .windowBackgroundColor
+        window.backgroundColor = colorName == "white" ? .black : .white
         window.hasShadow = true
         window.appearance = NSAppearance(named: appearance.hasPrefix("dark") ? .darkAqua : .aqua)
         let content = OutlineSolidView(frame: CGRect(origin: .zero, size: frame.size))
         content.autoresizingMask = [.width, .height]
         content.wantsLayer = true
-        content.color = .windowBackgroundColor
+        content.color = colorName == "white" ? .black : .white
         window.contentView = content
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
