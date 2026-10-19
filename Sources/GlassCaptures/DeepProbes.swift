@@ -174,7 +174,10 @@ private func runtimeSDFObject(_ object: AnyObject, depth: Int = 0) -> [String: A
     return ["class": NSStringFromClass(type(of: object)), "properties": properties]
 }
 
-private func menuLayerProperties(_ root: CALayer, depth: Int = 0, path: String = "0") -> [[String: Any]] {
+// Shared runtime layer-property dump for menu and grouping probes. It preserves the
+// property/filter/SDF detail while allowing callers to choose their tree depth.
+private func layerPropertyDump(_ root: CALayer, depth: Int = 0, maximumDepth: Int = 16,
+                               path: String = "0", includeAllLayers: Bool = false) -> [[String: Any]] {
     var entries: [[String: Any]] = []
     let cls = NSStringFromClass(type(of: root))
     let layerFilters = (root.filters ?? []).compactMap { $0 as AnyObject? }
@@ -184,8 +187,8 @@ private func menuLayerProperties(_ root: CALayer, depth: Int = 0, path: String =
     let filters = layerFilters + compositing + backgroundFilters
     let matchesClass = cls.hasPrefix("CASDF") || cls.hasPrefix("CABackdrop") ||
         cls.hasPrefix("SwiftUI.SDF") || cls.contains("Portal")
-    if matchesClass || !filters.isEmpty {
-        var entry: [String: Any] = ["path": path, "class": cls,
+    if includeAllLayers || matchesClass || !filters.isEmpty {
+        var entry: [String: Any] = ["path": path, "class": cls, "frame": probeRect(root.frame),
                                     "properties": runtimeProperties(root, upTo: CALayer.self),
                                     "filters": filters.map(runtimeFilter), "effect": [:]]
         if cls.hasPrefix("CASDF"), let effect = SafeValueForKey(root, "effect") as AnyObject? {
@@ -193,10 +196,12 @@ private func menuLayerProperties(_ root: CALayer, depth: Int = 0, path: String =
         }
         entries.append(entry)
     }
-    if depth < 16 {
+    if depth < maximumDepth {
         for (index, child) in (root.sublayers ?? []).enumerated() {
-            entries.append(contentsOf: menuLayerProperties(child, depth: depth + 1,
-                                                           path: "\(path)/\(index)"))
+            entries.append(contentsOf: layerPropertyDump(child, depth: depth + 1,
+                                                         maximumDepth: maximumDepth,
+                                                         path: "\(path)/\(index)",
+                                                         includeAllLayers: includeAllLayers))
         }
     }
     return entries
@@ -552,7 +557,7 @@ private func probeOpenMenu(name: String, menu: NSMenu, anchor: NSView, window: N
                 entry["views"] = viewTree(frameView, depth: 0, maximumDepth: 12)
                 entry["layers"] = frameView.layer.map { deepLayer($0, depth: 0, maximumDepth: 14) as Any } ?? NSNull()
                 if name == "context" || name == "popup.regular", let layer = frameView.layer {
-                    glassLayerEntries.append(contentsOf: menuLayerProperties(layer))
+                    glassLayerEntries.append(contentsOf: layerPropertyDump(layer))
                 }
             }
             return entry
@@ -812,6 +817,139 @@ private func probeControlRenders(window: NSWindow, root: NSView, folder: URL, re
     }
 }
 
+private final class GroupingToolbarDelegate: NSObject, NSToolbarDelegate {
+    let groupID = NSToolbarItem.Identifier("grouping.toolbar.group")
+    let thirdID = NSToolbarItem.Identifier("grouping.toolbar.third")
+    let childIDs = [NSToolbarItem.Identifier("grouping.toolbar.first"),
+                    NSToolbarItem.Identifier("grouping.toolbar.second")]
+
+    func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        [groupID, thirdID, .flexibleSpace]
+    }
+
+    func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        [groupID, thirdID]
+    }
+
+    func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier,
+                 willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
+        if itemIdentifier == groupID {
+            let group = NSToolbarItemGroup(itemIdentifier: groupID)
+            group.label = "Grouped glass"
+            group.paletteLabel = "Grouped glass"
+            group.subitems = zip(childIDs, ["First", "Second"]).map { identifier, label in
+                let item = NSToolbarItem(itemIdentifier: identifier)
+                item.label = label
+                item.paletteLabel = label
+                item.view = NSButton(title: label, target: nil, action: nil)
+                return item
+            }
+            return group
+        }
+        guard itemIdentifier == thirdID else { return nil }
+        let item = NSToolbarItem(itemIdentifier: thirdID)
+        item.label = "Third"
+        item.paletteLabel = "Third"
+        item.view = NSButton(title: "Third", target: nil, action: nil)
+        return item
+    }
+}
+
+@available(macOS 26.0, *)
+private func groupingCapsule() -> some View {
+    Color.clear.frame(width: 60, height: 36).glassEffect(.regular, in: .capsule)
+}
+
+@available(macOS 26.0, *)
+private func probeGlassGrouping(window: NSWindow, root: NSView, folder: URL, recorder: ProbeRecorder) {
+    let cases: [(String, Int?, Int)] = ( [0, 8, 24].flatMap { spacing in
+        [0, 6, 16, 40].map { gap in ("grouping.swiftui.s\(spacing).g\(gap)", spacing, gap) }
+    } + [6, 40].map { ("grouping.swiftui.none.g\($0)", nil, $0) })
+
+    for (id, spacing, gap) in cases {
+        var box: NSView?
+        var host: NSHostingView<AnyView>?
+        guard recorder.guarded(id, {
+            let content = HStack(spacing: CGFloat(gap)) { groupingCapsule(); groupingCapsule() }
+            let view: AnyView
+            if let spacing {
+                view = AnyView(GlassEffectContainer(spacing: CGFloat(spacing)) { content })
+            } else {
+                view = AnyView(content)
+            }
+            let made = NSHostingView(rootView: view)
+            made.frame = CGRect(x: 12, y: 12, width: 190, height: 72)
+            let background = NSView(frame: CGRect(x: 10, y: 10, width: 214, height: 96))
+            background.wantsLayer = true
+            background.layer?.backgroundColor = NSColor(calibratedWhite: 0.52, alpha: 1).cgColor
+            background.addSubview(made)
+            root.addSubview(background)
+            box = background; host = made
+        }), let box, let host else { continue }
+        window.displayIfNeeded(); settle(); settle()
+        let base = folder.appendingPathComponent(id)
+        recorder.put("\(id).layers", host.layer.map {
+            layerPropertyDump($0, maximumDepth: 20, includeAllLayers: true)
+        } ?? ["error": "hosting view has no layer"])
+        let shotRect = window.convertToScreen(box.convert(box.bounds, to: nil))
+        recorder.put("\(id).screenshot", captureScreen(shotRect, to: base.appendingPathExtension("png")))
+        recorder.put("\(id).cache2x", cacheRender(box, scale: 2,
+                                                   to: folder.appendingPathComponent("\(id)@2x-cache.png")))
+        box.removeFromSuperview()
+    }
+
+    let toolbarID = "grouping.toolbar"
+    let baseline = Set(NSApp.windows.map { $0.windowNumber })
+    var toolbarWindow: NSWindow?
+    var toolbarDelegate: GroupingToolbarDelegate?
+    guard recorder.guarded(toolbarID, {
+        let made = NSWindow(contentRect: CGRect(x: 260, y: 360, width: 500, height: 240),
+                            styleMask: [.titled, .closable], backing: .buffered, defer: false)
+        made.title = "Glass grouping toolbar"
+        made.titlebarAppearsTransparent = false
+        made.toolbarStyle = .unified
+        let content = NSView(frame: made.contentView?.bounds ?? .zero)
+        content.wantsLayer = true
+        content.layer?.backgroundColor = NSColor(calibratedWhite: 0.52, alpha: 1).cgColor
+        made.contentView = content
+        let delegate = GroupingToolbarDelegate()
+        let toolbar = NSToolbar(identifier: "grouping.toolbar")
+        toolbar.delegate = delegate
+        toolbar.displayMode = .iconAndLabel
+        made.toolbar = toolbar
+        made.center()
+        made.makeKeyAndOrderFront(nil)
+        toolbarWindow = made; toolbarDelegate = delegate
+    }), let toolbarWindow else { return }
+    _ = toolbarDelegate // Keep the toolbar delegate alive for the capture.
+    _ = baseline
+    toolbarWindow.displayIfNeeded(); settle(); settle()
+    if let titlebarContainer = toolbarWindow.contentView?.superview ?? toolbarWindow.contentView,
+       let layer = titlebarContainer.layer {
+        recorder.put("\(toolbarID).layers", layerPropertyDump(layer, maximumDepth: 20,
+                                                               includeAllLayers: true))
+    } else {
+        recorder.put("\(toolbarID).layers", ["error": "titlebar container has no layer"])
+    }
+    recorder.put("\(toolbarID).screenshot", captureScreen(toolbarWindow.frame,
+                 to: folder.appendingPathComponent("grouping.toolbar.png")))
+    toolbarWindow.orderOut(nil)
+    for created in NSApp.windows where !baseline.contains(created.windowNumber) { created.orderOut(nil) }
+}
+
+private func probeGlassGroupingUnavailable(folder: URL, recorder: ProbeRecorder) {
+    let ids = ([0, 8, 24].flatMap { s in [0, 6, 16, 40].map { "grouping.swiftui.s\(s).g\($0)" } }
+               + [6, 40].map { "grouping.swiftui.none.g\($0)" })
+    for id in ids {
+        for suffix in ["layers", "screenshot", "cache2x"] {
+            recorder.put("\(id).\(suffix)", ["error": "GlassEffectContainer/.glassEffect unavailable on this macOS runtime"])
+        }
+    }
+    recorder.put("grouping.toolbar.layers", ["error": "glass grouping probe unavailable"])
+    recorder.put("grouping.toolbar.screenshot", ["error": "glass grouping probe unavailable"])
+    _ = folder
+}
+
 private func captureControlRender(kind: String, sizeName: String, size: NSControl.ControlSize,
                                   state: String, id: String, disabled: Bool, window: NSWindow,
                                   root: NSView, folder: URL, recorder: ProbeRecorder) {
@@ -995,6 +1133,11 @@ func runDeepProbes(window: NSWindow, root: NSView, output: URL) throws {
     probeMenusOpen(window: window, root: root, folder: folder, recorder: recorder)
     probeControlRenders(window: window, root: root, folder: folder, recorder: recorder)
     probePushButtons(window: window, root: root, folder: folder, recorder: recorder)
+    if #available(macOS 26.0, *) {
+        probeGlassGrouping(window: window, root: root, folder: folder, recorder: recorder)
+    } else {
+        probeGlassGroupingUnavailable(folder: folder, recorder: recorder)
+    }
     try writeJSON(recorder.values, to: url)
     record("deep probes complete count=\(recorder.values.count)")
 }

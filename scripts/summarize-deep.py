@@ -172,6 +172,35 @@ def effect_property_chunks(props, maximum=118):
         else:
             line+=addition
     if line: yield line
+
+def layer_prop(layer, name):
+    value=(layer.get('properties',{}) or {}).get(name)
+    return value.get('value') if isinstance(value,dict) and 'value' in value else value
+
+def glass_grouping_section(data):
+    cases=([f'grouping.swiftui.s{s}.g{g}' for s in (0,8,24) for g in (0,6,16,40)]
+           + [f'grouping.swiftui.none.g{g}' for g in (6,40)] + ['grouping.toolbar'])
+    lines=['\n### Glass grouping\n']
+    for case in cases:
+        entries=val(data,case+'.layers',[])
+        if isinstance(entries,dict) and entries.get('error'):
+            lines.append(f"- `{case}`: unavailable: {entries['error']}")
+            continue
+        if not isinstance(entries,list): entries=[]
+        backdrops=[x for x in entries if str(x.get('class','')).startswith('CABackdropLayer')]
+        sdf=[x for x in entries if str(x.get('class','')).startswith('CASDFLayer')]
+        elements=[x for x in entries if str(x.get('class','')).startswith('CASDFElementLayer')]
+        lines.append(f"- `{case}`: CABackdropLayer={len(backdrops)}, CASDFLayer={len(sdf)}, CASDFElementLayer={len(elements)}")
+        for layer in backdrops:
+            lines.append(f"  - backdrop path={layer.get('path')} groupName={layer_prop(layer,'groupName')} groupNamespace={layer_prop(layer,'groupNamespace')} marginWidth={layer_prop(layer,'marginWidth')} frame={rectstr(layer.get('frame'))}")
+        for layer in sdf:
+            effect=layer.get('effect',{}) or {}
+            smoothness=layer_prop(layer,'smoothness')
+            lines.append(f"  - sdf path={layer.get('path')} smoothness={smoothness} effect={effect.get('class')} frame={rectstr(layer.get('frame'))}")
+        for layer in elements:
+            lines.append(f"  - sdfElement path={layer.get('path')} operation={layer_prop(layer,'operation')} mode={layer_prop(layer,'mode')} frame={rectstr(layer.get('frame'))}")
+    return lines
+
 def main(run):
     root=Path(run); parts=[]; glass_entries=[]
     for passname in ('light','dark'):
@@ -254,6 +283,7 @@ def main(run):
                 rows=timeline(d,p+'.'+typ)
                 descriptions.append(typ+': '+('none' if not rows else ' | '.join(f"t={fmt(t)} α={fmt(a)} root={fmt(o)} tr={fmt(tr)} server={fmt(sa)}" for t,a,o,tr,sa in rows)))
             parts.append('- '+mid+'; '+'; '.join(descriptions))
+        parts.extend(glass_grouping_section(d))
         parts.append('\n### Slider drag\n')
         target_times=(0.1,0.2,0.3,0.4,0.5,0.75,1.05,1.2,1.5)
         def nearest_sample(samples, target):
