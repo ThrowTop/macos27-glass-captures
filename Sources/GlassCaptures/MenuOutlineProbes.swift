@@ -39,15 +39,17 @@ private func outlineCaptureDisplay(_ rect: CGRect, _ url: URL) -> [String: Any] 
                               userInfo: [NSLocalizedDescriptionKey: "ScreenCaptureKit returned no display"])
             }
             let names = content.windows.map { window in
-                "\(window.owningApplication?.applicationName ?? "unknown"): \(window.title)"
+                "\(window.owningApplication?.applicationName ?? "unknown"): \(window.title ?? "")"
             }
             visibleNames.value = names
             let excluded = content.windows.filter { window in
-                let title = window.title.lowercased()
+                let title = (window.title ?? "").lowercased()
                 return title.contains("private window picker") ||
                     title.contains("screen and audio") || title.contains("screen recording")
             }
-            excludedNames.value = excluded.map { "\($0.owningApplication?.applicationName ?? "unknown"): \($0.title)" }
+            excludedNames.value = excluded.map {
+                "\($0.owningApplication?.applicationName ?? "unknown"): \($0.title ?? "")"
+            }
             let filter = SCContentFilter(display: display, excludingWindows: excluded)
             let configuration = SCStreamConfiguration()
             configuration.width = display.width
