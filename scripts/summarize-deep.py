@@ -145,7 +145,7 @@ def numeric_or_color(value, key=''):
     if isinstance(value,(list,tuple)): return any(numeric_or_color(v,key) for v in value)
     return 'color' in key.lower() or 'cgcolor' in str(value).lower()
 def main(run):
-    root=Path(run); parts=[]; glass_lines=0
+    root=Path(run); parts=[]; glass_entries=[]
     for passname in ('light','dark'):
         candidates=list(root.glob(f'**/probes/{passname}/deep.json'))
         if not candidates: parts.append(f'## {passname}\n\nNo deep.json found.'); continue
@@ -215,34 +215,10 @@ def main(run):
             dx=(mw.get('frame',{}).get('x',0)-bf.get('x',0)) if isinstance(bf,dict) and mw else None
             gap=(bf.get('y',0)-(mw.get('frame',{}).get('y',0)+mw.get('frame',{}).get('height',0))) if isinstance(bf,dict) and mw else None
             parts.append(f"- `{mid}` button={rectstr(bf)} font={json.dumps(val(d,p+'.buttonFont'),separators=(',',':'))}; menu={rectstr(mw.get('frame'))} dx={fmt(dx)} gap={fmt(gap)}; rowH={fmt((row or {}).get('frame',{}).get('height'))}; textX={fmt((tf or {}).get('frame',{}).get('x'))} textFont={json.dumps((tf or {}).get('font'),separators=(',',':'))}; highlighted={val(d,p+'.highlightedItem')}")
-        parts.append('\n### Menu glass layers\n')
         for mid in ('context','popup.regular'):
             entries=val(d,f'openMenu.{mid}.layerProperties',[]) or []
             for entry in entries:
-                if glass_lines>=120: break
-                filters=entry.get('filters',[])
-                names=[]
-                for filt in filters:
-                    n=filt.get('name','')
-                    if isinstance(n,dict): n=n.get('value',n.get('error',''))
-                    names.append(str(n))
-                parts.append(f"- `{mid}` path `{entry.get('path')}` class `{entry.get('class')}` filters: {', '.join(names) or 'none'}")
-                glass_lines+=1
-                for group_name, props in [('layer',entry.get('properties',{}))]:
-                    for key,value in props.items():
-                        if glass_lines>=120: break
-                        if isinstance(value,dict) and 'value' in value: value=value['value']
-                        if numeric_or_color(value,key):
-                            parts.append(f"  - {group_name}.{key}={short(json.dumps(value,separators=(',',':'),ensure_ascii=False))}")
-                            glass_lines+=1
-                for fi,filt in enumerate(filters):
-                    for group_name in ('properties','inputs'):
-                        for key,value in filt.get(group_name,{}).items():
-                            if glass_lines>=120: break
-                            if isinstance(value,dict) and 'value' in value: value=value['value']
-                            if numeric_or_color(value,key):
-                                parts.append(f"  - filter[{fi}].{group_name}.{key}={short(json.dumps(value,separators=(',',':'),ensure_ascii=False))}")
-                                glass_lines+=1
+                glass_entries.append((passname,mid,entry))
         parts.append('\n### Menu timeline\n')
         for mid in menuids:
             p='openMenu.'+mid; descriptions=[]
@@ -283,6 +259,30 @@ def main(run):
                         cols.append('overlays=['+('; '.join(overlays) if overlays else 'none')+']')
                     details.append('; '.join(cols))
                 parts.append('  timeline: '+'<br>'.join(details))
+    parts.append('\n### Menu glass layers\n')
+    glass_limit=116  # Reserve four section/blank lines so the rendered section stays within 120.
+    for passname,mid,entry in glass_entries[:glass_limit]:
+        filters=entry.get('filters',[])
+        names=[]
+        for filt in filters:
+            n=filt.get('name','')
+            if isinstance(n,dict): n=n.get('value',n.get('error',''))
+            names.append(str(n))
+        parts.append(f"- `{passname}.{mid}` path `{entry.get('path')}` class `{entry.get('class')}` filters: {', '.join(names) or 'none'}")
+    glass_lines=min(len(glass_entries),glass_limit)
+    for passname,mid,entry in glass_entries:
+        if glass_lines>=glass_limit: break
+        groups=[('layer',entry.get('properties',{}))]
+        for fi,filt in enumerate(entry.get('filters',[])):
+            groups.extend([(f'filter[{fi}].properties',filt.get('properties',{})),
+                           (f'filter[{fi}].inputs',filt.get('inputs',{}))])
+        for group_name,props in groups:
+            for key,value in props.items():
+                if glass_lines>=glass_limit: break
+                if isinstance(value,dict) and 'value' in value: value=value['value']
+                if numeric_or_color(value,key):
+                    parts.append(f"  - `{passname}.{mid}` {group_name}.{key}={short(json.dumps(value,separators=(',',':'),ensure_ascii=False))}")
+                    glass_lines+=1
     parts.append('\n## Renders (all probe passes)\n')
     for passname in ('light','dark','light-contrast','dark-contrast'):
         candidates=list(root.glob(f'**/probes/{passname}/deep.json'))
