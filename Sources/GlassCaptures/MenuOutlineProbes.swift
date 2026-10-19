@@ -336,7 +336,7 @@ private func outlineSendMouse(_ type: NSEvent.EventType, window: NSWindow, point
 }
 
 private func outlineSendEscape(to window: NSWindow) {
-    guard let event = NSEvent.keyEvent(with: .keyDown, modifierFlags: [],
+    guard let event = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [],
                                        timestamp: ProcessInfo.processInfo.systemUptime,
                                        windowNumber: window.windowNumber, context: nil,
                                        characters: "\u{1b}", charactersIgnoringModifiers: "\u{1b}",
@@ -461,7 +461,9 @@ private func outlineRunMenuCase(source: String, appearance: String, background: 
         }
         if source == "submenu", let menu = button.menu, let parent = menu.item(at: 0) {
             let child = NSMenu(title: "Caption language")
-            child.addItems(withTitles: ["English", "Swedish", "German"])
+            for title in ["English", "Swedish", "German"] {
+                child.addItem(withTitle: title, action: nil, keyEquivalent: "")
+            }
             menu.setSubmenu(child, for: parent)
             submenu = true
         }
