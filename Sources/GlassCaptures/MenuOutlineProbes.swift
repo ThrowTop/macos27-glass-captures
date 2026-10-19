@@ -774,3 +774,89 @@ func runMenuOutlineSingleContourProbe(appearance: String, background: String, st
     try outlineCaptureWindowContour(appearance: appearance, background: background,
                                     state: state, output: output)
 }
+
+
+// Window silhouette per window style: per-window images keep the shadow and rims in the alpha, so the
+// corner shape and radius can be read from them; the theme frame reports its own radius.
+private final class WindowShapeToolbarDelegate: NSObject, NSToolbarDelegate {
+    let item = NSToolbarItem.Identifier("probe.item")
+    func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] { [item] }
+    func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] { [item] }
+    func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier identifier: NSToolbarItem.Identifier,
+                 willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
+        let entry = NSToolbarItem(itemIdentifier: identifier)
+        entry.label = "Item"
+        entry.image = NSImage(systemSymbolName: "square.and.arrow.up", accessibilityDescription: nil)
+        return entry
+    }
+}
+
+func runWindowShapeProbe(appearance: String, output path: String) throws {
+    let output = URL(fileURLWithPath: path, isDirectory: true)
+    NSApp.appearance = NSAppearance(named: appearance.hasPrefix("dark") ? .darkAqua : .aqua)
+    let screen = NSScreen.main?.frame ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
+    let backdrop = NSWindow(contentRect: screen, styleMask: .borderless, backing: .buffered, defer: false)
+    backdrop.isReleasedWhenClosed = false
+    backdrop.backgroundColor = .white
+    backdrop.hasShadow = false
+    let fill = OutlineSolidView(frame: CGRect(origin: .zero, size: screen.size))
+    fill.color = .white; fill.wantsLayer = true
+    backdrop.contentView = fill
+    backdrop.orderFrontRegardless()
+    let delegate = WindowShapeToolbarDelegate()
+    let variants: [(String, NSWindow.ToolbarStyle?, Bool)] = [
+        ("titled", nil, false), ("unified", .unified, false), ("unified-compact", .unifiedCompact, false),
+        ("expanded", .expanded, false), ("preference", .preference, false),
+        ("unified-fullsize", .unified, true), ("unified-compact-fullsize", .unifiedCompact, true)]
+    for (name, style, fullSize) in variants {
+        let folder = output.appendingPathComponent("window-shape/\(appearance)/\(name)", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        var mask: NSWindow.StyleMask = [.titled, .closable, .miniaturizable, .resizable]
+        if fullSize { mask.insert(.fullSizeContentView) }
+        let frame = CGRect(x: screen.midX - 320, y: screen.midY - 230, width: 640, height: 460)
+        let window = NSWindow(contentRect: frame, styleMask: mask, backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        window.title = "Window shape \(name)"
+        window.hasShadow = true
+        window.appearance = NSAppearance(named: appearance.hasPrefix("dark") ? .darkAqua : .aqua)
+        if let style {
+            let toolbar = NSToolbar(identifier: "probe.\(name)")
+            toolbar.delegate = delegate
+            window.toolbar = toolbar
+            window.toolbarStyle = style
+        }
+        if fullSize { window.titlebarAppearsTransparent = true }
+        let content = OutlineSolidView(frame: CGRect(origin: .zero, size: frame.size))
+        content.autoresizingMask = [.width, .height]
+        content.wantsLayer = true
+        content.color = .black
+        window.contentView = content
+        window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
+        NSApp.activate(ignoringOtherApps: true)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.35))
+        let cg = outlineCGWindowImage(window, folder.appendingPathComponent("cgwindow.png"))
+        var runtime = outlineRuntimeDump(window)
+        if let theme = window.contentView?.superview {
+            runtime["themeFrameClass"] = NSStringFromClass(type(of: theme))
+            for key in ["_cornerRadius", "_getCachedDefaultWindowCornerRadius", "_topCornerRadius",
+                        "_bottomCornerRadius", "cornerRadius", "_convolutionOverride"] {
+                runtime["themeFrame.\(key)"] = outlineKVC(theme, key)
+            }
+        }
+        for key in ["_cornerRadius", "_cornerMask", "_windowCornerRadius"] {
+            runtime["window.\(key)"] = outlineKVC(window, key)
+        }
+        runtime["toolbarStyle"] = window.toolbarStyle.rawValue
+        runtime["styleMask"] = window.styleMask.rawValue
+        runtime["titlebarAppearsTransparent"] = window.titlebarAppearsTransparent
+        try writeJSON(runtime, to: folder.appendingPathComponent("runtime.json"))
+        try writeJSON(["stage": "window-shape", "variant": name, "appearance": appearance,
+                       "windowFrame": probeRect(window.frame), "pixelScale": window.backingScaleFactor,
+                       "isKeyWindow": window.isKeyWindow, "cgWindow": cg, "runtime": "runtime.json"],
+                      to: folder.appendingPathComponent("case.json"))
+        record("window-shape \(appearance)/\(name) cg=\(cg["error"] ?? "ok")")
+        window.close()
+    }
+    backdrop.close()
+}
