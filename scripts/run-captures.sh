@@ -79,11 +79,14 @@ run_case() {
 : > out/cases.tsv
 
 # Completion gate first: regular on switches in both appearances and both backgrounds.
-for appearance in light dark; do
-  for background in plain grid; do
-    run_case nsswitch "$appearance" "$background" regular on hold default
+# Outline-only filters run a dedicated AppKit probe instead of the control capture matrix.
+if [[ "$FILTER" != menu-outline-window && "$FILTER" != menu-outline ]]; then
+  for appearance in light dark; do
+    for background in plain grid; do
+      run_case nsswitch "$appearance" "$background" regular on hold default
+    done
   done
-done
+fi
 
 if [[ "$FILTER" != smoke ]]; then
   if [[ "$FILTER" == accent-smoke ]]; then
@@ -290,6 +293,28 @@ PY
     echo "BATCH FAILED accent=$accent accessibility=$accessibility" >> out/log.txt
   fi
 done
+
+# Step 1 runner-effects validation, isolated from the main control capture matrix.
+if [[ "$FILTER" == menu-outline-window || "$FILTER" == menu-outline ]]; then
+  mkdir -p out/menu-outline
+  for pass in light dark light-contrast dark-contrast; do
+    appearance="${pass%%-*}"
+    contrast=false
+    [[ "$pass" == *-contrast ]] && contrast=true
+    defaults write com.apple.universalaccess increaseContrast -bool "$contrast"
+    defaults write com.apple.universalaccess reduceTransparency -bool false
+    killall cfprefsd >/dev/null 2>&1 || true
+    pass_dir="$ROOT/out/menu-outline"
+    echo "MENU OUTLINE WINDOW PASS name=$pass increaseContrast=$contrast" >> out/log.txt
+    if ! perl -e 'alarm shift; exec @ARGV' 120 /usr/bin/open -W -n -a "$APP" --args \
+        --menu-outline-window-mode --probe-appearance "$appearance" --probe-out "$pass_dir" >> out/log.txt 2>&1; then
+      echo "MENU OUTLINE WINDOW PASS FAILED name=$pass" >> out/log.txt
+      FAILURES=$((FAILURES + 1))
+    fi
+  done
+  defaults write com.apple.universalaccess increaseContrast -bool false
+  killall cfprefsd >/dev/null 2>&1 || true
+fi
 
 # Runtime AppKit probes are separate from image scenarios. Keep the four required
 # NSSwitch captures above first for every filter, including probes.
