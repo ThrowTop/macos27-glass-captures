@@ -334,7 +334,7 @@ private func outlineMouseEvent(_ type: NSEvent.EventType, window: NSWindow, poin
 
 private func outlineSendMouse(_ type: NSEvent.EventType, window: NSWindow, point: CGPoint) {
     guard let event = outlineMouseEvent(type, window: window, point: point) else { return }
-    window.sendEvent(event)
+    NSApp.postEvent(event, atStart: false)
 }
 
 private func outlineSendEscape(to window: NSWindow) {
@@ -573,10 +573,12 @@ private func outlineRunMenuCase(source: String, appearance: String, background: 
         }
         if let point = clickPoint {
             let mouseUp = Timer(timeInterval: 0.12, repeats: false) { _ in
+                record("menu-outline post mouseUp source=\(source) pass=\(appearance) background=\(background)")
                 outlineSendMouse(.leftMouseUp, window: host, point: point)
             }
             RunLoop.main.add(mouseUp, forMode: .eventTracking)
             RunLoop.main.add(mouseUp, forMode: .common)
+            record("menu-outline post mouseDown source=\(source) pass=\(appearance) background=\(background)")
             outlineSendMouse(.leftMouseDown, window: host, point: point)
         } else { presenter?() }
         if attemptResult.value == nil {

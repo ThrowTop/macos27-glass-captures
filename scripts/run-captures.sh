@@ -94,7 +94,8 @@ run_case() {
 # Completion gate first: regular on switches in both appearances and both backgrounds.
 # Outline-only filters run a dedicated AppKit probe instead of the control capture matrix.
 if [[ "$FILTER" != menu-outline-window && "$FILTER" != menu-outline && \
-      "$FILTER" != menu-outline-recover && "$FILTER" != menu-outline-recover-cases ]]; then
+      "$FILTER" != menu-outline-recover && "$FILTER" != menu-outline-recover-cases && \
+      "$FILTER" != menu-outline-recover-swiftui ]]; then
   for appearance in light dark; do
     for background in plain grid; do
       run_case nsswitch "$appearance" "$background" regular on hold default
@@ -142,6 +143,32 @@ if [[ "$FILTER" == menu-outline-recover-cases ]]; then
     for source in appkit-popup appkit-pulldown context swiftui-picker swiftui-menu combobox submenu; do
       run_outline_app "dark-contrast/$background/$source" --menu-outline-menu-only-mode \
         --probe-appearance dark-contrast --probe-menu-filter "$background:$source"
+    done
+  done
+  defaults write com.apple.universalaccess increaseContrast -bool false
+  killall cfprefsd >/dev/null 2>&1 || true
+fi
+
+if [[ "$FILTER" == menu-outline-recover-swiftui ]]; then
+  mkdir -p out/menu-outline
+  defaults write com.apple.universalaccess increaseContrast -bool true
+  defaults write com.apple.universalaccess reduceTransparency -bool false
+  recovery_dir="$ROOT/out/menu-outline"
+  killall cfprefsd >/dev/null 2>&1 || true
+  for background in plain photo; do
+    for source in swiftui-picker swiftui-menu; do
+      label="dark-contrast/$background/$source"
+      echo "MENU OUTLINE SWIFTUI RECOVERY CASE name=$label" >> out/log.txt
+      killall GlassCaptures >/dev/null 2>&1 || true
+      if ! perl -e 'alarm shift; exec @ARGV' 120 /usr/bin/open -W -n -a "$APP" --args \
+          --menu-outline-menu-only-mode --probe-appearance dark-contrast \
+          --probe-menu-filter "$background:$source" --probe-out "$recovery_dir" \
+          --out "$ROOT/out" >> out/log.txt 2>&1; then
+        echo "MENU OUTLINE SWIFTUI RECOVERY CASE FAILED name=$label" >> out/log.txt
+        FAILURES=$((FAILURES + 1))
+      fi
+      killall GlassCaptures >/dev/null 2>&1 || true
+      sleep 1
     done
   done
   defaults write com.apple.universalaccess increaseContrast -bool false
@@ -482,7 +509,7 @@ with open('out/quality-warnings.txt', 'w') as f:
 with open('out/manifest.json', 'w') as f:
     json.dump(parts, f, indent=2, sort_keys=True)
 required = set() if filter_name in ('menu-outline-window', 'menu-outline', 'menu-outline-recover',
-                                    'menu-outline-recover-cases') else {
+                                    'menu-outline-recover-cases', 'menu-outline-recover-swiftui') else {
     (a, b) for a in ('light', 'dark') for b in ('plain', 'grid')
 }
 phases = {'idle', 'held-0100ms', 'held-0250ms', 'held-0500ms', 'held-1000ms'}
