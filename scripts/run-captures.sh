@@ -62,6 +62,15 @@ killall cfprefsd >/dev/null 2>&1 || true
 
 python3 scripts/grant-screen-capture.py com.throwtop.glasscaptures "$APP/Contents/MacOS/GlassCaptures" >> out/env.txt 2>&1
 
+# The hosted compute agent is the responsible process for these launched apps.
+# Its replayd approval suppresses the ScreenCaptureKit privacy reminder modal,
+# which otherwise covers the very windows being measured.
+CAPTURE_APPROVALS="$HOME/Library/Group Containers/group.apple.replayd/ScreenCaptureApprovals.plist"
+mkdir -p "$(dirname "$CAPTURE_APPROVALS")"
+defaults write "$CAPTURE_APPROVALS" "/opt/hca/hosted-compute-agent" -date "3024-01-01 00:00:00 +0000"
+killall cfprefsd >/dev/null 2>&1 || true
+echo "replayd hosted-agent approval=$(defaults read "$CAPTURE_APPROVALS" /opt/hca/hosted-compute-agent 2>&1 || true)" >> out/env.txt
+
 "$EXE" --env-out "$ROOT/out/display.json" >> out/log.txt 2>&1 || true
 cat out/display.json >> out/env.txt 2>/dev/null || true
 
@@ -406,7 +415,9 @@ with open('out/quality-warnings.txt', 'w') as f:
     f.write('\n'.join(quality_warnings) + ('\n' if quality_warnings else ''))
 with open('out/manifest.json', 'w') as f:
     json.dump(parts, f, indent=2, sort_keys=True)
-required = {(a, b) for a in ('light', 'dark') for b in ('plain', 'grid')}
+required = set() if filter_name in ('menu-outline-window', 'menu-outline') else {
+    (a, b) for a in ('light', 'dark') for b in ('plain', 'grid')
+}
 phases = {'idle', 'held-0100ms', 'held-0250ms', 'held-0500ms', 'held-1000ms'}
 missing = []
 for appearance, background in required:

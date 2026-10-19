@@ -80,8 +80,11 @@ private func outlineCaptureSingleWindow(_ window: NSWindow, _ url: URL) -> [Stri
             }
             let filter = SCContentFilter(desktopIndependentWindow: source)
             let configuration = SCStreamConfiguration()
-            configuration.width = max(1, Int(ceil(windowSize.width * scale)))
-            configuration.height = max(1, Int(ceil(windowSize.height * scale)))
+            // The window-style filter returns the shadow in addition to the frame.
+            // A 56 pt allowance on each side matches the legacy framing extent and
+            // prevents SCStreamConfiguration from scaling the window down to fit.
+            configuration.width = max(1, Int(ceil((windowSize.width + 112) * scale)))
+            configuration.height = max(1, Int(ceil((windowSize.height + 112) * scale)))
             configuration.showsCursor = false
             configuration.shouldBeOpaque = false
             configuration.ignoreShadowsSingleWindow = false
@@ -264,13 +267,13 @@ func runMenuOutlineWindowProbe(appearance: String, output path: String) throws {
                               backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
         window.title = "Window effects probe \(colorName)"
-        window.backgroundColor = color
+        window.backgroundColor = .windowBackgroundColor
         window.hasShadow = true
         window.appearance = NSAppearance(named: appearance.hasPrefix("dark") ? .darkAqua : .aqua)
         let content = OutlineSolidView(frame: CGRect(origin: .zero, size: frame.size))
         content.autoresizingMask = [.width, .height]
         content.wantsLayer = true
-        content.color = color
+        content.color = .windowBackgroundColor
         window.contentView = content
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
