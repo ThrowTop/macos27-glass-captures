@@ -133,8 +133,19 @@ def timeline(data,key):
         if wins and (prev is None or vals!=prev): rows.append((s.get('t'),*vals))
         if wins: prev=vals
     return rows
+def short(value):
+    text=str(value).replace('\n',' ')
+    return text if len(text)<=160 else text[:157]+'...'
+def numeric_or_color(value, key=''):
+    if isinstance(value,bool) or value is None: return False
+    if isinstance(value,(int,float)): return True
+    if isinstance(value,dict):
+        if 'components' in value: return True
+        return any(numeric_or_color(v,k) for k,v in value.items())
+    if isinstance(value,(list,tuple)): return any(numeric_or_color(v,key) for v in value)
+    return 'color' in key.lower() or 'cgcolor' in str(value).lower()
 def main(run):
-    root=Path(run); parts=[]
+    root=Path(run); parts=[]; glass_lines=0
     for passname in ('light','dark'):
         candidates=list(root.glob(f'**/probes/{passname}/deep.json'))
         if not candidates: parts.append(f'## {passname}\n\nNo deep.json found.'); continue
@@ -204,6 +215,34 @@ def main(run):
             dx=(mw.get('frame',{}).get('x',0)-bf.get('x',0)) if isinstance(bf,dict) and mw else None
             gap=(bf.get('y',0)-(mw.get('frame',{}).get('y',0)+mw.get('frame',{}).get('height',0))) if isinstance(bf,dict) and mw else None
             parts.append(f"- `{mid}` button={rectstr(bf)} font={json.dumps(val(d,p+'.buttonFont'),separators=(',',':'))}; menu={rectstr(mw.get('frame'))} dx={fmt(dx)} gap={fmt(gap)}; rowH={fmt((row or {}).get('frame',{}).get('height'))}; textX={fmt((tf or {}).get('frame',{}).get('x'))} textFont={json.dumps((tf or {}).get('font'),separators=(',',':'))}; highlighted={val(d,p+'.highlightedItem')}")
+        parts.append('\n### Menu glass layers\n')
+        for mid in ('context','popup.regular'):
+            entries=val(d,f'openMenu.{mid}.layerProperties',[]) or []
+            for entry in entries:
+                if glass_lines>=120: break
+                filters=entry.get('filters',[])
+                names=[]
+                for filt in filters:
+                    n=filt.get('name','')
+                    if isinstance(n,dict): n=n.get('value',n.get('error',''))
+                    names.append(str(n))
+                parts.append(f"- `{mid}` path `{entry.get('path')}` class `{entry.get('class')}` filters: {', '.join(names) or 'none'}")
+                glass_lines+=1
+                for group_name, props in [('layer',entry.get('properties',{}))]:
+                    for key,value in props.items():
+                        if glass_lines>=120: break
+                        if isinstance(value,dict) and 'value' in value: value=value['value']
+                        if numeric_or_color(value,key):
+                            parts.append(f"  - {group_name}.{key}={short(json.dumps(value,separators=(',',':'),ensure_ascii=False))}")
+                            glass_lines+=1
+                for fi,filt in enumerate(filters):
+                    for group_name in ('properties','inputs'):
+                        for key,value in filt.get(group_name,{}).items():
+                            if glass_lines>=120: break
+                            if isinstance(value,dict) and 'value' in value: value=value['value']
+                            if numeric_or_color(value,key):
+                                parts.append(f"  - filter[{fi}].{group_name}.{key}={short(json.dumps(value,separators=(',',':'),ensure_ascii=False))}")
+                                glass_lines+=1
         parts.append('\n### Menu timeline\n')
         for mid in menuids:
             p='openMenu.'+mid; descriptions=[]

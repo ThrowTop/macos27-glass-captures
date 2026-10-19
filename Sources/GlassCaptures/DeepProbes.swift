@@ -4,6 +4,7 @@ import ScreenCaptureKit
 import SafeKVC
 import ApplicationServices
 import SwiftUI
+import ObjectiveC.runtime
 
 // Deep probes: states that need a live window and a screenshot rather than a getter. Slider tick
 // marks, open menus (tree, layers, open/close timeline, highlight) and a slider over-drag timeline.
@@ -77,6 +78,82 @@ private func presentationSample(_ layer: CALayer, path: String, depth: Int, maxi
         presentationSample(child, path: "\(path)/\(index)", depth: depth + 1,
                            maximumDepth: maximumDepth, into: &out)
     }
+}
+
+// Runtime property dump used only while a menu window is open. KVC is performed inside
+// SafeInvoke so an exception is retained alongside the property name.
+private func runtimeKVC(_ object: AnyObject, _ key: String) -> [String: Any] {
+    if let value = SafeValueForKey(object, key) {
+        return ["value": safeDescription(value)]
+    }
+    var error: NSString?
+    let result = SafeInvoke({ object.value(forKey: key) }, &error)
+    if let error { return ["error": error as String] }
+    guard let result else { return ["value": NSNull()] }
+    return ["value": safeDescription(result)]
+}
+
+private func runtimeProperties(_ object: AnyObject, upTo stopClass: AnyClass? = nil,
+                               classOnly: Bool = false) -> [String: Any] {
+    var values: [String: Any] = [:]
+    var current: AnyClass? = type(of: object)
+    while let cls = current, cls !== stopClass {
+        var count: UInt32 = 0
+        if let list = class_copyPropertyList(cls, &count) {
+            for index in 0..<Int(count) {
+                let name = String(cString: property_getName(list[index]))
+                let result = runtimeKVC(object, name)
+                if let error = result["error"] as? String, name.hasPrefix("_") {
+                    _ = error
+                    continue
+                }
+                values[name] = result["value"] ?? ["error": result["error"] ?? "KVC failed"]
+            }
+            free(list)
+        }
+        if classOnly { break }
+        current = class_getSuperclass(cls)
+    }
+    return values
+}
+
+private func runtimeFilter(_ object: AnyObject) -> [String: Any] {
+    let nameResult = runtimeKVC(object, "name")
+    let inputsResult = runtimeKVC(object, "inputKeys")
+    let outputsResult = runtimeKVC(object, "outputKeys")
+    let inputKeys = (SafeValueForKey(object, "inputKeys") as? [String]) ?? []
+    var inputs: [String: Any] = [:]
+    for key in inputKeys { inputs[key] = runtimeKVC(object, key) }
+    return ["class": NSStringFromClass(type(of: object)),
+            "name": nameResult["value"] ?? nameResult["error"] ?? NSNull(),
+            "inputKeys": inputsResult["value"] ?? inputsResult["error"] ?? NSNull(),
+            "outputKeys": outputsResult["value"] ?? outputsResult["error"] ?? NSNull(),
+            "inputs": inputs,
+            "properties": runtimeProperties(object, classOnly: true)]
+}
+
+private func menuLayerProperties(_ root: CALayer, depth: Int = 0, path: String = "0") -> [[String: Any]] {
+    var entries: [[String: Any]] = []
+    let cls = NSStringFromClass(type(of: root))
+    let layerFilters = (root.filters ?? []).compactMap { $0 as AnyObject? }
+    let backgroundFilters = (root.backgroundFilters ?? []).compactMap { $0 as AnyObject? }
+    var compositing: [AnyObject] = []
+    if let value = root.compositingFilter as AnyObject? { compositing = [value] }
+    let filters = layerFilters + compositing + backgroundFilters
+    let matchesClass = cls.hasPrefix("CASDF") || cls.hasPrefix("CABackdrop") ||
+        cls.hasPrefix("SwiftUI.SDF") || cls.contains("Portal")
+    if matchesClass || !filters.isEmpty {
+        entries.append(["path": path, "class": cls,
+                        "properties": runtimeProperties(root, upTo: CALayer.self),
+                        "filters": filters.map(runtimeFilter)])
+    }
+    if depth < 16 {
+        for (index, child) in (root.sublayers ?? []).enumerated() {
+            entries.append(contentsOf: menuLayerProperties(child, depth: depth + 1,
+                                                           path: "\(path)/\(index)"))
+        }
+    }
+    return entries
 }
 
 private func ownServerWindows() -> [[String: Any]] {
@@ -418,6 +495,7 @@ private func probeOpenMenu(name: String, menu: NSMenu, anchor: NSView, window: N
     let inspect = Timer(timeInterval: 0.7, repeats: false) { _ in
         let windows = newWindows(excluding: baseline)
         found.value = windows.map { $0.windowNumber }
+        var glassLayerEntries: [[String: Any]] = []
         recorder.put("\(id).windows", windows.map { w -> [String: Any] in
             var entry = windowEntry(w)
             entry["level"] = w.level.rawValue
@@ -427,9 +505,22 @@ private func probeOpenMenu(name: String, menu: NSMenu, anchor: NSView, window: N
             if let frameView = w.contentView?.superview ?? w.contentView {
                 entry["views"] = viewTree(frameView, depth: 0, maximumDepth: 12)
                 entry["layers"] = frameView.layer.map { deepLayer($0, depth: 0, maximumDepth: 14) as Any } ?? NSNull()
+                if name == "context" || name == "popup.regular", let layer = frameView.layer {
+                    glassLayerEntries.append(contentsOf: menuLayerProperties(layer))
+                }
             }
             return entry
         })
+        if name == "context" || name == "popup.regular" {
+            let key = "\(id).layerProperties"
+            recorder.put(key, glassLayerEntries)
+            if name == "context" {
+                recorder.guarded("\(key).write", {
+                    try? writeJSON(glassLayerEntries,
+                                   to: folder.appendingPathComponent("openMenu.context.layerProperties.json"))
+                })
+            }
+        }
         recorder.put("\(id).menuSize", probeSize(menu.size))
         recorder.put("\(id).menuFont", fontJSON(menu.font))
         var union = anchor.window.map { $0.convertToScreen(anchor.convert(anchor.bounds, to: nil)) } ?? .zero
