@@ -63,6 +63,36 @@ def clusters(path,kind,meta,d):
             cx=(x0+x1-1)//2; cy=(y0+y1-1)//2
             rows.append(f"{(x0/2,y0/2,(x1-x0)/2,(y1-y0)/2)} RGBA={pix[cy*w+cx]}")
     return '; '.join(rows) if rows else 'none'
+def visual_bar_position(path,meta,d,orientation):
+    """Find screenshot pixel runs that differ from the crop background across the unfilled bar."""
+    try: im=Image.open(path).convert('RGBA')
+    except Exception as e: return f'image unavailable ({e})'
+    w,h=im.size; pix=im.load(); bg=pix[2,2]
+    sr=meta.get('screenRect',{}); frame=val(d,meta['id']+'.frameScreen',{}) or {}
+    bar=val(d,meta['id']+'.barRectScreen',{}) or {}
+    scale=meta.get('pixelScale',1); sh=sr.get('height',h/scale); sx=sr.get('x',0); sy=sr.get('y',0)
+    bx=(bar.get('x',0)-sx)*scale; by=(sy+sh-(bar.get('y',0)+bar.get('height',0)))*scale
+    bw=bar.get('width',0)*scale; bh=bar.get('height',0)*scale
+    if orientation=='horizontal':
+        sample_x=round(bx+bw-30*scale); indices=range(max(0,round(by)),min(h,round(by+bh)))
+        points=[(sample_x,i) for i in indices]; local=lambda i: frame.get('y',sy)+frame.get('height',0)-(sy+sh-i/scale)
+        axis='rows'
+    else:
+        sample_y=round(by+30*scale); indices=range(max(0,round(bx)),min(w,round(bx+bw)))
+        points=[(i,sample_y) for i in indices]; local=lambda i: sx+i/scale-frame.get('x',sx)
+        axis='columns'
+    active=[]
+    for i,(x,y) in zip(indices,points):
+        if 0<=x<w and 0<=y<h and any(abs(pix[x,y][c]-bg[c])>8 for c in range(3)): active.append(i)
+    runs=[]
+    if active:
+        start=prev=active[0]
+        for i in active[1:]:
+            if i!=prev+1: runs.append((start,prev+1)); start=i
+            prev=i
+        runs.append((start,prev+1))
+    ranges=', '.join(f'{local(a):.2f}–{local(b):.2f}' for a,b in runs)
+    return f'{axis}={ranges or "none"} pt'
 def luminance(path):
     im=Image.open(path).convert('RGB'); px=list(im.getdata())
     return sum(.2126*r+.7152*g+.0722*b for r,g,b in px)/len(px)
@@ -97,11 +127,20 @@ def main(run):
             except Exception as e: image_rows.append(f'{f.name}=unreadable({e})')
         parts.append('Images (mean luminance; BLACK < 10): '+'; '.join(image_rows))
         parts.append('\n### Tick marks\n')
-        for size in ('mini','small','regular','large'):
+        for size in ('mini','small','regular','large','extraLarge'):
             for pos in ('below','above'):
                 ident=f'slider.{size}.ticks.{pos}'; shot=val(d,ident+'.screenshot'); cache=val(d,ident+'.cache2x')
                 if not isinstance(shot,dict): continue
-                parts.append(f"- `{ident}` 1×: {clusters(folder/shot.get('file',''), 'shot', dict(shot,id=ident), d)}")
+                bar=visual_bar_position(folder/shot.get('file',''),dict(shot,id=ident),d,'horizontal')
+                parts.append(f"- `{ident}` 1×: {clusters(folder/shot.get('file',''), 'shot', dict(shot,id=ident), d)}; visual bar {bar}")
+                if isinstance(cache,dict): parts.append(f"  2× cache: {clusters(folder/cache.get('file',''),'cache',cache,d)}")
+        parts.append('\n### Vertical tick marks\n')
+        for size in ('mini','small','regular','large'):
+            for pos in ('leading','trailing'):
+                ident=f'sliderV.{size}.{pos}'; shot=val(d,ident+'.screenshot'); cache=val(d,ident+'.cache2x')
+                if not isinstance(shot,dict): continue
+                bar=visual_bar_position(folder/shot.get('file',''),dict(shot,id=ident),d,'vertical')
+                parts.append(f"- `{ident}` 1×: {clusters(folder/shot.get('file',''), 'shot', dict(shot,id=ident), d)}; visual bar {bar}")
                 if isinstance(cache,dict): parts.append(f"  2× cache: {clusters(folder/cache.get('file',''),'cache',cache,d)}")
         parts.append('\n### Menus\n')
         menuids=['context']+[f'{kind}.{size}' for kind in ('popup','pulldown') for size in ('mini','small','regular','large','extraLarge')]

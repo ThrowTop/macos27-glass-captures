@@ -172,15 +172,16 @@ private func windowEntry(_ w: NSWindow) -> [String: Any] {
 private func probeSliderTicks(window: NSWindow, root: NSView, folder: URL, recorder: ProbeRecorder) {
     let variants: [(String, Int, Bool)] = [("plain", 0, false), ("ticks", 5, false),
                                            ("tickOnly", 5, true), ("ticks11", 11, false)]
-    for sizeName in ["mini", "small", "regular", "large"] {
+    for sizeName in ["mini", "small", "regular", "large", "extraLarge"] {
         guard let size = controlSize(sizeName) else { continue }
         for (variant, ticks, only) in variants {
             for (positionName, position) in [("below", NSSlider.TickMarkPosition.below), ("above", .above)] {
                 if ticks == 0 && positionName == "above" { continue }
                 let id = "slider.\(sizeName).\(variant).\(positionName)"
-                let container = NSView(frame: CGRect(x: 10, y: 10, width: 240, height: 64))
+                var madeContainer: NSView?
                 var made: NSSlider?
                 guard recorder.guarded(id, {
+                    let container = NSView(frame: CGRect(x: 10, y: 10, width: 240, height: 64))
                     let s = NSSlider(value: 0.4, minValue: 0, maxValue: 1, target: nil, action: nil)
                     s.controlSize = size
                     s.numberOfTickMarks = ticks
@@ -190,27 +191,75 @@ private func probeSliderTicks(window: NSWindow, root: NSView, folder: URL, recor
                     s.frame = CGRect(x: 20, y: 20, width: 200, height: s.frame.height)
                     container.addSubview(s)
                     root.addSubview(container)
+                    madeContainer = container
                     made = s
-                }), let s = made, let cell = s.cell as? NSSliderCell else { continue }
-                recorder.guarded("\(id).display", { window.displayIfNeeded() })
-                settle(); settle()
+                }) else { continue }
+                recorder.guarded("\(id).measure", {
+                    guard let s = made, let container = madeContainer, let cell = s.cell as? NSSliderCell else {
+                        recorder.missing("\(id).measure", "slider cell unavailable"); return
+                    }
+                    window.displayIfNeeded(); settle(); settle()
+                    let toScreen: (CGRect) -> CGRect = { window.convertToScreen(s.convert($0, to: nil)) }
+                    recorder.put("\(id).value", s.doubleValue)
+                    recorder.put("\(id).frameScreen", probeRect(toScreen(s.bounds)))
+                    recorder.put("\(id).knobRectScreen", probeRect(toScreen(cell.knobRect(flipped: s.isFlipped))))
+                    recorder.put("\(id).barRectScreen", probeRect(toScreen(cell.barRect(flipped: s.isFlipped))))
+                    if ticks > 0 {
+                        recorder.put("\(id).tickRectsScreen",
+                                     (0..<ticks).map { probeRect(toScreen(cell.rectOfTickMark(at: $0))) })
+                    }
+                    recorder.putOptional("\(id).layers", "slider has no layer",
+                                         s.layer.map { deepLayer($0, depth: 0, maximumDepth: 12) })
+                    let shotRect = window.convertToScreen(container.convert(container.bounds, to: nil))
+                    recorder.put("\(id).screenshot", captureScreen(shotRect, to: folder.appendingPathComponent("\(id).png")))
+                    recorder.put("\(id).cache2x", cacheRender(container, scale: 2,
+                                                              to: folder.appendingPathComponent("\(id)@2x-cache.png")))
+                    container.removeFromSuperview()
+                })
+            }
+        }
+    }
+}
+
+private func probeVerticalSliderTicks(window: NSWindow, root: NSView, folder: URL, recorder: ProbeRecorder) {
+    for sizeName in ["mini", "small", "regular", "large"] {
+        guard let size = controlSize(sizeName) else { continue }
+        for (positionName, position) in [("leading", NSSlider.TickMarkPosition.leading), ("trailing", .trailing)] {
+            let id = "sliderV.\(sizeName).\(positionName)"
+            var madeContainer: NSView?
+            var made: NSSlider?
+            guard recorder.guarded(id, {
+                let container = NSView(frame: CGRect(x: 10, y: 10, width: 64, height: 240))
+                let s = NSSlider(value: 0.4, minValue: 0, maxValue: 1, target: nil, action: nil)
+                s.controlSize = size
+                s.isVertical = true
+                s.numberOfTickMarks = 5
+                s.tickMarkPosition = position
+                s.frame = CGRect(x: 20, y: 20, width: 28, height: 200)
+                container.addSubview(s)
+                root.addSubview(container)
+                madeContainer = container
+                made = s
+            }) else { continue }
+            recorder.guarded("\(id).measure", {
+                guard let s = made, let container = madeContainer, let cell = s.cell as? NSSliderCell else {
+                    recorder.missing("\(id).measure", "slider cell unavailable"); return
+                }
+                window.displayIfNeeded(); settle(); settle()
                 let toScreen: (CGRect) -> CGRect = { window.convertToScreen(s.convert($0, to: nil)) }
                 recorder.put("\(id).value", s.doubleValue)
                 recorder.put("\(id).frameScreen", probeRect(toScreen(s.bounds)))
                 recorder.put("\(id).knobRectScreen", probeRect(toScreen(cell.knobRect(flipped: s.isFlipped))))
                 recorder.put("\(id).barRectScreen", probeRect(toScreen(cell.barRect(flipped: s.isFlipped))))
-                if ticks > 0 {
-                    recorder.put("\(id).tickRectsScreen",
-                                 (0..<ticks).map { probeRect(toScreen(cell.rectOfTickMark(at: $0))) })
-                }
+                recorder.put("\(id).tickRectsScreen", (0..<5).map { probeRect(toScreen(cell.rectOfTickMark(at: $0))) })
                 recorder.putOptional("\(id).layers", "slider has no layer",
                                      s.layer.map { deepLayer($0, depth: 0, maximumDepth: 12) })
                 let shotRect = window.convertToScreen(container.convert(container.bounds, to: nil))
                 recorder.put("\(id).screenshot", captureScreen(shotRect, to: folder.appendingPathComponent("\(id).png")))
                 recorder.put("\(id).cache2x", cacheRender(container, scale: 2,
-                                                          to: folder.appendingPathComponent("\(id)@2x-cache.png")))
-                recorder.guarded("\(id).cleanup", { container.removeFromSuperview() })
-            }
+                                                            to: folder.appendingPathComponent("\(id)@2x-cache.png")))
+                container.removeFromSuperview()
+            })
         }
     }
 }
@@ -594,6 +643,7 @@ func runDeepProbes(window: NSWindow, root: NSView, output: URL) throws {
     recorder.put("deep.axTrusted", AXIsProcessTrusted())
     recorder.put("deep.backingScale", window.backingScaleFactor)
     probeSliderTicks(window: window, root: root, folder: folder, recorder: recorder)
+    probeVerticalSliderTicks(window: window, root: root, folder: folder, recorder: recorder)
     try? writeJSON(recorder.values, to: url)
     record("deep probes slider ticks complete count=\(recorder.values.count)")
     probeSliderDrag(window: window, root: root, folder: folder, recorder: recorder)
