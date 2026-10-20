@@ -1303,9 +1303,32 @@ private func tlCapture(_ rect: CGRect, windowNumber: Int?, _ url: URL) -> [Strin
             "imagePixels": ["width": image.width, "height": image.height], "cgRect": probeRect(rect)]
 }
 
-private func tlPost(_ type: CGEventType, _ point: CGPoint) {
+// The hosted VM ignores HID posts (the cursor never moves), so each event also warps the cursor
+// and is queued as an AppKit event for the window; the button's tracking loop dequeues it.
+private struct TrafficLightTarget: @unchecked Sendable {
+    let windowNumber: Int
+    let windowOrigin: CGPoint
+    let screenTop: CGFloat
+}
+
+private func tlPost(_ type: CGEventType, _ point: CGPoint, _ target: TrafficLightTarget) {
+    CGWarpMouseCursorPosition(point)
     CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: point, mouseButton: .left)?
         .post(tap: .cghidEventTap)
+    let kind: NSEvent.EventType
+    switch type {
+    case .leftMouseDown: kind = .leftMouseDown
+    case .leftMouseUp: kind = .leftMouseUp
+    case .leftMouseDragged: kind = .leftMouseDragged
+    default: kind = .mouseMoved
+    }
+    let location = CGPoint(x: point.x - target.windowOrigin.x, y: target.screenTop - point.y - target.windowOrigin.y)
+    if let event = NSEvent.mouseEvent(with: kind, location: location, modifierFlags: [],
+                                      timestamp: ProcessInfo.processInfo.systemUptime,
+                                      windowNumber: target.windowNumber, context: nil, eventNumber: 0,
+                                      clickCount: 1, pressure: kind == .leftMouseUp || kind == .mouseMoved ? 0 : 1) {
+        NSApp.postEvent(event, atStart: false)
+    }
 }
 
 private final class TrafficLightToolbarDelegate: NSObject, NSToolbarDelegate {
@@ -1368,6 +1391,8 @@ func runTrafficLightProbe(appearance: String, output path: String) throws {
         }
         let region = CGRect(x: window.frame.minX - 20, y: screenTop - window.frame.maxY - 20, width: 240, height: 120)
         let windowNumber = window.windowNumber
+        let target = TrafficLightTarget(windowNumber: windowNumber, windowOrigin: window.frame.origin,
+                                        screenTop: screenTop)
         let other = NSWindow(contentRect: CGRect(x: screen.minX + 40, y: screen.minY + 60, width: 200, height: 120),
                              styleMask: [.titled], backing: .buffered, defer: false)
         other.isReleasedWhenClosed = false
@@ -1404,33 +1429,33 @@ func runTrafficLightProbe(appearance: String, output path: String) throws {
                 onMain { run.done = true }
                 return
             }
-            tlPost(.mouseMoved, cgPoint(park)); state("idle", wait: 0.8)
-            tlPost(.mouseMoved, cgPoint(close)); state("hover-close", wait: 0.8)
-            tlPost(.mouseMoved, cgPoint(zoom)); state("hover-zoom", wait: 0.6)
-            tlPost(.mouseMoved, cgPoint(close)); Thread.sleep(forTimeInterval: 0.4)
-            tlPost(.leftMouseDown, cgPoint(close)); state("pressed-close", wait: 1.2)
+            tlPost(.mouseMoved, cgPoint(park), target); state("idle", wait: 0.8)
+            tlPost(.mouseMoved, cgPoint(close), target); state("hover-close", wait: 0.8)
+            tlPost(.mouseMoved, cgPoint(zoom), target); state("hover-zoom", wait: 0.6)
+            tlPost(.mouseMoved, cgPoint(close), target); Thread.sleep(forTimeInterval: 0.4)
+            tlPost(.leftMouseDown, cgPoint(close), target); state("pressed-close", wait: 1.2)
             var last = close
             let drags: [(String, Double, Double)] = [("drag-close-right12", 12, 0), ("drag-close-right80", 80, 0),
                                                      ("drag-close-right160", 160, 0), ("drag-close-down80", 0, -80),
                                                      ("drag-close-diag", 80, -80)]
             for (name, dx, dy) in drags {
-                let target = CGPoint(x: close.x + dx, y: close.y + dy)
+                let goal = CGPoint(x: close.x + dx, y: close.y + dy)
                 for step in 1...10 {
                     let f = Double(step) / 10
-                    tlPost(.leftMouseDragged, cgPoint(CGPoint(x: last.x + (target.x - last.x) * f,
-                                                              y: last.y + (target.y - last.y) * f)))
+                    tlPost(.leftMouseDragged, cgPoint(CGPoint(x: last.x + (goal.x - last.x) * f,
+                                                              y: last.y + (goal.y - last.y) * f)), target)
                     Thread.sleep(forTimeInterval: 0.02)
                 }
-                last = target
+                last = goal
                 state(name, wait: 1.2)
             }
-            tlPost(.leftMouseUp, cgPoint(last)); state("released", wait: 1.2)
+            tlPost(.leftMouseUp, cgPoint(last), target); state("released", wait: 1.2)
             if variant == "unified" {
                 onMain { other.makeKeyAndOrderFront(nil) }
-                tlPost(.mouseMoved, cgPoint(park)); state("inactive", wait: 0.8)
-                tlPost(.mouseMoved, cgPoint(close)); state("inactive-hover-close", wait: 0.8)
+                tlPost(.mouseMoved, cgPoint(park), target); state("inactive", wait: 0.8)
+                tlPost(.mouseMoved, cgPoint(close), target); state("inactive-hover-close", wait: 0.8)
             }
-            tlPost(.mouseMoved, cgPoint(park))
+            tlPost(.mouseMoved, cgPoint(park), target)
             onMain { run.done = true }
         }
         while !run.done { RunLoop.main.run(until: Date().addingTimeInterval(0.05)) }
