@@ -1458,7 +1458,14 @@ func runTrafficLightProbe(appearance: String, output path: String) throws {
             tlPost(.mouseMoved, cgPoint(park), target)
             onMain { run.done = true }
         }
-        while !run.done { RunLoop.main.run(until: Date().addingTimeInterval(0.05)) }
+        // The probe runs inside a main-queue block, so NSApp's own loop is not fetching events:
+        // dispatch the queued AppKit events here.
+        while !run.done {
+            if let event = NSApp.nextEvent(matching: .any, until: Date().addingTimeInterval(0.02),
+                                           inMode: .default, dequeue: true) {
+                NSApp.sendEvent(event)
+            }
+        }
         other.close()
         window.close()
     }
