@@ -897,19 +897,8 @@ final class CaptureSession {
         let knob = knobFrame()
         let segmentLabels: [[String: Any]] = (control as? NSSegmentedControl).map { segmented in
             (0..<segmented.segmentCount).map { index in
-                let attributed = (segmented.cell as? NSSegmentedCell)?.attributedTitle(forSegment: index)
-                let foreground = attributed?.attribute(.foregroundColor, at: 0,
-                                                       effectiveRange: nil) as? NSColor
-                let resolved = foreground.map { color -> Any in
-                    var value: Any = NSNull()
-                    window.effectiveAppearance.performAsCurrentDrawingAppearance {
-                        value = probeColor(color, appearance: window.effectiveAppearance)
-                    }
-                    return value
-                } ?? NSNull()
                 return ["index": index, "title": segmented.label(forSegment: index),
-                        "selected": segmented.selectedSegment == index,
-                        "attributed_foreground": resolved]
+                        "selected": segmented.selectedSegment == index]
             }
         } ?? []
         let workspace = NSWorkspace.shared
