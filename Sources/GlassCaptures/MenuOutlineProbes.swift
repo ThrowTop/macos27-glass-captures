@@ -1022,8 +1022,8 @@ private func pocketLayerTree(_ layer: CALayer, depth: Int = 0) -> [String: Any] 
     entry["filters"] = filterInfo(layer.filters)
     entry["backgroundFilters"] = filterInfo(layer.backgroundFilters)
     let object = layer as NSObject
-    for key in ["scale", "groupName", "enabled", "captureOnly", "colors", "locations", "startPoint",
-                "endPoint", "type", "contents"] {
+    for key in ["scale", "marginWidth", "contentsScale", "groupName", "enabled", "captureOnly",
+                "colors", "locations", "startPoint", "endPoint", "type", "contents"] {
         if object.responds(to: NSSelectorFromString(key)) {
             var error: NSString?
             let value = SafeInvoke({ object.value(forKey: key) }, &error)
