@@ -897,18 +897,9 @@ final class CaptureSession {
             }
             let sckWindowError = windowError ?? "ScreenCaptureKit window capture timed out or failed to write PNG"
 
-            // A window-ID capture avoids unrelated notification windows and works with the
-            // segmented windows' read-only sharing setting. Keep the display composite below
-            // as a fallback because AppKit may present lifted content in a separate window.
-            if let image = CGWindowListCreateImage(.null, .optionIncludingWindow, windowID,
-                                                   [.bestResolution, .boundsIgnoreFraming]),
-               image.width >= minimumWidth * 3 / 4 && image.height >= minimumHeight * 3 / 4,
-               containsNonBlackPixels(image, atLeast: minimumVisiblePixels(in: image)),
-               writePNG(image, to: url) {
-                windowCaptureFailure = "ScreenCaptureKit-window: \(sckWindowError)"
-                return ("CGWindowListCreateImage-window", nil)
-            }
-            windowCaptureFailure = "ScreenCaptureKit-window: \(sckWindowError); CGWindowListCreateImage returned no complete window image"
+            // Keep the display composite below as a fallback because AppKit may present lifted
+            // content in a separate window. CGWindowListCreateImage is unavailable in macOS 27.
+            windowCaptureFailure = "ScreenCaptureKit-window: \(sckWindowError)"
         }
         if sckUnavailable { return screenshotWithCLI(url) }
         let semaphore = DispatchSemaphore(value: 0)
