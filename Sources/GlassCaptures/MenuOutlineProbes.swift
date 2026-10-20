@@ -1376,7 +1376,19 @@ func runTrafficLightProbe(appearance: String, output path: String) throws {
         // Events and captures run off the main thread: a pressed window button tracks the mouse in a
         // nested loop, and main-queue blocks still run there (common modes) for the dumps.
         DispatchQueue.global().async {
-            func onMain<T>(_ body: () -> T) -> T { DispatchQueue.main.sync(execute: body) }
+            // The probe itself runs inside a main-queue block, so main.sync would deadlock; a run-loop
+            // block runs in the nested run loops and in the button's tracking loop (common modes).
+            func onMain<T>(_ body: @escaping () -> T) -> T {
+                let done = DispatchSemaphore(value: 0)
+                var result: T?
+                CFRunLoopPerformBlock(CFRunLoopGetMain(), CFRunLoopMode.commonModes.rawValue) {
+                    result = body()
+                    done.signal()
+                }
+                CFRunLoopWakeUp(CFRunLoopGetMain())
+                done.wait()
+                return result!
+            }
             func state(_ name: String, wait: Double) {
                 Thread.sleep(forTimeInterval: wait)
                 let display = tlCapture(region, windowNumber: nil, folder.appendingPathComponent("\(name)-display.png"))
