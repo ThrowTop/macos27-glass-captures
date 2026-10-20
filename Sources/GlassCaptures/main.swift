@@ -534,13 +534,13 @@ final class CaptureSession {
     var backgroundError: String?
     var backgroundObstructions: [[String: Any]] = []
 
-    func containsNonBlackPixel(_ image: CGImage) -> Bool {
+    func containsNonBlackPixels(_ image: CGImage, atLeast minimumPixels: Int = 1) -> Bool {
         let width = image.width
         let height = image.height
         var pixels = [UInt8](repeating: 0, count: width * height * 4)
         let bitmapInfo = CGBitmapInfo.byteOrder32Big.rawValue |
             CGImageAlphaInfo.premultipliedLast.rawValue
-        var found = false
+        var visiblePixelCount = 0
         pixels.withUnsafeMutableBytes { storage in
             guard let context = CGContext(data: storage.baseAddress, width: width, height: height,
                                           bitsPerComponent: 8, bytesPerRow: width * 4,
@@ -548,14 +548,21 @@ final class CaptureSession {
                                           bitmapInfo: bitmapInfo) else { return }
             context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
             let bytes = storage.bindMemory(to: UInt8.self)
-            for offset in stride(from: 0, to: bytes.count, by: 4) {
+            for offset in stride(from: 0, to: bytes.count, by: 4) where visiblePixelCount < minimumPixels {
                 if bytes[offset] != 0 || bytes[offset + 1] != 0 || bytes[offset + 2] != 0 {
-                    found = true
-                    break
+                    visiblePixelCount += 1
                 }
             }
         }
-        return found
+        return visiblePixelCount >= minimumPixels
+    }
+
+    func minimumVisiblePixels(in image: CGImage) -> Int {
+        // Run 39347235103's notification-only window crop had 4,379 of 144,000
+        // non-black pixels. The segmented references use a plain window background.
+        let isSegmentedReference = options.scenario == "segmented-lens" ||
+            options.scenario == "segmented-toolbar"
+        return isSegmentedReference ? image.width * image.height / 4 : 1
     }
 
     init(options: Options) throws {
@@ -568,12 +575,21 @@ final class CaptureSession {
         let isToolbar = options.scenario == "toolbar-window"
         let isSegmentedToolbar = options.scenario == "segmented-toolbar"
         let isSidebar = options.scenario == "sidebar-window"
-        let w = CaptureWindow(contentRect: CGRect(x: 24, y: 24, width: 480, height: 300),
+        // Run 39347235103 found UserNotificationCenter at (382,133,260,348).
+        // With the control at y=256..292, y=-16 moves the full control below it.
+        let windowFrame = CGRect(x: 24, y: isSegmentedToolbar ? -16 : 24,
+                                 width: 480, height: 300)
+        let w = CaptureWindow(contentRect: windowFrame,
                          styleMask: isToolbar || isSidebar || isSegmentedToolbar
                             ? [.titled, .fullSizeContentView] : [.borderless],
                          backing: .buffered, defer: false)
         if isToolbar || isSidebar || isSegmentedToolbar {
-            w.setFrame(CGRect(x: 24, y: 24, width: 480, height: 300), display: false)
+            w.setFrame(windowFrame, display: false)
+        }
+        // NSWindow.SharingType.none may omit content from sharing; readOnly permits capture.
+        // https://developer.apple.com/documentation/appkit/nswindow/sharingtype-swift.enum/readonly
+        if options.scenario == "segmented-lens" || options.scenario == "segmented-toolbar" {
+            w.sharingType = .readOnly
         }
         w.isReleasedWhenClosed = false
         w.backgroundColor = .windowBackgroundColor
@@ -865,7 +881,8 @@ final class CaptureSession {
                 guard let clipped = full.cropping(to: crop) else {
                     throw NSError(domain: "GlassCaptures", code: 7, userInfo: [NSLocalizedDescriptionKey: "display composite crop outside image: \(crop)"])
                 }
-                if self.containsNonBlackPixel(clipped) {
+                if self.containsNonBlackPixels(clipped,
+                    atLeast: self.minimumVisiblePixels(in: clipped)) {
                     image = clipped
                 } else {
                     errorText = "ScreenCaptureKit returned an all-black window crop"
@@ -894,8 +911,8 @@ final class CaptureSession {
             if process.terminationStatus == 0,
                let source = CGImageSourceCreateWithURL(url as CFURL, nil),
                let image = CGImageSourceCreateImageAtIndex(source, 0, nil) {
-                guard containsNonBlackPixel(image) else {
-                    return ("none", "screencapture returned an all-black window crop")
+                guard containsNonBlackPixels(image, atLeast: minimumVisiblePixels(in: image)) else {
+                    return ("none", "screencapture returned an incomplete window crop")
                 }
                 return ("screencapture-region", nil)
             }
