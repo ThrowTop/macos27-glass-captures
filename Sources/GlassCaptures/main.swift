@@ -534,6 +534,30 @@ final class CaptureSession {
     var backgroundError: String?
     var backgroundObstructions: [[String: Any]] = []
 
+    func containsNonBlackPixel(_ image: CGImage) -> Bool {
+        let width = image.width
+        let height = image.height
+        var pixels = [UInt8](repeating: 0, count: width * height * 4)
+        let bitmapInfo = CGBitmapInfo.byteOrder32Big.rawValue |
+            CGImageAlphaInfo.premultipliedLast.rawValue
+        var found = false
+        pixels.withUnsafeMutableBytes { storage in
+            guard let context = CGContext(data: storage.baseAddress, width: width, height: height,
+                                          bitsPerComponent: 8, bytesPerRow: width * 4,
+                                          space: CGColorSpaceCreateDeviceRGB(),
+                                          bitmapInfo: bitmapInfo) else { return }
+            context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+            let bytes = storage.bindMemory(to: UInt8.self)
+            for offset in stride(from: 0, to: bytes.count, by: 4) {
+                if bytes[offset] != 0 || bytes[offset + 1] != 0 || bytes[offset + 2] != 0 {
+                    found = true
+                    break
+                }
+            }
+        }
+        return found
+    }
+
     init(options: Options) throws {
         self.options = options
         let root = URL(fileURLWithPath: options.out, isDirectory: true)
@@ -841,7 +865,11 @@ final class CaptureSession {
                 guard let clipped = full.cropping(to: crop) else {
                     throw NSError(domain: "GlassCaptures", code: 7, userInfo: [NSLocalizedDescriptionKey: "display composite crop outside image: \(crop)"])
                 }
-                image = clipped
+                if containsNonBlackPixel(clipped) {
+                    image = clipped
+                } else {
+                    errorText = "ScreenCaptureKit returned an all-black window crop"
+                }
             } catch { errorText = String(describing: error) }
             semaphore.signal()
         }
@@ -863,7 +891,12 @@ final class CaptureSession {
         do {
             try process.run()
             process.waitUntilExit()
-            if process.terminationStatus == 0, FileManager.default.fileExists(atPath: url.path) {
+            if process.terminationStatus == 0,
+               let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+               let image = CGImageSourceCreateImageAtIndex(source, 0, nil) {
+                guard containsNonBlackPixel(image) else {
+                    return ("none", "screencapture returned an all-black window crop")
+                }
                 return ("screencapture-region", nil)
             }
             return ("none", "ScreenCaptureKit: \(sckFailure ?? "unknown"); screencapture exit \(process.terminationStatus)")
@@ -1227,10 +1260,16 @@ final class CaptureSession {
         if options.ablate && options.scenario.hasPrefix("swiftui-glass") { nativeAblations() }
         if options.interaction == "idle" { try saveManifest(); return }
         let f = control.convert(control.bounds, to: window.contentView)
-        let start = knobFrame().map { CGPoint(x: $0.midX, y: $0.midY) }
-            ?? CGPoint(x: f.midX, y: f.midY)
         let segmentedLensScenario = options.scenario == "segmented-lens" ||
             options.scenario == "segmented-toolbar"
+        let start: CGPoint
+        if let knob = knobFrame() {
+            start = CGPoint(x: knob.midX, y: knob.midY)
+        } else if segmentedLensScenario && options.interaction == "hold" {
+            start = CGPoint(x: f.minX + f.width * (5.0 / 6.0), y: f.midY)
+        } else {
+            start = CGPoint(x: f.midX, y: f.midY)
+        }
         let direction: CGFloat = segmentedLensScenario ? 1 : options.state == "on" ? -1 : 1
         let dragDistance = segmentedLensScenario
             ? f.width / 6 : 8
