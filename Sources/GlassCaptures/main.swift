@@ -1217,7 +1217,8 @@ if (CommandLine.arguments.contains("--menu-outline-window-mode") ||
     CommandLine.arguments.contains("--menu-outline-contour-only-mode") ||
     CommandLine.arguments.contains("--window-shape-mode") ||
     CommandLine.arguments.contains("--text-probe-mode") ||
-    CommandLine.arguments.contains("--scroll-pocket-mode")),
+    CommandLine.arguments.contains("--scroll-pocket-mode") ||
+    CommandLine.arguments.contains("--traffic-lights-mode")),
    let appearanceIndex = CommandLine.arguments.firstIndex(of: "--probe-appearance"),
    let outputIndex = CommandLine.arguments.firstIndex(of: "--probe-out"),
    appearanceIndex + 1 < CommandLine.arguments.count, outputIndex + 1 < CommandLine.arguments.count {
@@ -1249,6 +1250,8 @@ if (CommandLine.arguments.contains("--menu-outline-window-mode") ||
                 try runWindowShapeProbe(appearance: appearance, output: output)
             } else if CommandLine.arguments.contains("--text-probe-mode") {
                 try runTextProbe(appearance: appearance, output: output)
+            } else if CommandLine.arguments.contains("--traffic-lights-mode") {
+                try runTrafficLightProbe(appearance: appearance, output: output)
             } else if CommandLine.arguments.contains("--scroll-pocket-mode") {
                 try runScrollPocketProbe(appearance: appearance, output: output)
             } else if contourOnly, let windowBackground, let windowState {

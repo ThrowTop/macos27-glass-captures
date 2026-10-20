@@ -1229,3 +1229,202 @@ func runScrollPocketProbe(appearance: String, output path: String) throws {
         }
     }
 }
+
+
+// Traffic-light references: the standard window buttons idle, hovered, pressed and dragged with HID
+// mouse events, with each button's view tree and presentation-layer transforms in every state.
+private func tlLayerTree(_ layer: CALayer, depth: Int = 0) -> [String: Any] {
+    let p = layer.presentation() ?? layer
+    let t = p.transform
+    var entry: [String: Any] = [
+        "class": NSStringFromClass(type(of: layer)), "name": layer.name ?? NSNull(),
+        "frame": probeRect(p.frame), "bounds": probeRect(p.bounds),
+        "position": ["x": p.position.x, "y": p.position.y],
+        "transform": [t.m11, t.m12, t.m21, t.m22, t.m41, t.m42],
+        "opacity": p.opacity, "isHidden": p.isHidden, "cornerRadius": p.cornerRadius,
+        "compositingFilter": safeDescription(layer.compositingFilter) ?? NSNull(),
+        "filters": safeDescription(layer.filters) ?? NSNull(),
+        "animationKeys": layer.animationKeys() ?? []
+    ]
+    if depth < 12 { entry["sublayers"] = (layer.sublayers ?? []).map { tlLayerTree($0, depth: depth + 1) } }
+    return entry
+}
+
+private func tlViewTree(_ view: NSView, depth: Int = 0) -> [String: Any] {
+    var entry: [String: Any] = [
+        "class": NSStringFromClass(type(of: view)), "frame": probeRect(view.frame),
+        "windowFrame": probeRect(view.convert(view.bounds, to: nil)),
+        "isHidden": view.isHidden, "alpha": view.alphaValue
+    ]
+    if depth < 10 { entry["subviews"] = view.subviews.map { tlViewTree($0, depth: depth + 1) } }
+    return entry
+}
+
+private func tlButtons(_ window: NSWindow) -> [(String, NSButton)] {
+    let types: [(String, NSWindow.ButtonType)] = [("close", .closeButton), ("minimize", .miniaturizeButton),
+                                                  ("zoom", .zoomButton)]
+    return types.compactMap { name, type in window.standardWindowButton(type).map { (name, $0) } }
+}
+
+private func tlDump(_ window: NSWindow) -> [String: Any] {
+    var buttons: [String: Any] = [:]
+    for (name, button) in tlButtons(window) {
+        var entry: [String: Any] = ["view": tlViewTree(button)]
+        if let layer = button.layer { entry["layer"] = tlLayerTree(layer) }
+        if let cell = button.cell {
+            for key in ["_bezelInteractionState", "isHighlighted", "buttonRevealAmount", "widgetType",
+                        "buttonID", "isObscured", "isEdited"] {
+                entry["cell.\(key)"] = outlineKVC(cell, key)
+            }
+        }
+        for key in ["revealAmount", "buttonGestureRecognizerEnabled"] { entry[key] = outlineKVC(button, key) }
+        buttons[name] = entry
+    }
+    let mouse = NSEvent.mouseLocation
+    let windows: [[String: Any]] = NSApp.windows.filter { $0.isVisible }.map {
+        ["class": NSStringFromClass(type(of: $0)), "frame": probeRect($0.frame), "level": $0.level.rawValue]
+    }
+    return ["buttons": buttons, "isKeyWindow": window.isKeyWindow, "isMainWindow": window.isMainWindow,
+            "mouse": ["x": mouse.x, "y": mouse.y], "pixelScale": window.backingScaleFactor,
+            "windowFrame": probeRect(window.frame), "windows": windows]
+}
+
+private func tlCapture(_ rect: CGRect, windowNumber: Int?, _ url: URL) -> [String: Any] {
+    typealias Capture = @convention(c) (CGRect, UInt32, UInt32, UInt32) -> Unmanaged<CGImage>?
+    guard let library = dlopen("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics", RTLD_LAZY),
+          let symbol = dlsym(library, "CGWindowListCreateImage") else { return ["error": "no CGWindowListCreateImage"] }
+    let capture = unsafeBitCast(symbol, to: Capture.self)
+    let option = windowNumber == nil ? CGWindowListOption.optionOnScreenOnly : .optionIncludingWindow
+    guard let image = capture(rect, option.rawValue, CGWindowID(windowNumber ?? 0),
+                              CGWindowImageOption.bestResolution.rawValue)?.takeRetainedValue() else {
+        return ["error": "capture returned nil"]
+    }
+    return ["file": url.lastPathComponent, "written": outlineWrite(image, url),
+            "imagePixels": ["width": image.width, "height": image.height], "cgRect": probeRect(rect)]
+}
+
+private func tlPost(_ type: CGEventType, _ point: CGPoint) {
+    CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: point, mouseButton: .left)?
+        .post(tap: .cghidEventTap)
+}
+
+private final class TrafficLightToolbarDelegate: NSObject, NSToolbarDelegate {
+    let item = NSToolbarItem.Identifier("probe.item")
+    func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] { [item] }
+    func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] { [item] }
+    func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier identifier: NSToolbarItem.Identifier,
+                 willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
+        let entry = NSToolbarItem(itemIdentifier: identifier)
+        entry.label = "Item"
+        entry.image = NSImage(systemSymbolName: "square.and.arrow.up", accessibilityDescription: nil)
+        return entry
+    }
+}
+
+private final class TrafficLightRun: @unchecked Sendable {
+    var done = false
+    var cases: [[String: Any]] = []
+}
+
+func runTrafficLightProbe(appearance: String, output path: String) throws {
+    let output = URL(fileURLWithPath: path, isDirectory: true)
+    let dark = appearance.hasPrefix("dark")
+    NSApp.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+    let screen = NSScreen.main?.frame ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
+    let backdrop = NSWindow(contentRect: screen, styleMask: .borderless, backing: .buffered, defer: false)
+    backdrop.isReleasedWhenClosed = false
+    backdrop.backgroundColor = .white
+    backdrop.hasShadow = false
+    backdrop.orderFrontRegardless()
+    let delegate = TrafficLightToolbarDelegate()
+    // CG global coordinates have their origin at the top left of the main display.
+    let screenTop = screen.maxY
+    func cgPoint(_ p: CGPoint) -> CGPoint { CGPoint(x: p.x, y: screenTop - p.y) }
+    let park = CGPoint(x: screen.maxX - 20, y: 20)
+    let run = TrafficLightRun()
+    for variant in ["unified", "titled"] {
+        let folder = output.appendingPathComponent("traffic-lights/\(appearance)/\(variant)", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let frame = CGRect(x: screen.midX - 320, y: screen.midY - 230, width: 640, height: 460)
+        let window = NSWindow(contentRect: frame, styleMask: [.titled, .closable, .miniaturizable, .resizable],
+                              backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        window.title = "Traffic lights \(variant)"
+        window.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+        if variant == "unified" {
+            let toolbar = NSToolbar(identifier: "probe.traffic")
+            toolbar.delegate = delegate
+            window.toolbar = toolbar
+            window.toolbarStyle = .unified
+        }
+        window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
+        NSApp.activate(ignoringOtherApps: true)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.6))
+        var centers: [String: CGPoint] = [:]
+        for (name, button) in tlButtons(window) {
+            let r = window.convertToScreen(button.convert(button.bounds, to: nil))
+            centers[name] = CGPoint(x: r.midX, y: r.midY)
+        }
+        let region = CGRect(x: window.frame.minX - 20, y: screenTop - window.frame.maxY - 20, width: 240, height: 120)
+        let windowNumber = window.windowNumber
+        let other = NSWindow(contentRect: CGRect(x: screen.minX + 40, y: screen.minY + 60, width: 200, height: 120),
+                             styleMask: [.titled], backing: .buffered, defer: false)
+        other.isReleasedWhenClosed = false
+        other.title = "Other"
+        run.done = false
+        // Events and captures run off the main thread: a pressed window button tracks the mouse in a
+        // nested loop, and main-queue blocks still run there (common modes) for the dumps.
+        DispatchQueue.global().async {
+            func onMain<T>(_ body: () -> T) -> T { DispatchQueue.main.sync(execute: body) }
+            func state(_ name: String, wait: Double) {
+                Thread.sleep(forTimeInterval: wait)
+                let display = tlCapture(region, windowNumber: nil, folder.appendingPathComponent("\(name)-display.png"))
+                let windowImage = tlCapture(.null, windowNumber: windowNumber,
+                                            folder.appendingPathComponent("\(name)-window.png"))
+                let dump = onMain { tlDump(window) }
+                try? writeJSON(dump, to: folder.appendingPathComponent("\(name).json"))
+                onMain { run.cases.append(["appearance": appearance, "variant": variant, "state": name,
+                                           "display": display, "window": windowImage]) }
+                record("traffic-lights \(appearance)/\(variant)/\(name) display=\(display["error"] ?? "ok")")
+            }
+            guard let close = centers["close"], let zoom = centers["zoom"] else {
+                onMain { run.done = true }
+                return
+            }
+            tlPost(.mouseMoved, cgPoint(park)); state("idle", wait: 0.8)
+            tlPost(.mouseMoved, cgPoint(close)); state("hover-close", wait: 0.8)
+            tlPost(.mouseMoved, cgPoint(zoom)); state("hover-zoom", wait: 0.6)
+            tlPost(.mouseMoved, cgPoint(close)); Thread.sleep(forTimeInterval: 0.4)
+            tlPost(.leftMouseDown, cgPoint(close)); state("pressed-close", wait: 1.2)
+            var last = close
+            let drags: [(String, Double, Double)] = [("drag-close-right12", 12, 0), ("drag-close-right80", 80, 0),
+                                                     ("drag-close-right160", 160, 0), ("drag-close-down80", 0, -80),
+                                                     ("drag-close-diag", 80, -80)]
+            for (name, dx, dy) in drags {
+                let target = CGPoint(x: close.x + dx, y: close.y + dy)
+                for step in 1...10 {
+                    let f = Double(step) / 10
+                    tlPost(.leftMouseDragged, cgPoint(CGPoint(x: last.x + (target.x - last.x) * f,
+                                                              y: last.y + (target.y - last.y) * f)))
+                    Thread.sleep(forTimeInterval: 0.02)
+                }
+                last = target
+                state(name, wait: 1.2)
+            }
+            tlPost(.leftMouseUp, cgPoint(last)); state("released", wait: 1.2)
+            if variant == "unified" {
+                onMain { other.makeKeyAndOrderFront(nil) }
+                tlPost(.mouseMoved, cgPoint(park)); state("inactive", wait: 0.8)
+                tlPost(.mouseMoved, cgPoint(close)); state("inactive-hover-close", wait: 0.8)
+            }
+            tlPost(.mouseMoved, cgPoint(park))
+            onMain { run.done = true }
+        }
+        while !run.done { RunLoop.main.run(until: Date().addingTimeInterval(0.05)) }
+        other.close()
+        window.close()
+    }
+    try writeJSON(run.cases, to: output.appendingPathComponent("traffic-lights/\(appearance)/cases.json"))
+    backdrop.close()
+}
