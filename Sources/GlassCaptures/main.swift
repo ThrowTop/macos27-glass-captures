@@ -865,7 +865,7 @@ final class CaptureSession {
                 guard let clipped = full.cropping(to: crop) else {
                     throw NSError(domain: "GlassCaptures", code: 7, userInfo: [NSLocalizedDescriptionKey: "display composite crop outside image: \(crop)"])
                 }
-                if containsNonBlackPixel(clipped) {
+                if self.containsNonBlackPixel(clipped) {
                     image = clipped
                 } else {
                     errorText = "ScreenCaptureKit returned an all-black window crop"
