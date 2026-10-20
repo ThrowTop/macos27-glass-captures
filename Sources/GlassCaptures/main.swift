@@ -529,6 +529,7 @@ final class CaptureSession {
     var usesTrackingLoop = true
     var usedDirectFallback = false
     var sckFailure: String?
+    var windowCaptureFailure: String?
     var sckUnavailable = false
     var backgroundPath: String?
     var backgroundError: String?
@@ -852,6 +853,63 @@ final class CaptureSession {
     }
 
     func screenshot(_ url: URL) -> (String, String?) {
+        let isSegmentedReference = options.scenario == "segmented-lens" ||
+            options.scenario == "segmented-toolbar"
+        if isSegmentedReference {
+            let windowID = CGWindowID(window.windowNumber)
+            let semaphore = DispatchSemaphore(value: 0)
+            var windowImage: CGImage?
+            var windowError: String?
+            let scale = window.backingScaleFactor
+            let minimumWidth = max(1, Int((window.frame.width * scale).rounded()))
+            let minimumHeight = max(1, Int((window.frame.height * scale).rounded()))
+            Task.detached {
+                do {
+                    let content = try await SCShareableContent.current
+                    guard let shareableWindow = content.windows.first(where: { $0.windowID == windowID }) else {
+                        throw NSError(domain: "GlassCaptures", code: 11,
+                            userInfo: [NSLocalizedDescriptionKey: "ScreenCaptureKit did not expose windowID=\(windowID)"])
+                    }
+                    let filter = SCContentFilter(desktopIndependentWindow: shareableWindow)
+                    let config = SCStreamConfiguration()
+                    config.width = minimumWidth
+                    config.height = minimumHeight
+                    config.showsCursor = false
+                    let image = try await SCScreenshotManager.captureImage(
+                        contentFilter: filter, configuration: config)
+                    guard image.width >= minimumWidth * 3 / 4 && image.height >= minimumHeight * 3 / 4 else {
+                        throw NSError(domain: "GlassCaptures", code: 12,
+                            userInfo: [NSLocalizedDescriptionKey: "window screenshot dimensions \(image.width)x\(image.height), expected at least \(minimumWidth)x\(minimumHeight)"])
+                    }
+                    guard self.containsNonBlackPixels(image,
+                        atLeast: self.minimumVisiblePixels(in: image)) else {
+                        throw NSError(domain: "GlassCaptures", code: 13,
+                            userInfo: [NSLocalizedDescriptionKey: "ScreenCaptureKit returned an incomplete window image"])
+                    }
+                    windowImage = image
+                } catch { windowError = String(describing: error) }
+                semaphore.signal()
+            }
+            if semaphore.wait(timeout: .now() + 8) == .success,
+               let windowImage, writePNG(windowImage, to: url) {
+                windowCaptureFailure = nil
+                return ("ScreenCaptureKit-window", nil)
+            }
+            let sckWindowError = windowError ?? "ScreenCaptureKit window capture timed out or failed to write PNG"
+
+            // A window-ID capture avoids unrelated notification windows and works with the
+            // segmented windows' read-only sharing setting. Keep the display composite below
+            // as a fallback because AppKit may present lifted content in a separate window.
+            if let image = CGWindowListCreateImage(.null, .optionIncludingWindow, windowID,
+                                                   [.bestResolution, .boundsIgnoreFraming]),
+               image.width >= minimumWidth * 3 / 4 && image.height >= minimumHeight * 3 / 4,
+               containsNonBlackPixels(image, atLeast: minimumVisiblePixels(in: image)),
+               writePNG(image, to: url) {
+                windowCaptureFailure = "ScreenCaptureKit-window: \(sckWindowError)"
+                return ("CGWindowListCreateImage-window", nil)
+            }
+            windowCaptureFailure = "ScreenCaptureKit-window: \(sckWindowError); CGWindowListCreateImage returned no complete window image"
+        }
         if sckUnavailable { return screenshotWithCLI(url) }
         let semaphore = DispatchSemaphore(value: 0)
         var image: CGImage?
@@ -1036,6 +1094,7 @@ final class CaptureSession {
             "background_image": backgroundPath as Any? ?? NSNull(),
             "background_error": backgroundError as Any? ?? NSNull(),
             "background_obstructions": backgroundObstructions,
+            "window_capture_failure": windowCaptureFailure as Any? ?? NSNull(),
             "do_not_disturb": "not configured; obstruction check is authoritative",
             "control_value": (control as? NSSwitch).map { $0.state.rawValue } as Any? ?? NSNull(),
             "segment_labels": segmentLabels,
