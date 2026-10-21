@@ -129,8 +129,17 @@ private final class Probe: NSObject, NSApplicationDelegate {
                 }
             }
             try await settle(seconds: 0.75)
+            NSApp.activate(ignoringOtherApps: true)
+            window?.makeKeyAndOrderFront(nil)
+            try await settle(seconds: 0.75)
             let full = try await captureDisplay(screen: screen)
             try savePNG(full, to: config.output.appendingPathComponent("full-display.png"))
+            let focus = ["isKeyWindow": window?.isKeyWindow ?? false,
+                         "isMainWindow": window?.isMainWindow ?? false,
+                         "isActive": NSApp.isActive]
+            if focus["isKeyWindow"] != true || focus["isActive"] != true {
+                incomplete.append("Probe window was not key and application active after final settling/capture")
+            }
             let cropInfo = try saveWindowCrop(full, screen: screen)
             let windowScan = overlappingWindows(windowFrame: window?.frame ?? .zero, screen: screen)
             let windows = windowScan.windows
@@ -146,6 +155,7 @@ private final class Probe: NSObject, NSApplicationDelegate {
                 "awareMode": config.aware, "backdrops": layerReport,
                 "windowHeight400Accepted": abs((window?.frame.height ?? 0) - 400) <= 1,
                 "screen": screenFacts(screen), "window": windowFacts(window),
+                "focusAfterFinalCapture": focus,
                 "crop": cropInfo, "overlappingVisibleWindows": windows,
                 "visibleWindowEnumerationComplete": windowScan.complete,
                 "obstructionAssessment": !windowScan.complete ? "unknown: on-screen window enumeration incomplete" : (blocked.isEmpty ? "no reported visible window above probe intersects probe window" : "obstructed: reported window(s) above probe intersect probe window"),
@@ -332,7 +342,9 @@ private final class Probe: NSObject, NSApplicationDelegate {
         return ["framePoints": rectJSON(window.frame), "contentLayoutRectPoints": rectJSON(window.contentLayoutRect),
                 "contentViewBoundsPoints": rectJSON(window.contentView?.bounds ?? .zero),
                 "backingScaleFactor": window.backingScaleFactor, "styleMask": window.styleMask.rawValue,
-                "isVisible": window.isVisible, "appearance": window.effectiveAppearance.name.rawValue]
+                "isVisible": window.isVisible, "isKeyWindow": window.isKeyWindow,
+                "isMainWindow": window.isMainWindow, "isActive": NSApp.isActive,
+                "appearance": window.effectiveAppearance.name.rawValue]
     }
 
     private func overlappingWindows(windowFrame: CGRect, screen: NSScreen) -> (windows: [[String: Any]], complete: Bool) {

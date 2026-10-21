@@ -136,6 +136,36 @@ jobs:
             echo "$name process_exit=$status" >> "$ROOT/run-summary.txt"
           }
 
+          # A separately labelled capture gives ScreenCaptureKit a real first
+          # invocation before the scheduled matrix. Consent handling is limited
+          # to the matching WallpaperEdges prompt's button named exactly Allow.
+          warmup_out="$ROOT/warmup-consent"
+          mkdir -p "$warmup_out"
+          echo "warmup=light-black-aware-native-tint-off" > "$warmup_out/label.txt"
+          echo "warmup_started=$(date -u +%FT%TZ)" >> "$warmup_out/label.txt"
+          /usr/bin/open -n -W "$APP" --args \
+            --appearance=light --desktop=black --aware=native --tint=off \
+            --output="$warmup_out" > "$warmup_out/process.log" 2>&1 &
+          warmup_pid=$!
+          osascript scripts/dismiss-wallpaper-capture-consent.applescript \
+            > "$ROOT/consent-dismissal.log" 2>&1
+          consent_status=$?
+          if grep -q 'ACCESSIBILITY_ERROR ' "$ROOT/consent-dismissal.log"; then
+            echo "warmup_open_status=not-waited accessibility_error=1" >> "$warmup_out/label.txt"
+            killall WallpaperEdges >/dev/null 2>&1 || true
+            wait "$warmup_pid" 2>/dev/null || true
+            echo "Consent dismissal stopped: System Events accessibility error" >> "$ROOT/run-summary.txt"
+            exit 2
+          fi
+          wait "$warmup_pid"
+          warmup_status=$?
+          echo "warmup_process_exit=$warmup_status consent_script_exit=$consent_status" >> "$warmup_out/label.txt"
+          if [[ ! -f "$warmup_out/metadata.json" ]]; then
+            printf '{"status":"failed","errors":["warmup app exited before writing metadata.json"],"incompleteReasons":["No warmup capture metadata was produced"]}\n' > "$warmup_out/metadata.json"
+          fi
+          echo "warmup_process_exit=$warmup_status" >> "$ROOT/run-summary.txt"
+          if [[ $warmup_status -ne 0 ]]; then failed=1; fi
+
           for appearance in light dark; do
             for desktop in black white; do
               for aware in native off; do
