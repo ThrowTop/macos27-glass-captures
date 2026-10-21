@@ -1,6 +1,6 @@
 # Wallpaper and sidebar edge probe
 
-This standalone `workflow_dispatch` probe collects controlled AppKit sidebar and inspector captures on the macOS 27 hosted runner. It does not modify the maintained capture harness. Run it only when a manual capture is wanted; one newly launched app process is used for each case.
+This standalone `captures.yml` (`workflow_dispatch`) probe collects controlled AppKit sidebar and inspector captures on the macOS 27 hosted runner. It does not modify the maintained capture harness. Run it only when a manual capture is wanted; one newly launched app process is used for each case.
 
 ## Exact case matrix
 
@@ -21,4 +21,4 @@ The displayed window has a 400 point height, 180 point sidebar and inspector tar
 
 Treat a capture as unobstructed only when metadata reports complete on-screen window enumeration, its obstruction assessment reports no intersecting window above the probe, and the full-display image agrees. Enumeration retains intersecting windows below the probe too, including the desktop; the `aboveProbe` field uses the front-to-back CGWindow list order. Review `desktop-before-window.png` too; consent dialogs or other runner windows can obscure a case. A nonzero process exit, `status: incomplete`, missing expected backdrop, or absent output image is an explicit case limitation, not a native result.
 
-This is a static probe on a macOS 27 hosted runner and is expected to use a 1x display; the recorded scale is authoritative. Settling waits provide no animation timing evidence. The newly written Swift source has not been compiled or run locally as part of preparation. Captures alone make no native behavior or implementation conclusions; interpretation belongs to the MacUIKit owner and requires review of the recorded evidence.
+This is a static probe on a macOS 27 hosted runner and is expected to use a 1x display; the recorded scale is authoritative. Settling waits provide no animation timing evidence. Run `39663849726` stopped at compilation; the next run will record the corrected Swift compilation state and captures. Captures alone make no native behavior or implementation conclusions; interpretation belongs to the MacUIKit owner and requires review of the recorded evidence.

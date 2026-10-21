@@ -90,8 +90,8 @@ private final class Probe: NSObject, NSApplicationDelegate {
             // at 0x18a76bdc4 tailcalls standardUserDefaults.boolForKey for
             // CFString 0x1e2892ee8 ("AppleReduceDesktopTinting"). This records that trace;
             // native interpretation remains with the MacUIKit owner.
-            // NSArgumentDomain is volatile and takes precedence over persistent user defaults.
-            UserDefaults.standard.setVolatileDomain(["AppleReduceDesktopTinting": tintValue], forName: NSArgumentDomain)
+            // UserDefaults.argumentDomain is volatile and takes precedence over persistent user defaults.
+            UserDefaults.standard.setVolatileDomain(["AppleReduceDesktopTinting": tintValue], forName: UserDefaults.argumentDomain)
             let observedTintValue = UserDefaults.standard.bool(forKey: "AppleReduceDesktopTinting")
             if observedTintValue != tintValue { incomplete.append("Process-scoped AppleReduceDesktopTinting value did not match the requested value") }
             NSApp.appearance = NSAppearance(named: config.appearance)
@@ -178,7 +178,7 @@ private final class Probe: NSObject, NSApplicationDelegate {
         sideItem.canCollapse = false; inspectItem.canCollapse = false
         split.addSplitViewItem(sideItem); split.addSplitViewItem(bodyItem); split.addSplitViewItem(inspectItem)
         split.view.wantsLayer = true
-        split.view.layer?.backgroundColor = NSColor(srgbWhite: 0.75, alpha: 1).cgColor
+        split.view.layer?.backgroundColor = NSColor(srgbRed: 0.75, green: 0.75, blue: 0.75, alpha: 1).cgColor
         let style: NSWindow.StyleMask = [.titled, .closable, .resizable, .fullSizeContentView]
         let frame = NSRect(x: screen.visibleFrame.midX - 331, y: screen.visibleFrame.midY - 200,
                            width: 662, height: 400)
@@ -187,7 +187,7 @@ private final class Probe: NSObject, NSApplicationDelegate {
         window.titlebarAppearsTransparent = true
         window.isReleasedWhenClosed = false
         window.appearance = NSAppearance(named: config.appearance)
-        window.backgroundColor = NSColor(srgbWhite: 0.75, alpha: 1)
+        window.backgroundColor = NSColor(srgbRed: 0.75, green: 0.75, blue: 0.75, alpha: 1)
         window.isOpaque = true
         window.contentViewController = split
         self.window = window; splitController = split; sidebarItem = sideItem; inspectorItem = inspectItem
