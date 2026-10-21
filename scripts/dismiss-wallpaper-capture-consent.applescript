@@ -37,13 +37,12 @@ on run argv
 						set buttonText to buttonLabels as text
 						set AppleScript's text item delimiters to ""
 						set normalizedText to staticText as text
-						set isWallpaperPrompt to false
-						ignoring case
-							if normalizedText contains "WallpaperEdges" then
-								if ((normalizedText contains "screen" and normalizedText contains "audio" and normalizedText contains "capture") or normalizedText contains "screen picker") then set isWallpaperPrompt to true
-							end if
-						end ignoring
+						set hasWallpaperName to (normalizedText contains "WallpaperEdges")
+						set hasScreenAudioCapture to ((normalizedText contains "screen and audio") and (normalizedText contains "capture"))
+						set hasScreenPicker to (normalizedText contains "screen picker")
+						set isWallpaperPrompt to (hasWallpaperName and (hasScreenAudioCapture or hasScreenPicker))
 						log "WINDOW process=" & processLabel & " label=" & windowLabel & " staticTexts=" & staticText & " buttons=" & buttonText
+						log "PROMPT_MATCH wallpaper=" & hasWallpaperName & " screenAudioCapture=" & hasScreenAudioCapture & " screenPicker=" & hasScreenPicker
 						if isWallpaperPrompt then
 							repeat with targetButton in allElements
 								set buttonLabel to ""
