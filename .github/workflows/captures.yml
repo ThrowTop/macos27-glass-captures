@@ -1,37 +1,118 @@
-name: macOS 27 glass captures
+name: wallpaper edge probe
 
 on:
   workflow_dispatch:
-    inputs:
-      scenarios:
-        description: "Comma-separated scenario IDs, smoke, or all"
-        required: false
-        default: all
+
+permissions:
+  contents: read
 
 jobs:
   capture:
     runs-on: xcode-27
-    timeout-minutes: 180
-    permissions:
-      contents: read
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - name: Environment
+
+      - name: Record runner environment
         run: |
-          sw_vers
-          uname -a
-          xcodebuild -version
-      - name: Build
-        run: swift build -c release > build.log 2>&1 || { cat build.log; exit 1; }
-      - name: Capture
-        run: bash scripts/run-captures.sh '${{ inputs.scenarios }}'
-      - name: Upload results
+          mkdir -p out/wallpaper-edges
+          {
+            sw_vers
+            echo "uname=$(uname -a)"
+            echo "runner_os=$RUNNER_OS"
+            echo "runner_arch=$RUNNER_ARCH"
+            system_profiler SPDisplaysDataType
+          } > out/wallpaper-edges/environment.txt 2>&1
+
+      - name: Compile standalone app
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP="$RUNNER_TEMP/WallpaperEdges.app"
+          mkdir -p "$APP/Contents/MacOS"
+          cat > "$APP/Contents/Info.plist" <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>CFBundleExecutable</key><string>WallpaperEdges</string>
+            <key>CFBundleIdentifier</key><string>custom.macuikit.WallpaperEdges</string>
+            <key>CFBundleName</key><string>WallpaperEdges</string>
+            <key>CFBundlePackageType</key><string>APPL</string>
+            <key>LSMinimumSystemVersion</key><string>27.0</string>
+            <key>NSHighResolutionCapable</key><true/>
+          </dict></plist>
+          PLIST
+          if ! swiftc -parse-as-library Sources/WallpaperEdges/main.swift \
+            -framework AppKit -framework ScreenCaptureKit -framework ImageIO \
+            -o "$APP/Contents/MacOS/WallpaperEdges" \
+            > out/wallpaper-edges/build.log 2>&1; then
+            cat out/wallpaper-edges/build.log
+            exit 1
+          fi
+          rm out/wallpaper-edges/build.log
+          codesign --force --deep --sign - "$APP"
+          python3 scripts/grant-screen-capture.py \
+            custom.macuikit.WallpaperEdges "$APP/Contents/MacOS/WallpaperEdges" \
+            > out/wallpaper-edges/tcc-grant.log 2>&1
+          echo "$APP" > "$RUNNER_TEMP/wallpaper-edges-app-path"
+
+      - name: Capture 16 fresh-process cases
+        shell: bash
+        run: |
+          set -uo pipefail
+          APP="$(cat "$RUNNER_TEMP/wallpaper-edges-app-path")"
+          ROOT="$GITHUB_WORKSPACE/out/wallpaper-edges"
+          mkdir -p "$ROOT"
+          failed=0
+          run_case() {
+            local appearance="$1" desktop="$2" aware="$3" tint="$4"
+            local name="${appearance}-${desktop}-aware-${aware}-tint-${tint}"
+            local out="$ROOT/$name"
+            mkdir -p "$out"
+            {
+              echo "case=$name"
+              date -u
+              sw_vers
+              echo "display inventory follows"
+              system_profiler SPDisplaysDataType
+            } > "$out/environment.txt" 2>&1
+            /usr/bin/open -n -W "$APP" --args \
+              "--appearance=$appearance" "--desktop=$desktop" \
+              "--aware=$aware" "--tint=$tint" "--output=$out" \
+              > "$out/process.log" 2>&1
+            local status=$?
+            if [[ ! -f "$out/metadata.json" ]]; then
+              printf '{"status":"failed","errors":["app exited %s before writing metadata.json"],"incompleteReasons":["No capture files were produced"]}\n' "$status" > "$out/metadata.json"
+            fi
+            if ! python3 -c 'import json,sys; sys.exit(0 if json.load(open(sys.argv[1])).get("status") == "captured" else 1)' "$out/metadata.json"; then
+              failed=1
+            fi
+            if [[ $status -ne 0 ]]; then failed=1; fi
+            echo "$name process_exit=$status" >> "$ROOT/run-summary.txt"
+          }
+
+          for appearance in light dark; do
+            for desktop in black white; do
+              for aware in native off; do
+                run_case "$appearance" "$desktop" "$aware" off
+              done
+            done
+          done
+          for appearance in light dark; do
+            for desktop in red blue; do
+              for tint in on off; do
+                run_case "$appearance" "$desktop" native "$tint"
+              done
+            done
+          done
+          exit "$failed"
+
+      - name: Upload probe records
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: macos27-captures
+          name: wallpaper-edges
           path: |
-            out/
-            build.log
+            out/wallpaper-edges/
+            out/wallpaper-edges/build.log
           if-no-files-found: warn
-          retention-days: 30
