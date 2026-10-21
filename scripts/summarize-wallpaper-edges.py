@@ -12,15 +12,22 @@ def compact(value):
 
 def summarize(root: Path) -> list[dict]:
     cases = []
-    for metadata_path in sorted(root.glob("*/metadata.json")):
-        case_dir = metadata_path.parent
+    case_dirs = sorted(path for path in root.iterdir()
+                       if path.is_dir() and "-aware-" in path.name and "-tint-" in path.name)
+    for case_dir in case_dirs:
+        metadata_path = case_dir / "metadata.json"
+        images = sorted(path.relative_to(root).as_posix() for path in case_dir.glob("*.png"))
+        if not metadata_path.exists():
+            cases.append({"case": case_dir.name, "status": "missing-metadata",
+                          "reasons": ["metadata.json was not produced"],
+                          "metadata": None, "images": images})
+            continue
         try:
             metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as error:
             cases.append({"case": case_dir.name, "status": "metadata-error", "reasons": [str(error)],
                           "metadata": metadata_path.relative_to(root).as_posix(), "images": []})
             continue
-        images = sorted(path.relative_to(root).as_posix() for path in case_dir.glob("*.png"))
         cases.append({
             "case": case_dir.name,
             "status": metadata.get("status", "unknown"),
