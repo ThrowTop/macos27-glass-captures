@@ -51,7 +51,10 @@ def main() -> None:
     if args.format == "json":
         print(json.dumps(cases, indent=2, sort_keys=True))
         return
+    setup_path = args.root / "runner-setup.txt"
+    setup = setup_path.read_text(encoding="utf-8").strip() if setup_path.exists() else "not recorded"
     print(f"# Wallpaper-edge capture summary\n\nCases with metadata: {len(cases)}\n")
+    print(f"Runner setup (`{setup_path.relative_to(args.root).as_posix()}`):\n\n```text\n{setup}\n```\n")
     print("| Case | Status | Reasons | Screen | Window | Crop | Backdrops before / after | Images |")
     print("| --- | --- | --- | --- | --- | --- | --- | --- |")
     for case in cases:

@@ -110,8 +110,14 @@ private final class Probe: NSObject, NSApplicationDelegate {
             NSApp.activate(ignoringOtherApps: true)
             window?.makeKeyAndOrderFront(nil)
             try await settle(seconds: 1.0)
+            window?.contentView?.layoutSubtreeIfNeeded()
+            splitController?.view.layoutSubtreeIfNeeded()
 
             let layerReport = inspectAndApplyBackdropMode()
+            let actualWindowHeight = window?.frame.height ?? 0
+            if abs(actualWindowHeight - 400) > 1 {
+                incomplete.append("Window frame height was not 400 points")
+            }
             for side in ["sidebar", "inspector"] {
                 let records = layerReport[side] as? [[String: Any]] ?? []
                 if !records.contains(where: { $0["eligibleSidebarInspectorSize"] as? Bool == true }) {
@@ -138,6 +144,7 @@ private final class Probe: NSObject, NSApplicationDelegate {
                 "desktopStimulus": config.desktop, "desktopImage": desktopURL.lastPathComponent,
                 "tint": ["requested": config.tint, "AppleReduceDesktopTinting": observedTintValue],
                 "awareMode": config.aware, "backdrops": layerReport,
+                "windowHeight400Accepted": abs((window?.frame.height ?? 0) - 400) <= 1,
                 "screen": screenFacts(screen), "window": windowFacts(window),
                 "crop": cropInfo, "overlappingVisibleWindows": windows,
                 "visibleWindowEnumerationComplete": windowScan.complete,
@@ -175,6 +182,9 @@ private final class Probe: NSObject, NSApplicationDelegate {
         sideItem.minimumThickness = 180; sideItem.maximumThickness = 180
         bodyItem.minimumThickness = 300; bodyItem.maximumThickness = 300
         inspectItem.minimumThickness = 180; inspectItem.maximumThickness = 180
+        body.view.heightAnchor.constraint(equalToConstant: 400).isActive = true
+        split.view.setFrameSize(NSSize(width: 662, height: 400))
+        split.preferredContentSize = NSSize(width: 662, height: 400)
         sideItem.canCollapse = false; inspectItem.canCollapse = false
         split.addSplitViewItem(sideItem); split.addSplitViewItem(bodyItem); split.addSplitViewItem(inspectItem)
         split.view.wantsLayer = true
@@ -190,6 +200,9 @@ private final class Probe: NSObject, NSApplicationDelegate {
         window.backgroundColor = NSColor(srgbRed: 0.75, green: 0.75, blue: 0.75, alpha: 1)
         window.isOpaque = true
         window.contentViewController = split
+        window.setContentSize(NSSize(width: 662, height: 400))
+        window.setFrameOrigin(NSPoint(x: screen.visibleFrame.midX - window.frame.width / 2,
+                                      y: screen.visibleFrame.midY - window.frame.height / 2))
         self.window = window; splitController = split; sidebarItem = sideItem; inspectorItem = inspectItem
     }
 
@@ -200,14 +213,23 @@ private final class Probe: NSObject, NSApplicationDelegate {
         let glassCount = countViews(root, className: "NSGlassEffectView")
         result["nativeViewCounts"] = ["NSGlassEffectView": glassCount,
                                       "CAChameleonLayer": countLayers(root?.layer, className: "CAChameleonLayer")]
+        guard let root, let rootLayer = root.layer else { return result }
+        window.contentView?.layoutSubtreeIfNeeded()
+        let candidates = backdropLayers(in: root)
         for (name, item) in [("sidebar", sidebarItem), ("inspector", inspectorItem)] {
             guard let item else { continue }
             var records: [[String: Any]] = []
-            for layer in backdropLayers(in: item.viewController.view) {
+            let itemRootRect = root.convert(item.viewController.view.bounds, from: item.viewController.view)
+            for layer in candidates {
+                let mappedBounds = layer.convert(layer.bounds, to: rootLayer)
+                let midpoint = CGPoint(x: mappedBounds.midX, y: mappedBounds.midY)
+                let associated = itemRootRect.contains(midpoint)
                 let frame = layer.frame
                 var before = backdropProperties(layer)
                 before["frame"] = rectJSON(frame); before["bounds"] = rectJSON(layer.bounds)
-                let expected = abs(frame.width - 180) <= 20 && abs(frame.height - 400) <= 40 && frame.width > 0 && frame.height > 0
+                before["mappedBoundsInRoot"] = rectJSON(mappedBounds)
+                let expected = associated && abs(mappedBounds.width - 180) <= 20 &&
+                    abs(mappedBounds.height - 400) <= 40 && mappedBounds.width > 0 && mappedBounds.height > 0
                 let hasSetter = layer.responds(to: NSSelectorFromString("setWindowServerAware:"))
                 let attempted = config.aware == "off" && expected && hasSetter
                 if attempted {
@@ -215,8 +237,10 @@ private final class Probe: NSObject, NSApplicationDelegate {
                 }
                 var after = backdropProperties(layer)
                 after["frame"] = rectJSON(layer.frame); after["bounds"] = rectJSON(layer.bounds)
+                after["mappedBoundsInRoot"] = rectJSON(layer.convert(layer.bounds, to: rootLayer))
                 let confirmedFalse = attempted && (after["windowServerAware"] as? NSNumber)?.boolValue == false
                 records.append(["class": NSStringFromClass(type(of: layer)), "before": before, "after": after,
+                                "itemRootRectInRoot": rectJSON(itemRootRect), "midpointInItemRect": associated,
                                 "eligibleSidebarInspectorSize": expected,
                                 "windowServerAwareSetterPresent": hasSetter, "setFalseAttempted": attempted,
                                 "setFalseConfirmed": confirmedFalse])
@@ -249,8 +273,12 @@ private final class Probe: NSObject, NSApplicationDelegate {
     }
 
     private func backdropLayers(in view: NSView) -> [CALayer] {
-        var found = backdropLayers(in: view.layer)
-        for child in view.subviews { found.append(contentsOf: backdropLayers(in: child)) }
+        var found: [CALayer] = []
+        func visit(_ current: NSView) {
+            found.append(contentsOf: backdropLayers(in: current.layer))
+            current.subviews.forEach(visit)
+        }
+        visit(view)
         var seen = Set<ObjectIdentifier>()
         return found.filter { seen.insert(ObjectIdentifier($0)).inserted }
     }
@@ -302,6 +330,7 @@ private final class Probe: NSObject, NSApplicationDelegate {
     private func windowFacts(_ window: NSWindow?) -> [String: Any] {
         guard let window else { return [:] }
         return ["framePoints": rectJSON(window.frame), "contentLayoutRectPoints": rectJSON(window.contentLayoutRect),
+                "contentViewBoundsPoints": rectJSON(window.contentView?.bounds ?? .zero),
                 "backingScaleFactor": window.backingScaleFactor, "styleMask": window.styleMask.rawValue,
                 "isVisible": window.isVisible, "appearance": window.effectiveAppearance.name.rawValue]
     }

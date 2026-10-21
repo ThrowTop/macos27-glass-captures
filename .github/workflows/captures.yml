@@ -56,6 +56,51 @@ jobs:
             > out/wallpaper-edges/tcc-grant.log 2>&1
           echo "$APP" > "$RUNNER_TEMP/wallpaper-edges-app-path"
 
+      - name: Prepare capture runner
+        shell: bash
+        run: |
+          set -u
+          ROOT="$GITHUB_WORKSPACE/out/wallpaper-edges"
+          APP="$(cat "$RUNNER_TEMP/wallpaper-edges-app-path")"
+          APP_EXE="$APP/Contents/MacOS/WallpaperEdges"
+          BUNDLE_ID="custom.macuikit.WallpaperEdges"
+          {
+            echo '--- original accessibility settings ---'
+            for key in reduceTransparency reduceMotion increaseContrast differentiateWithoutColor; do
+              echo "original $key=$(defaults read com.apple.universalaccess "$key" 2>&1 || true)"
+            done
+            echo "original Dock autohide=$(defaults read com.apple.dock autohide 2>&1 || true)"
+            echo "original Dock autohide-delay=$(defaults read com.apple.dock autohide-delay 2>&1 || true)"
+          } > "$ROOT/runner-setup.txt"
+          defaults write com.apple.universalaccess reduceTransparency -bool false
+          defaults write com.apple.universalaccess reduceMotion -bool false
+          defaults write com.apple.universalaccess increaseContrast -bool false
+          defaults write com.apple.universalaccess differentiateWithoutColor -bool false
+          defaults write com.apple.dock autohide -bool true
+          defaults write com.apple.dock autohide-delay -float 1000
+          killall Dock 2>/dev/null || true
+          killall UserNotificationCenter 2>/dev/null || true
+          sleep 3
+          {
+            echo '--- changed accessibility and Dock settings ---'
+            for key in reduceTransparency reduceMotion increaseContrast differentiateWithoutColor; do
+              echo "changed $key=$(defaults read com.apple.universalaccess "$key" 2>&1 || true)"
+            done
+            echo "changed Dock autohide=$(defaults read com.apple.dock autohide 2>&1 || true)"
+            echo "changed Dock autohide-delay=$(defaults read com.apple.dock autohide-delay 2>&1 || true)"
+            echo 'dismissed stale UserNotificationCenter before cases'
+          } >> "$ROOT/runner-setup.txt"
+
+          CAPTURE_APPROVALS="$HOME/Library/Group Containers/group.apple.replayd/ScreenCaptureApprovals.plist"
+          mkdir -p "$(dirname "$CAPTURE_APPROVALS")"
+          for responsible in "/opt/hca/hosted-compute-agent" "$BUNDLE_ID" "$APP_EXE"; do
+            defaults write "$CAPTURE_APPROVALS" "$responsible" -date "3024-01-01 00:00:00 +0000"
+          done
+          killall cfprefsd >/dev/null 2>&1 || true
+          for responsible in "/opt/hca/hosted-compute-agent" "$BUNDLE_ID" "$APP_EXE"; do
+            echo "replayd approval $responsible=$(defaults read "$CAPTURE_APPROVALS" "$responsible" 2>&1 || true)" >> "$ROOT/runner-setup.txt"
+          done
+
       - name: Capture 16 fresh-process cases
         shell: bash
         run: |
