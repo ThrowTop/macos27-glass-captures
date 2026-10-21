@@ -134,6 +134,19 @@ private final class Probe: NSObject, NSApplicationDelegate {
             try await settle(seconds: 0.75)
             let full = try await captureDisplay(screen: screen)
             try savePNG(full, to: config.output.appendingPathComponent("full-display.png"))
+            let settledLayerReport = inspectAndApplyBackdropMode(applyOverride: false)
+            if config.aware == "off" {
+                for side in ["sidebar", "inspector"] {
+                    let settled = settledLayerReport[side] as? [[String: Any]] ?? []
+                    let eligible = settled.filter { $0["eligibleSidebarInspectorSize"] as? Bool == true }
+                    if eligible.isEmpty || eligible.contains(where: {
+                        let after = $0["after"] as? [String: Any]
+                        return (after?["windowServerAware"] as? NSNumber)?.boolValue != false
+                    }) {
+                        incomplete.append("Settled \(side) backdrop did not retain windowServerAware=false after capture")
+                    }
+                }
+            }
             let focus = ["isKeyWindow": window?.isKeyWindow ?? false,
                          "isMainWindow": window?.isMainWindow ?? false,
                          "isActive": NSApp.isActive]
@@ -153,6 +166,7 @@ private final class Probe: NSObject, NSApplicationDelegate {
                 "desktopStimulus": config.desktop, "desktopImage": desktopURL.lastPathComponent,
                 "tint": ["requested": config.tint, "AppleReduceDesktopTinting": observedTintValue],
                 "awareMode": config.aware, "backdrops": layerReport,
+                "backdropsAfterFinalCapture": settledLayerReport,
                 "windowHeight400Accepted": abs((window?.frame.height ?? 0) - 400) <= 1,
                 "screen": screenFacts(screen), "window": windowFacts(window),
                 "focusAfterFinalCapture": focus,
@@ -216,7 +230,7 @@ private final class Probe: NSObject, NSApplicationDelegate {
         self.window = window; splitController = split; sidebarItem = sideItem; inspectorItem = inspectItem
     }
 
-    private func inspectAndApplyBackdropMode() -> [String: Any] {
+    private func inspectAndApplyBackdropMode(applyOverride: Bool = true) -> [String: Any] {
         guard let window else { return [:] }
         var result: [String: Any] = ["nativeViewCounts": ["NSGlassEffectView": 0, "CAChameleonLayer": 0]]
         let root = window.contentView
@@ -241,7 +255,7 @@ private final class Probe: NSObject, NSApplicationDelegate {
                 let expected = associated && abs(mappedBounds.width - 180) <= 20 &&
                     abs(mappedBounds.height - 400) <= 40 && mappedBounds.width > 0 && mappedBounds.height > 0
                 let hasSetter = layer.responds(to: NSSelectorFromString("setWindowServerAware:"))
-                let attempted = config.aware == "off" && expected && hasSetter
+                let attempted = applyOverride && config.aware == "off" && expected && hasSetter
                 if attempted {
                     invokeBoolSetter(layer, selector: NSSelectorFromString("setWindowServerAware:"), value: false)
                 }

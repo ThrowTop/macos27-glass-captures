@@ -38,7 +38,7 @@ on run argv
 						set AppleScript's text item delimiters to ""
 						set normalizedText to staticText as text
 						set hasWallpaperName to (normalizedText contains "WallpaperEdges")
-						set hasScreenAudioCapture to ((normalizedText contains "screen and audio") and (normalizedText contains "capture"))
+						set hasScreenAudioCapture to ((normalizedText contains "screen and audio") and (normalizedText contains "directly access your screen"))
 						set hasScreenPicker to (normalizedText contains "screen picker")
 						set isWallpaperPrompt to (hasWallpaperName and (hasScreenAudioCapture or hasScreenPicker))
 						log "WINDOW process=" & processLabel & " label=" & windowLabel & " staticTexts=" & staticText & " buttons=" & buttonText
