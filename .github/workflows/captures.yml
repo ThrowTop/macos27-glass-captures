@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "smoke or full"
+        description: "smoke, full, or s9"
         required: false
         default: smoke
 
@@ -22,7 +22,12 @@ jobs:
           uname -a
           xcodebuild -version
       - name: Build
-        run: swiftc -O Sources/SFSymbolChecks/main.swift -o sf-symbol-checks -framework AppKit -framework SwiftUI -framework CoreGraphics -framework CoreText
+        run: |
+          if [ '${{ inputs.mode }}' = 's9' ]; then
+            swiftc -O Sources/SFSymbolChecks/s9.swift -o sf-symbol-checks -framework AppKit -framework SwiftUI -framework CoreGraphics -framework CoreText
+          else
+            swiftc -O Sources/SFSymbolChecks/main.swift -o sf-symbol-checks -framework AppKit -framework SwiftUI -framework CoreGraphics -framework CoreText
+          fi
       - name: Run probes
         run: ./sf-symbol-checks '${{ inputs.mode }}'
       - name: Upload results

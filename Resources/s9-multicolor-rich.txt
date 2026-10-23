@@ -1,0 +1,10 @@
+lightspectrum.horizontal
+circle.hexagongrid.fill
+cloud.rainbow.crop
+interface.window.on.rectangle.dashed
+cloud.rainbow.crop.fill
+paintpalette
+paintpalette.fill
+calendar.day.timeline.leading
+calendar.day.timeline.left
+calendar.day.timeline.right
