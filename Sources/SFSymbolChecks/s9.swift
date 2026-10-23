@@ -100,7 +100,13 @@ struct SymbolProbe: View {
     renderer.scale = CGFloat(backing)
     guard let cg = renderer.cgImage else { throw NSError(domain: "S9Raster", code: 1, userInfo: [NSLocalizedDescriptionKey: "ImageRenderer returned no CGImage for \(name)"]) }
     let rep = NSBitmapImageRep(cgImage: cg)
-    let relative = "rasters/\(suffix)/\(name)-\(mode.rawValue)-\(scheme == .dark ? "dark" : "light")-20pt@\(backing)x.png"
+    let variableSuffix: String
+    if let value, let variableMode {
+        variableSuffix = "-\(variableMode == 0 ? "color" : "draw")-v\(Int((value * 100).rounded()))"
+    } else {
+        variableSuffix = ""
+    }
+    let relative = "rasters/\(suffix)/\(name)-\(mode.rawValue)\(variableSuffix)-\(scheme == .dark ? "dark" : "light")-20pt@\(backing)x.png"
     let url = root.appendingPathComponent(relative)
     try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
     try rep.representation(using: .png, properties: [:])!.write(to: url)
@@ -117,7 +123,24 @@ struct SymbolProbe: View {
 }
 
 let mode = CommandLine.arguments.dropFirst().first ?? "s9"
-guard mode == "s9" else { fatalError("s9.swift accepts only mode s9") }
+guard mode == "s9" || mode == "s9-variable" else { fatalError("s9.swift accepts modes s9 and s9-variable") }
+let variableNames = ["wifi", "speaker.wave.3.fill", "chart.bar.fill", "touchid", "waveform", "lines.measurement.vertical"]
+func runVariableRasters() throws {
+    let variableOut = try output("e-r6-variable-raster.jsonl")
+    for name in variableNames { for variableMode in [0, 1] { for value in [0.0, 0.25, 0.5, 0.75, 1.0] { for scheme in [ColorScheme.light, .dark] { for backing in [1, 2] {
+        let row = try MainActor.assumeIsolated { try raster(name, .palette3, 3, scheme, backing, "e-r6-variable", value, variableMode) }
+        try emit(row, to: variableOut)
+    }}}}}
+    try variableOut.close()
+    let variableSelection = try output("e-r6-variable-selection.txt")
+    let variableSelectionText = "Required: wifi, speaker.wave.3.fill, chart.bar.fill. Extras ranked across public export records by maximum monochrome layer count with participatesInVariableDraw=true; selected first three: touchid (6/6), waveform (6/6), lines.measurement.vertical (5/5). Source scan: MacUIKit binary-research/macos-27.2-26B5101f/tasks/sf-symbols-p1/e-r6-variable-selection.txt.\n"
+    variableSelection.write(Data(variableSelectionText.utf8))
+    try variableSelection.close()
+}
+if mode == "s9-variable" {
+    try runVariableRasters()
+    print("DONE mode=s9-variable symbols=\(variableNames.count) variableValueImages=240")
+} else {
 let base = ["checkmark", "chevron.down", "magnifyingglass", "xmark.circle.fill", "plus", "ellipsis", "square.and.arrow.up", "cloud.sun.rain.fill", "person.crop.circle.badge.plus", "trash.slash", "star.fill", "gearshape", "minus", "poweron", "exclamationmark"]
 let rich = try String(contentsOfFile: "Resources/s9-multicolor-rich.txt", encoding: .utf8).split(whereSeparator: \.isNewline).map(String.init)
 let selection = try output("e-r1-symbol-selection.tsv")
@@ -147,17 +170,7 @@ let gradientSelectionText = "Selection: first six rows of Resources/s9-multicolo
 gradientSelection.write(Data(gradientSelectionText.utf8))
 try gradientSelection.close()
 
-let variableNames = ["wifi", "speaker.wave.3.fill", "chart.bar.fill", "touchid", "waveform", "lines.measurement.vertical"]
-let variableOut = try output("e-r6-variable-raster.jsonl")
-for name in variableNames { for variableMode in [0, 1] { for value in [0.0, 0.25, 0.5, 0.75, 1.0] { for scheme in [ColorScheme.light, .dark] { for backing in [1, 2] {
-    let row = try MainActor.assumeIsolated { try raster(name, .palette3, 3, scheme, backing, "e-r6-variable", value, variableMode) }
-    try emit(row, to: variableOut)
-}}}}}
-try variableOut.close()
-let variableSelection = try output("e-r6-variable-selection.txt")
-let variableSelectionText = "Required: wifi, speaker.wave.3.fill, chart.bar.fill. Extras ranked across public export records by maximum monochrome layer count with participatesInVariableDraw=true; selected first three: touchid (6/6), waveform (6/6), lines.measurement.vertical (5/5). Source scan: MacUIKit binary-research/macos-27.2-26B5101f/tasks/sf-symbols-p1/e-r6-variable-selection.txt.\n"
-variableSelection.write(Data(variableSelectionText.utf8))
-try variableSelection.close()
+try runVariableRasters()
 
 let names = try String(contentsOfFile: "Resources/s9-public-symbol-names.txt", encoding: .utf8).split(whereSeparator: \.isNewline).map(String.init)
 let locales = ["ar", "he", "hi", "ja", "ko", "th", "zh-Hans"]
@@ -177,3 +190,4 @@ let metadata = try output("manifest.json")
 try emit(["mode": "s9", "publicSymbolCount": names.count, "multicolorRichNames": rich.count, "baseNames": base.count, "variableNames": variableNames, "localeCodes": locales, "renderingModes": RenderMode.allCases.map(\.rawValue), "selectionSource": "Resources/s9-multicolor-rich.txt ranked from the full public attributes export", "runner": ProcessInfo.processInfo.environment["RUNNER_NAME"] ?? "GitHub Actions runner"], to: metadata)
 try metadata.close()
 print("DONE mode=s9 publicNames=\(names.count) rasterPacks=E-R1/R2/R3/E-R4/E-R6 E-R8 locales=\(locales.count)")
+}
