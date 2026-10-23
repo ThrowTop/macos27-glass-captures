@@ -140,7 +140,7 @@ let v3 = try writer("v3.jsonl")
 let appWeights = smoke ? [4] : [4, 7]
 let layoutPoints = smoke ? [13] : [13, 20]
 let layoutScales = smoke ? [1] : [0, 1, 2]
-let rasterWeights = smoke ? [1, 4, 9] : [1, 4, 7, 9]
+let rasterWeights = smoke ? [4] : [1, 4, 7, 9]
 let rasterScales = smoke ? [1] : [0, 1, 2]
 let rasterPoints = smoke ? [13] : [13, 20]
 for name in symbols {
