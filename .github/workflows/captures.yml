@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "smoke, full, or s9"
+        description: "smoke, full, s9, or s10-overflow"
         required: false
         default: smoke
 
@@ -23,7 +23,9 @@ jobs:
           xcodebuild -version
       - name: Build
         run: |
-          if [ '${{ inputs.mode }}' = 's9' ] || [ '${{ inputs.mode }}' = 's9-variable' ]; then
+          if [ '${{ inputs.mode }}' = 's10-overflow' ]; then
+            swiftc -O Sources/SFSymbolChecks/s10-overflow.swift -o sf-symbol-checks -framework AppKit -framework SwiftUI -framework CoreGraphics
+          elif [ '${{ inputs.mode }}' = 's9' ] || [ '${{ inputs.mode }}' = 's9-variable' ]; then
             swiftc -O Sources/SFSymbolChecks/s9.swift -o sf-symbol-checks -framework AppKit -framework SwiftUI -framework CoreGraphics -framework CoreText
           else
             swiftc -O Sources/SFSymbolChecks/main.swift -o sf-symbol-checks -framework AppKit -framework SwiftUI -framework CoreGraphics -framework CoreText
