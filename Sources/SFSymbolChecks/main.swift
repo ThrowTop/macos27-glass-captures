@@ -179,10 +179,9 @@ private struct FramePreference: PreferenceKey {
     static var defaultValue: [String: CGRect] = [:]
     static func reduce(value: inout [String: CGRect], nextValue: () -> [String: CGRect]) { value.merge(nextValue(), uniquingKeysWith: { _, n in n }) }
 }
-private final class AlignmentCapture { var baseline: CGFloat = .nan; var bottom: CGFloat = .nan }
+private final class AlignmentCapture { var baseline: CGFloat = .nan; var bottom: CGFloat = .nan; var frames: [String: CGRect] = [:] }
 private struct SwiftUILayoutView: View {
     let name: String; let pt: Int; let weight: Int; let scale: Int; let pair: Bool; let capture: AlignmentCapture
-    @State private var frames: [String: CGRect] = [:]
     var font: Font { .system(size: CGFloat(pt), weight: [.ultraLight, .thin, .light, .regular, .medium, .semibold, .bold, .heavy, .black][weight - 1]) }
     var img: some View { Image(systemName: name).font(font).imageScale([.small, .medium, .large][scale]) }
     var body: some View {
@@ -196,10 +195,10 @@ private struct SwiftUILayoutView: View {
             } else {
                 img.background(GeometryReader { p in Color.clear.preference(key: FramePreference.self, value: ["image": p.frame(in: .named("probe"))]) })
             }
-        }.coordinateSpace(name: "probe").onPreferenceChange(FramePreference.self) { frames = $0 }
+        }.coordinateSpace(name: "probe").onPreferenceChange(FramePreference.self) { capture.frames = $0 }
     }
     func result() -> [String: Any] {
-        func rect(_ key: String) -> [CGFloat]? { guard let r = frames[key] else { return nil }; return [r.origin.x, r.origin.y, r.width, r.height] }
+        func rect(_ key: String) -> [CGFloat]? { guard let r = capture.frames[key] else { return nil }; return [r.origin.x, r.origin.y, r.width, r.height] }
         return ["fittingSize": [CGFloat(pt), CGFloat(pt)], "imageFrame": rect("image") ?? [], "textFrame": rect("text") ?? [], "stackFrame": rect("stack") ?? [], "imageFirstTextBaseline": pair ? capture.baseline : .nan, "imageBottom": pair ? capture.bottom : .nan]
     }
 }
@@ -217,7 +216,8 @@ private enum SwiftUILayoutProbe {
         RunLoop.current.run(until: Date().addingTimeInterval(0.08))
         let pair = view.result()
         window.orderOut(nil)
-        let single = SwiftUILayoutView(name: name, pt: pt, weight: weight, scale: scale, pair: false, capture: AlignmentCapture())
+        let singleCapture = AlignmentCapture()
+        let single = SwiftUILayoutView(name: name, pt: pt, weight: weight, scale: scale, pair: false, capture: singleCapture)
         let singleHost = NSHostingView(rootView: single)
         singleHost.frame = NSRect(x: 0, y: 0, width: 240, height: 80)
         window.contentView = singleHost
