@@ -62,7 +62,7 @@ guard let discreteMethod = class_getInstanceMethod(catalogClass, discreteSel) el
 typealias Discrete = @convention(c) (AnyObject, Selector, NSString, CGFloat, Int, Int, Int, Int, CGFloat, NSString?, NSLocale?) -> AnyObject?
 let discrete = unsafeBitCast(method_getImplementation(discreteMethod), to: Discrete.self)
 func lookup(_ name: String, _ layout: Int, _ locale: String, _ appearance: String = "NSAppearanceNameAqua") -> NSObject? {
-    discrete(catalog, discreteSel, name as NSString, 1.0, 7, layout, 2, 4, 100, appearance as NSString, NSLocale(identifier: locale)) as? NSObject
+    discrete(catalog, discreteSel, name as NSString, 1.0, 7, layout, 2, 4, 100, appearance as NSString, NSLocale(localeIdentifier: locale)) as? NSObject
 }
 
 let colors: [(String, Color, (Int, Int, Int))] = [
@@ -75,22 +75,13 @@ struct SymbolProbe: View {
     let name: String; let mode: RenderMode; let paletteCount: Int; let value: Double?; let variableMode: Int?
     var image: Image { value.map { Image(systemName: name, variableValue: $0) } ?? Image(systemName: name) }
     @ViewBuilder var body: some View {
-        let sized = image.font(.system(size: 20))
         if let variableMode {
-            if variableMode == 0 { variableView(sized.symbolVariableValueMode(.color)) }
-            else { variableView(sized.symbolVariableValueMode(.draw)) }
-        } else { normalView(sized) }
+            if variableMode == 0 { styled(image.symbolVariableValueMode(.color)) }
+            else { styled(image.symbolVariableValueMode(.draw)) }
+        } else { styled(image) }
     }
-    @ViewBuilder func variableView(_ image: Image) -> some View {
-        switch mode {
-        case .hierarchical: image.symbolRenderingMode(.hierarchical).foregroundStyle(colors[0].1)
-        case .palette2: image.symbolRenderingMode(.palette).foregroundStyle(colors[0].1, colors[1].1)
-        case .palette3: image.symbolRenderingMode(.palette).foregroundStyle(colors[0].1, colors[1].1, colors[2].1)
-        case .multicolor: image.symbolRenderingMode(.multicolor)
-        case .monochrome: image.symbolRenderingMode(.monochrome).foregroundStyle(colors[0].1)
-        }
-    }
-    @ViewBuilder func normalView(_ image: Image) -> some View {
+    @ViewBuilder func styled<V: View>(_ source: V) -> some View {
+        let image = source.font(.system(size: 20))
         switch mode {
         case .hierarchical: image.symbolRenderingMode(.hierarchical).foregroundStyle(colors[0].1)
         case .palette2: image.symbolRenderingMode(.palette).foregroundStyle(colors[0].1, colors[1].1)
@@ -100,7 +91,7 @@ struct SymbolProbe: View {
         }
     }
 }
-func raster(_ name: String, _ mode: RenderMode, _ paletteCount: Int, _ scheme: ColorScheme, _ backing: Int, _ suffix: String, _ value: Double? = nil, _ variableMode: Int? = nil, gradient: Bool = false) throws -> [String: Any] {
+@MainActor func raster(_ name: String, _ mode: RenderMode, _ paletteCount: Int, _ scheme: ColorScheme, _ backing: Int, _ suffix: String, _ value: Double? = nil, _ variableMode: Int? = nil, gradient: Bool = false) throws -> [String: Any] {
     var content = AnyView(SymbolProbe(name: name, mode: mode, paletteCount: paletteCount, value: value, variableMode: variableMode).environment(\.colorScheme, scheme).frame(width: 32, height: 32))
     if gradient {
         content = AnyView(Image(systemName: name).font(.system(size: 20)).symbolRenderingMode(mode == .palette2 || mode == .palette3 ? .palette : mode == .hierarchical ? .hierarchical : mode == .multicolor ? .multicolor : .monochrome).symbolColorRenderingMode(.gradient).foregroundStyle(colors[0].1, colors[1].1, colors[2].1).environment(\.colorScheme, scheme).frame(width: 32, height: 32))
@@ -130,7 +121,10 @@ guard mode == "s9" else { fatalError("s9.swift accepts only mode s9") }
 let base = ["checkmark", "chevron.down", "magnifyingglass", "xmark.circle.fill", "plus", "ellipsis", "square.and.arrow.up", "cloud.sun.rain.fill", "person.crop.circle.badge.plus", "trash.slash", "star.fill", "gearshape", "minus", "poweron", "exclamationmark"]
 let rich = try String(contentsOfFile: "Resources/s9-multicolor-rich.txt", encoding: .utf8).split(whereSeparator: \.isNewline).map(String.init)
 let selection = try output("e-r1-symbol-selection.tsv")
-try selection.write(contentsOf: (["kind\tname"] + base.map { "base\t\($0)" } + rich.map { "multicolor-rich\t\($0)" }).joined(separator: "\n") + "\n", encoding: .utf8)
+var selectionRows = ["kind\tname"]
+selectionRows.append(contentsOf: base.map { "base\t\($0)" })
+selectionRows.append(contentsOf: rich.map { "multicolor-rich\t\($0)" })
+try selection.write(Data((selectionRows.joined(separator: "\n") + "\n").utf8))
 
 let colorsOut = try output("e-r1-raster-colors.jsonl")
 for name in base + rich { for scheme in [ColorScheme.light, .dark] { for backing in [1, 2] {
@@ -148,7 +142,8 @@ for name in gradientNames { for renderMode in [RenderMode.monochrome, .hierarchi
 }}}}
 try gradientOut.close()
 let gradientSelection = try output("e-r4-symbol-selection.txt")
-try gradientSelection.write(contentsOf: "Selection: first six rows of Resources/s9-multicolor-rich.txt, ranked by unique nonempty multicolor layer colors, then layer count, then UTF-8 name.\n" + gradientNames.joined(separator: "\n") + "\n", encoding: .utf8)
+let gradientSelectionText = "Selection: first six rows of Resources/s9-multicolor-rich.txt, ranked by unique nonempty multicolor layer colors, then layer count, then UTF-8 name.\n" + gradientNames.joined(separator: "\n") + "\n"
+try gradientSelection.write(Data(gradientSelectionText.utf8))
 try gradientSelection.close()
 
 let variableNames = ["wifi", "speaker.wave.3.fill", "chart.bar.fill", "touchid", "waveform", "lines.measurement.vertical"]
@@ -158,7 +153,8 @@ for name in variableNames { for variableMode in [0, 1] { for value in [0.0, 0.25
 }}}}}
 try variableOut.close()
 let variableSelection = try output("e-r6-variable-selection.txt")
-try variableSelection.write(contentsOf: "Required: wifi, speaker.wave.3.fill, chart.bar.fill. Extras ranked across public export records by maximum monochrome layer count with participatesInVariableDraw=true; selected first three: touchid (6/6), waveform (6/6), lines.measurement.vertical (5/5). Source scan: MacUIKit binary-research/macos-27.2-26B5101f/tasks/sf-symbols-p1/e-r6-variable-selection.txt.\n", encoding: .utf8)
+let variableSelectionText = "Required: wifi, speaker.wave.3.fill, chart.bar.fill. Extras ranked across public export records by maximum monochrome layer count with participatesInVariableDraw=true; selected first three: touchid (6/6), waveform (6/6), lines.measurement.vertical (5/5). Source scan: MacUIKit binary-research/macos-27.2-26B5101f/tasks/sf-symbols-p1/e-r6-variable-selection.txt.\n"
+try variableSelection.write(Data(variableSelectionText.utf8))
 try variableSelection.close()
 
 let names = try String(contentsOfFile: "Resources/s9-public-symbol-names.txt", encoding: .utf8).split(whereSeparator: \.isNewline).map(String.init)
