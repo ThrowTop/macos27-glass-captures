@@ -14,7 +14,7 @@ let sizeValues: [CGFloat] = [1.0, 1.276, 1.647]
 let pointSizes = [9, 13, 17, 20, 28, 100]
 let smoke = CommandLine.arguments.dropFirst().first == "smoke"
 let symbols = smoke ? ["checkmark", "plus"] : baseSymbols
-let weights = smoke ? [4] : weightCodes
+let v1Weights = smoke ? [4] : [1, 4, 9]
 let sizes = smoke ? [2] : [1, 2, 3]
 let points = smoke ? [100] : pointSizes
 let root = URL(fileURLWithPath: "out/sf-symbol-checks", isDirectory: true)
@@ -34,6 +34,16 @@ func json(_ value: Any?) -> Any {
     if let x = value as? CGFloat { return x.isFinite ? Double(x) : NSNull() }
     if let v = value as? NSValue {
         let t = String(cString: v.objCType)
+        if t.contains("EdgeInsets") || String(describing: v).contains("NSEdgeInsets") {
+            let text = String(describing: v)
+            if let re = try? NSRegularExpression(pattern: "[-+]?(?:\\d+\\.?\\d*|\\.\\d+)(?:[eE][-+]?\\d+)?") {
+                let values = re.matches(in: text, range: NSRange(text.startIndex..., in: text)).compactMap { m -> Double? in
+                    guard let range = Range(m.range, in: text) else { return nil }
+                    return Double(text[range])
+                }
+                if values.count >= 4 { return Array(values.suffix(4)) }
+            }
+        }
         if t.contains("Rect") { let r = v.rectValue; return [r.origin.x, r.origin.y, r.size.width, r.size.height] }
         if t.contains("Size") { let s = v.sizeValue; return [s.width, s.height] }
         if t.contains("Point") { let p = v.pointValue; return [p.x, p.y] }
@@ -108,9 +118,10 @@ func lookupContinuous(_ name: String, _ size: CGFloat, _ weight: CGFloat, _ pt: 
 }
 
 let v1 = try writer("v1.jsonl")
-for name in symbols { for size in sizes { for weight in weights { for pt in points {
+for name in symbols { for size in sizes { for weight in v1Weights { for pt in points {
     guard let g = lookup(name, size, weight, CGFloat(pt)) else { continue }
-    try emit(["name": name, "weightCode": weight, "sizeCode": size, "pointSize": pt, "paths": paths(g), "metrics": metrics(g)], v1)
+    let layerPaths = paths(g).mapValues { $0.map { ["path": $0] } }
+    try emit(["schemaVersion": 2, "name": name, "idiom": "mac", "appearance": "default", "weightCode": weight, "sizeCode": size, "pointSize": pt, "layers": layerPaths, "metrics": metrics(g)], v1)
 }}}}
 try v1.close()
 
