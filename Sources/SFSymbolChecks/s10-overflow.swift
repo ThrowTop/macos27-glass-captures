@@ -39,8 +39,8 @@ struct OverflowProbe: View {
         for x in 0..<image.width {
             guard let color = bitmap.colorAt(x: x, y: y)?.usingColorSpace(.deviceRGB),
                   color.alphaComponent > 0.1 else { continue }
-            let redBorder = color.redComponent > 0.8 && color.greenComponent < 0.2 &&
-                            color.blueComponent < 0.2 && color.alphaComponent > 0.8
+            let redBorder = color.redComponent > 0.8 && color.greenComponent < 0.3 &&
+                            color.blueComponent < 0.3 && color.alphaComponent > 0.8
             if redBorder {
                 borderPixels.append((x, y))
             } else if color.alphaComponent > 0.1 {
