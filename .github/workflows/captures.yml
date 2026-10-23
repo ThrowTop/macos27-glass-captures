@@ -22,7 +22,7 @@ jobs:
           uname -a
           xcodebuild -version
       - name: Build
-        run: swiftc -O Sources/SFSymbolChecks/main.swift -o sf-symbol-checks -framework AppKit -framework SwiftUI -framework CoreGraphics -framework CoreUI -framework CoreText
+        run: swiftc -O Sources/SFSymbolChecks/main.swift -o sf-symbol-checks -framework AppKit -framework SwiftUI -framework CoreGraphics -framework CoreText
       - name: Run probes
         run: ./sf-symbol-checks '${{ inputs.mode }}'
       - name: Upload results
