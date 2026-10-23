@@ -23,7 +23,7 @@ jobs:
           xcodebuild -version
       - name: Build
         run: |
-          if [ '${{ inputs.mode }}' = 's9' ]; then
+          if [ '${{ inputs.mode }}' = 's9' ] || [ '${{ inputs.mode }}' = 's9-variable' ]; then
             swiftc -O Sources/SFSymbolChecks/s9.swift -o sf-symbol-checks -framework AppKit -framework SwiftUI -framework CoreGraphics -framework CoreText
           else
             swiftc -O Sources/SFSymbolChecks/main.swift -o sf-symbol-checks -framework AppKit -framework SwiftUI -framework CoreGraphics -framework CoreText
