@@ -124,12 +124,12 @@ let selection = try output("e-r1-symbol-selection.tsv")
 var selectionRows = ["kind\tname"]
 selectionRows.append(contentsOf: base.map { "base\t\($0)" })
 selectionRows.append(contentsOf: rich.map { "multicolor-rich\t\($0)" })
-try selection.write(Data((selectionRows.joined(separator: "\n") + "\n").utf8))
+selection.write(Data((selectionRows.joined(separator: "\n") + "\n").utf8))
 
 let colorsOut = try output("e-r1-raster-colors.jsonl")
 for name in base + rich { for scheme in [ColorScheme.light, .dark] { for backing in [1, 2] {
     for renderMode in [RenderMode.hierarchical, .palette2, .palette3, .multicolor] {
-        let row = try raster(name, renderMode, renderMode == .palette2 ? 2 : renderMode == .palette3 ? 3 : 1, scheme, backing, "e-r1-r2-r3")
+        let row = try MainActor.assumeIsolated { try raster(name, renderMode, renderMode == .palette2 ? 2 : renderMode == .palette3 ? 3 : 1, scheme, backing, "e-r1-r2-r3") }
         try emit(row, to: colorsOut)
     }
 }}}
@@ -138,23 +138,25 @@ try colorsOut.close()
 let gradientNames = Array(rich.prefix(6))
 let gradientOut = try output("e-r4-gradient-raster.jsonl")
 for name in gradientNames { for renderMode in [RenderMode.monochrome, .hierarchical, .palette2, .palette3, .multicolor] { for scheme in [ColorScheme.light, .dark] { for backing in [1, 2] {
-    try emit(try raster(name, renderMode, renderMode == .palette2 ? 2 : renderMode == .palette3 ? 3 : 1, scheme, backing, "e-r4-gradient", gradient: true), to: gradientOut)
+    let row = try MainActor.assumeIsolated { try raster(name, renderMode, renderMode == .palette2 ? 2 : renderMode == .palette3 ? 3 : 1, scheme, backing, "e-r4-gradient", gradient: true) }
+    try emit(row, to: gradientOut)
 }}}}
 try gradientOut.close()
 let gradientSelection = try output("e-r4-symbol-selection.txt")
 let gradientSelectionText = "Selection: first six rows of Resources/s9-multicolor-rich.txt, ranked by unique nonempty multicolor layer colors, then layer count, then UTF-8 name.\n" + gradientNames.joined(separator: "\n") + "\n"
-try gradientSelection.write(Data(gradientSelectionText.utf8))
+gradientSelection.write(Data(gradientSelectionText.utf8))
 try gradientSelection.close()
 
 let variableNames = ["wifi", "speaker.wave.3.fill", "chart.bar.fill", "touchid", "waveform", "lines.measurement.vertical"]
 let variableOut = try output("e-r6-variable-raster.jsonl")
 for name in variableNames { for variableMode in [0, 1] { for value in [0.0, 0.25, 0.5, 0.75, 1.0] { for scheme in [ColorScheme.light, .dark] { for backing in [1, 2] {
-    try emit(try raster(name, .palette3, 3, scheme, backing, "e-r6-variable", value, variableMode), to: variableOut)
+    let row = try MainActor.assumeIsolated { try raster(name, .palette3, 3, scheme, backing, "e-r6-variable", value, variableMode) }
+    try emit(row, to: variableOut)
 }}}}}
 try variableOut.close()
 let variableSelection = try output("e-r6-variable-selection.txt")
 let variableSelectionText = "Required: wifi, speaker.wave.3.fill, chart.bar.fill. Extras ranked across public export records by maximum monochrome layer count with participatesInVariableDraw=true; selected first three: touchid (6/6), waveform (6/6), lines.measurement.vertical (5/5). Source scan: MacUIKit binary-research/macos-27.2-26B5101f/tasks/sf-symbols-p1/e-r6-variable-selection.txt.\n"
-try variableSelection.write(Data(variableSelectionText.utf8))
+variableSelection.write(Data(variableSelectionText.utf8))
 try variableSelection.close()
 
 let names = try String(contentsOfFile: "Resources/s9-public-symbol-names.txt", encoding: .utf8).split(whereSeparator: \.isNewline).map(String.init)
