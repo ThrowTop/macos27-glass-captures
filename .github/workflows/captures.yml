@@ -1,15 +1,15 @@
-name: macOS 27 glass captures
+name: macOS 27 SF Symbols checks
 
 on:
   workflow_dispatch:
     inputs:
-      scenarios:
-        description: "Comma-separated scenario IDs, smoke, or all"
+      mode:
+        description: "smoke or full"
         required: false
-        default: all
+        default: smoke
 
 jobs:
-  capture:
+  checks:
     runs-on: xcode-27
     timeout-minutes: 180
     permissions:
@@ -22,16 +22,14 @@ jobs:
           uname -a
           xcodebuild -version
       - name: Build
-        run: swift build -c release > build.log 2>&1 || { cat build.log; exit 1; }
-      - name: Capture
-        run: bash scripts/run-captures.sh '${{ inputs.scenarios }}'
+        run: swiftc -O Sources/SFSymbolChecks/main.swift -o sf-symbol-checks -framework AppKit -framework SwiftUI -framework CoreGraphics -framework CoreUI -framework CoreText
+      - name: Run probes
+        run: ./sf-symbol-checks '${{ inputs.mode }}'
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: macos27-captures
-          path: |
-            out/
-            build.log
+          name: sf-symbol-checks
+          path: out/
           if-no-files-found: warn
           retention-days: 30
