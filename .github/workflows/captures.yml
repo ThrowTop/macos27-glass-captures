@@ -23,8 +23,15 @@ jobs:
           xcodebuild -version
       - name: Build
         run: swift build -c release > build.log 2>&1 || { cat build.log; exit 1; }
+      - name: Build toolbar popup feedback probe
+        run: mkdir -p out && swiftc -O -framework AppKit -framework SwiftUI -framework ApplicationServices -framework ImageIO -framework UniformTypeIdentifiers Sources/ToolbarPopupFeedback/main.swift -o out/ToolbarPopupFeedback
       - name: Capture
-        run: bash scripts/run-captures.sh '${{ inputs.scenarios }}'
+        run: |
+          if [[ '${{ inputs.scenarios }}' == toolbar-popup-feedback ]]; then
+            bash scripts/run-toolbar-popup-feedback.sh
+          else
+            bash scripts/run-captures.sh '${{ inputs.scenarios }}'
+          fi
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
@@ -33,5 +40,6 @@ jobs:
           path: |
             out/
             build.log
+            ToolbarPopupFeedback.app/
           if-no-files-found: warn
           retention-days: 30
