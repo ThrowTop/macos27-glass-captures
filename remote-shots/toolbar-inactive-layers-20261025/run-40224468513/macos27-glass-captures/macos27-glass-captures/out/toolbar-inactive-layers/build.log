@@ -1,0 +1,42 @@
+Sources/ToolbarInactiveLayers/main.swift:137:36: warning: 'activateIgnoringOtherApps' was deprecated in macOS 14.0: ignoringOtherApps is deprecated in macOS 14 and will have no effect. [#DeprecatedDeclaration]
+135 |     if state == "finder-active" {
+136 |         guard let finder = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == "com.apple.finder" }) else { recordFailure("finder-not-running"); NSApp.terminate(nil); return }
+137 |         finder.activate(options: [.activateIgnoringOtherApps])
+    |                                    `- warning: 'activateIgnoringOtherApps' was deprecated in macOS 14.0: ignoringOtherApps is deprecated in macOS 14 and will have no effect. [#DeprecatedDeclaration]
+138 |     } else {
+139 |         NSApp.activate(ignoringOtherApps: true)
+
+Sources/ToolbarInactiveLayers/main.swift:158:33: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+156 |     let occlusion = occlusionRecords(window)
+157 |     let captured = screenCapture()
+158 |     var result: [String: Any] = [
+    |                                 `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+159 |         "appearance": appearance, "state": state, "timestamp": ISO8601DateFormatter().string(from: Date()),
+160 |         "app": ["bundleIdentifier": Bundle.main.bundleIdentifier ?? "unavailable", "active": active, "frontmostBundleIdentifier": front?.bundleIdentifier ?? "unavailable", "frontmostLocalizedName": front?.localizedName ?? "unavailable"],
+
+Sources/ToolbarInactiveLayers/main.swift:188:30: error: failed to produce diagnostic for expression; please submit a bug report (https://swift.org/contributing/#reporting-bugs)
+186 |     if let v = view as? NSVisualEffectView { effect = ["material": v.material.rawValue, "blendingMode": v.blendingMode.rawValue, "state": v.state.rawValue] }
+187 |     if let c = view as? NSControl { if let b = c as? NSButton, !b.title.isEmpty { labels.append(b.title) }; if let t = c as? NSTextField, !t.stringValue.isEmpty { labels.append(t.stringValue) } }
+188 |     let row: [String: Any] = ["path": path, "type": String(describing: type(of: view)), "identity": identity(view), "frame": rect(view.convert(view.bounds, to: nil)), "bounds": rect(view.bounds), "hidden": view.isHidden, "alpha": view.alphaValue, "labels": labels, "visualEffect": effect.isEmpty ? ["availability": "not NSVisualEffectView"] : effect, "semanticContext": readKeys(view, keys: semanticKeys), "layer": view.layer.map(layerRecord) ?? ["availability": "view has no backing layer"]]
+    |                              `- error: failed to produce diagnostic for expression; please submit a bug report (https://swift.org/contributing/#reporting-bugs)
+189 |     rows.append(row)
+190 |     for (i, child) in view.subviews.enumerated() { rows.append(contentsOf: viewRecords(child, path: "\(path).\(i)")) }
+
+Sources/ToolbarInactiveLayers/main.swift:218:42: error: cannot convert value of type 'NSString' to expected argument type 'String'
+216 |     var exceptionName: NSString?
+217 |     var exceptionReason: NSString?
+218 |     let status = SafeReadKey(object, key as NSString, &value, &exceptionName, &exceptionReason)
+    |                                          `- error: cannot convert value of type 'NSString' to expected argument type 'String'
+219 |     switch status {
+220 |     case 0: return ["status": "value", "value": normalized(value)]
+
+Sources/ToolbarInactiveLayers/main.swift:230:22: error: conditional downcast to CoreFoundation type 'CGColor' will always succeed
+228 |     if let n = value as? NSNumber { return n }
+229 |     if let s = value as? String { return s }
+230 |     if let c = value as? CGColor { return color(c) }
+    |                      |- error: conditional downcast to CoreFoundation type 'CGColor' will always succeed
+    |                      `- note: did you mean to explicitly compare the CFTypeIDs of 'value' and 'CGColor'?
+231 |     if let a = value as? [Any] { return a.map(normalized) }
+232 |     if let d = value as? [String: Any] { return d.mapValues(normalized) }
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>

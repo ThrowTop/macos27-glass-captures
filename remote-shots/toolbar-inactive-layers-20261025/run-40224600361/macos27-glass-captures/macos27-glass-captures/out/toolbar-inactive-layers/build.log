@@ -1,0 +1,43 @@
+Sources/ToolbarInactiveLayers/main.swift:137:36: warning: 'activateIgnoringOtherApps' was deprecated in macOS 14.0: ignoringOtherApps is deprecated in macOS 14 and will have no effect. [#DeprecatedDeclaration]
+135 |     if state == "finder-active" {
+136 |         guard let finder = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == "com.apple.finder" }) else { recordFailure("finder-not-running"); NSApp.terminate(nil); return }
+137 |         finder.activate(options: [.activateIgnoringOtherApps])
+    |                                    `- warning: 'activateIgnoringOtherApps' was deprecated in macOS 14.0: ignoringOtherApps is deprecated in macOS 14 and will have no effect. [#DeprecatedDeclaration]
+138 |     } else {
+139 |         NSApp.activate(ignoringOtherApps: true)
+
+Sources/ToolbarInactiveLayers/main.swift:160:166: error: value of type 'NSWindow' has no member 'keyView'
+158 |     let appRecord: [String: Any] = ["bundleIdentifier": Bundle.main.bundleIdentifier ?? "unavailable", "active": active, "frontmostBundleIdentifier": front?.bundleIdentifier ?? "unavailable", "frontmostLocalizedName": front?.localizedName ?? "unavailable"]
+159 |     let windowRecord: [String: Any] = ["key": key, "main": main, "visible": visible, "firstResponderType": window.firstResponder.map { String(describing: type(of: $0)) } ?? "unavailable", "firstResponderIdentity": window.firstResponder.map(identity) ?? "unavailable", "frame": rect(window.frame), "backingScale": window.backingScaleFactor, "number": window.windowNumber, "occlusion": occlusion]
+160 |     let rootRecord: [String: Any] = ["type": window.contentView.map { String(describing: type(of: $0)) } ?? "unavailable", "active": active, "keyAppearance": window.keyView?.effectiveAppearance.name.rawValue ?? "unavailable", "viewAppearance": window.contentView?.effectiveAppearance.name.rawValue ?? "unavailable", "semanticContext": window.contentView.map { readKeys($0, keys: semanticKeys) } ?? [:]]
+    |                                                                                                                                                                      `- error: value of type 'NSWindow' has no member 'keyView'
+161 |     let fixtureRecord: [String: Any] = ["windowWidth": 1280, "windowHeight": 760, "sidebarWidth": 260, "inspectorWidth": 300, "selection": "Golden hour (index 0)", "toolSelection": "Material (index 0)", "diagnosticSelection": "Composite (index 0)", "compare": "off; tint true", "sourceModifiers": ["PickerStyle.segmented", "PickerStyle.menu", "ToolbarSpacer.fixed", "buttonStyle.glassProminent"]]
+162 |     var result: [String: Any] = ["appearance": appearance, "state": state, "timestamp": ISO8601DateFormatter().string(from: Date())]
+
+Sources/ToolbarInactiveLayers/main.swift:261:43: error: 'CGColorGetTypeID()' has been replaced by property 'CGColor.typeID'
+259 |     if let n = value as? NSNumber { return n }
+260 |     if let s = value as? String { return s }
+261 |     if CFGetTypeID(value as CFTypeRef) == CGColorGetTypeID() { return color(value as! CGColor) }
+    |                                           `- error: 'CGColorGetTypeID()' has been replaced by property 'CGColor.typeID'
+262 |     if let a = value as? [Any] { return a.map(normalized) }
+263 |     if let d = value as? [String: Any] { return d.mapValues(normalized) }
+
+/Applications/Xcode_27.1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/CoreGraphics.framework/Headers/CGColor.h:144:20: note: 'CGColorGetTypeID()' was obsoleted in Swift 3
+142 | /* Return the CFTypeID for CGColors. */
+143 | 
+144 | CG_EXTERN CFTypeID CGColorGetTypeID(void)
+    |                    `- note: 'CGColorGetTypeID()' was obsoleted in Swift 3
+145 |   API_AVAILABLE(macos(10.3), ios(2.0));
+146 | 
+
+Sources/ToolbarInactiveLayers/main.swift:261:83: warning: treating a forced downcast to 'CGColor' as optional will never produce 'nil'
+259 |     if let n = value as? NSNumber { return n }
+260 |     if let s = value as? String { return s }
+261 |     if CFGetTypeID(value as CFTypeRef) == CGColorGetTypeID() { return color(value as! CGColor) }
+    |                                                                             |     | `- note: use 'as?' to perform a conditional downcast to 'CGColor'
+    |                                                                             |     `- warning: treating a forced downcast to 'CGColor' as optional will never produce 'nil'
+    |                                                                             `- note: add parentheses around the cast to silence this warning
+262 |     if let a = value as? [Any] { return a.map(normalized) }
+263 |     if let d = value as? [String: Any] { return d.mapValues(normalized) }
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>

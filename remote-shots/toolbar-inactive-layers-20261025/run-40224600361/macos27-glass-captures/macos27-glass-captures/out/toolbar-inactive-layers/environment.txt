@@ -1,0 +1,12 @@
+ProductName:		macOS
+ProductVersion:		27.0.1
+BuildVersion:		26A434
+Darwin sjc22-bt152-e18f1675-e00e-48da-8629-d16900fa48c3-6A4F8ABB1702.local 27.0.0 Darwin Kernel Version 27.0.0: Tue Aug 11 21:00:07 PDT 2026; root:xnu-13432.1.9~1/RELEASE_ARM64_VMAPPLE arm64
+Xcode 27.1
+Build version 27A9275
+runner_os=macOS
+runner_arch=ARM64
+commit=e0083cc40e17f792f13b071836e1e23b2b2dbc54
+d6dd2fc61a0dea7cbd96061fdc3fae0124cc47919e82b61d28a7667a85fc910e  Sources/ToolbarInactiveLayers/main.swift
+e273aa8548764fbe8ef00edb92b54e4616558dafb7fb43ddddbbe5285d923daa  Sources/ToolbarInactiveLayers/SafeReadKey.h
+52ea1e9ae708bd6438f25888e33a0ccf0312e1045fc68bec383fe0c2b6df251a  Sources/ToolbarInactiveLayers/SafeReadKey.m
