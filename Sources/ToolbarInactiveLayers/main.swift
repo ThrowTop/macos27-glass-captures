@@ -155,15 +155,17 @@ private func captureState(_ window: NSWindow, appearance: String, state: String)
     let front = NSWorkspace.shared.frontmostApplication
     let occlusion = occlusionRecords(window)
     let captured = screenCapture()
-    var result: [String: Any] = [
-        "appearance": appearance, "state": state, "timestamp": ISO8601DateFormatter().string(from: Date()),
-        "app": ["bundleIdentifier": Bundle.main.bundleIdentifier ?? "unavailable", "active": active, "frontmostBundleIdentifier": front?.bundleIdentifier ?? "unavailable", "frontmostLocalizedName": front?.localizedName ?? "unavailable"],
-        "window": ["key": key, "main": main, "visible": visible, "firstResponderType": window.firstResponder.map { String(describing: type(of: $0)) } ?? "unavailable", "firstResponderIdentity": window.firstResponder.map(identity) ?? "unavailable", "frame": rect(window.frame), "backingScale": window.backingScaleFactor, "number": window.windowNumber, "occlusion": occlusion],
-        "viewRoot": ["type": window.contentView.map { String(describing: type(of: $0)) } ?? "unavailable", "active": active, "keyAppearance": window.keyView?.effectiveAppearance.name.rawValue ?? "unavailable", "viewAppearance": window.contentView?.effectiveAppearance.name.rawValue ?? "unavailable", "semanticContext": window.contentView.map { readKeys($0, keys: semanticKeys) } ?? [:]],
-        "fixtureInputs": ["windowWidth": 1280, "windowHeight": 760, "sidebarWidth": 260, "inspectorWidth": 300, "selection": "Golden hour (index 0)", "toolSelection": "Material (index 0)", "diagnosticSelection": "Composite (index 0)", "compare": "off; tint true", "sourceModifiers": ["PickerStyle.segmented", "PickerStyle.menu", "ToolbarSpacer.fixed", "buttonStyle.glassProminent"]],
-        "screen": captured.metadata,
-        "focus": focusedAXRecord()
-    ]
+    let appRecord: [String: Any] = ["bundleIdentifier": Bundle.main.bundleIdentifier ?? "unavailable", "active": active, "frontmostBundleIdentifier": front?.bundleIdentifier ?? "unavailable", "frontmostLocalizedName": front?.localizedName ?? "unavailable"]
+    let windowRecord: [String: Any] = ["key": key, "main": main, "visible": visible, "firstResponderType": window.firstResponder.map { String(describing: type(of: $0)) } ?? "unavailable", "firstResponderIdentity": window.firstResponder.map(identity) ?? "unavailable", "frame": rect(window.frame), "backingScale": window.backingScaleFactor, "number": window.windowNumber, "occlusion": occlusion]
+    let rootRecord: [String: Any] = ["type": window.contentView.map { String(describing: type(of: $0)) } ?? "unavailable", "active": active, "keyAppearance": window.keyView?.effectiveAppearance.name.rawValue ?? "unavailable", "viewAppearance": window.contentView?.effectiveAppearance.name.rawValue ?? "unavailable", "semanticContext": window.contentView.map { readKeys($0, keys: semanticKeys) } ?? [:]]
+    let fixtureRecord: [String: Any] = ["windowWidth": 1280, "windowHeight": 760, "sidebarWidth": 260, "inspectorWidth": 300, "selection": "Golden hour (index 0)", "toolSelection": "Material (index 0)", "diagnosticSelection": "Composite (index 0)", "compare": "off; tint true", "sourceModifiers": ["PickerStyle.segmented", "PickerStyle.menu", "ToolbarSpacer.fixed", "buttonStyle.glassProminent"]]
+    var result: [String: Any] = ["appearance": appearance, "state": state, "timestamp": ISO8601DateFormatter().string(from: Date())]
+    result["app"] = appRecord
+    result["window"] = windowRecord
+    result["viewRoot"] = rootRecord
+    result["fixtureInputs"] = fixtureRecord
+    result["screen"] = captured.metadata
+    result["focus"] = focusedAXRecord()
     if let root = window.contentView { result["views"] = viewRecords(root, path: "root") }
     result["ax"] = accessibilityRecords()
     do {
@@ -185,14 +187,37 @@ private func viewRecords(_ view: NSView, path: String) -> [[String: Any]] {
     var effect: [String: Any] = [:]
     if let v = view as? NSVisualEffectView { effect = ["material": v.material.rawValue, "blendingMode": v.blendingMode.rawValue, "state": v.state.rawValue] }
     if let c = view as? NSControl { if let b = c as? NSButton, !b.title.isEmpty { labels.append(b.title) }; if let t = c as? NSTextField, !t.stringValue.isEmpty { labels.append(t.stringValue) } }
-    let row: [String: Any] = ["path": path, "type": String(describing: type(of: view)), "identity": identity(view), "frame": rect(view.convert(view.bounds, to: nil)), "bounds": rect(view.bounds), "hidden": view.isHidden, "alpha": view.alphaValue, "labels": labels, "visualEffect": effect.isEmpty ? ["availability": "not NSVisualEffectView"] : effect, "semanticContext": readKeys(view, keys: semanticKeys), "layer": view.layer.map(layerRecord) ?? ["availability": "view has no backing layer"]]
+    var row: [String: Any] = ["path": path, "type": String(describing: type(of: view)), "identity": identity(view)]
+    row["frame"] = rect(view.convert(view.bounds, to: nil))
+    row["bounds"] = rect(view.bounds)
+    row["hidden"] = view.isHidden
+    row["alpha"] = view.alphaValue
+    row["labels"] = labels
+    let effectRecord: [String: Any] = effect.isEmpty ? ["availability": "not NSVisualEffectView"] : effect
+    row["visualEffect"] = effectRecord
+    row["semanticContext"] = readKeys(view, keys: semanticKeys)
+    row["layer"] = view.layer.map(layerRecord) ?? ["availability": "view has no backing layer"]
     rows.append(row)
     for (i, child) in view.subviews.enumerated() { rows.append(contentsOf: viewRecords(child, path: "\(path).\(i)")) }
     return rows
 }
 
 private func layerRecord(_ layer: CALayer) -> [String: Any] {
-    return ["type": String(describing: type(of: layer)), "name": layer.name as Any? ?? NSNull(), "identity": identity(layer), "bounds": rect(layer.bounds), "position": point(layer.position), "anchorPoint": point(layer.anchorPoint), "transform": transform(layer.transform), "affineTransform": affine(layer.affineTransform()), "opacity": layer.opacity, "hidden": layer.isHidden, "opaque": layer.isOpaque, "backgroundColor": color(layer.backgroundColor), "contents": layer.contents.map { ["type": String(describing: type(of: $0)), "identity": identity($0 as AnyObject)] as [String: Any] } as Any? ?? NSNull(), "contentsRect": rect(layer.contentsRect), "contentsScale": layer.contentsScale, "borderColor": color(layer.borderColor), "borderWidth": layer.borderWidth, "cornerRadius": layer.cornerRadius, "masksToBounds": layer.masksToBounds, "compositingFilter": normalized(layer.compositingFilter), "semanticContext": readKeys(layer, keys: semanticKeys), "filters": filterRecords(layer.filters, key: "filters"), "backgroundFilters": filterRecords(layer.backgroundFilters, key: "backgroundFilters"), "mask": layer.mask.map(layerRecord) as Any? ?? NSNull(), "sublayers": (layer.sublayers ?? []).enumerated().map { ["order": $0.offset, "record": layerRecord($0.element)] as [String: Any] }]
+    var r: [String: Any] = ["type": String(describing: type(of: layer)), "name": layer.name as Any? ?? NSNull(), "identity": identity(layer)]
+    r["bounds"] = rect(layer.bounds); r["position"] = point(layer.position); r["anchorPoint"] = point(layer.anchorPoint)
+    r["transform"] = transform(layer.transform); r["affineTransform"] = affine(layer.affineTransform())
+    r["opacity"] = layer.opacity; r["hidden"] = layer.isHidden; r["opaque"] = layer.isOpaque
+    r["backgroundColor"] = color(layer.backgroundColor)
+    if let contents = layer.contents { r["contents"] = ["type": String(describing: type(of: contents)), "identity": identity(contents as AnyObject)] }
+    else { r["contents"] = NSNull() }
+    r["contentsRect"] = rect(layer.contentsRect); r["contentsScale"] = layer.contentsScale
+    r["borderColor"] = color(layer.borderColor); r["borderWidth"] = layer.borderWidth; r["cornerRadius"] = layer.cornerRadius
+    r["masksToBounds"] = layer.masksToBounds; r["compositingFilter"] = normalized(layer.compositingFilter)
+    r["semanticContext"] = readKeys(layer, keys: semanticKeys)
+    r["filters"] = filterRecords(layer.filters, key: "filters"); r["backgroundFilters"] = filterRecords(layer.backgroundFilters, key: "backgroundFilters")
+    r["mask"] = layer.mask.map(layerRecord) as Any? ?? NSNull()
+    r["sublayers"] = (layer.sublayers ?? []).enumerated().map { entry -> [String: Any] in ["order": entry.offset, "record": layerRecord(entry.element)] }
+    return r
 }
 
 private func readKeys(_ object: NSObject, keys: [String]) -> [String: Any] {
@@ -202,20 +227,26 @@ private func readKeys(_ object: NSObject, keys: [String]) -> [String: Any] {
 }
 private func filterRecords(_ filters: [Any]?, key: String) -> [String: Any] {
     guard let filters else { return ["availability": "\(key)=nil"] }
-    return ["availability": "present", "items": filters.enumerated().map { index, filter in
+    let items: [[String: Any]] = filters.enumerated().map { entry in
+        let index = entry.offset
+        let filter = entry.element
         let obj = filter as AnyObject
         var inputs: [String: Any] = [:]
         if let f = filter as? CIFilter {
             for inputKey in f.inputKeys { inputs[inputKey] = safeKeyRecord(f as NSObject, inputKey) }
         }
-        return ["order": index, "class": String(describing: type(of: filter)), "identity": identity(obj), "name": safeKeyRecord(obj as? NSObject ?? NSObject(), "name"), "inputKeys": (filter as? CIFilter)?.inputKeys ?? [], "inputs": inputs, "exception": "unavailable unless safe KVC helper reports it"] as [String: Any]
-    }]
+        var record: [String: Any] = ["order": index, "class": String(describing: type(of: filter)), "identity": identity(obj), "inputs": inputs]
+        if let nsObject = obj as? NSObject { record["name"] = safeKeyRecord(nsObject, "name") }
+        record["inputKeys"] = (filter as? CIFilter)?.inputKeys ?? []
+        return record
+    }
+    return ["availability": "present", "items": items]
 }
 private func safeKeyRecord(_ object: NSObject, _ key: String) -> [String: Any] {
     var value: AnyObject?
     var exceptionName: NSString?
     var exceptionReason: NSString?
-    let status = SafeReadKey(object, key as NSString, &value, &exceptionName, &exceptionReason)
+    let status = SafeReadKey(object, key, &value, &exceptionName, &exceptionReason)
     switch status {
     case 0: return ["status": "value", "value": normalized(value)]
     case 1: return ["status": "unavailable"]
@@ -227,12 +258,11 @@ private func normalized(_ value: Any?) -> Any {
     if value is NSNull { return NSNull() }
     if let n = value as? NSNumber { return n }
     if let s = value as? String { return s }
-    if let c = value as? CGColor { return color(c) }
+    if CFGetTypeID(value as CFTypeRef) == CGColorGetTypeID() { return color(value as! CGColor) }
     if let a = value as? [Any] { return a.map(normalized) }
     if let d = value as? [String: Any] { return d.mapValues(normalized) }
     return ["class": String(describing: type(of: value)), "description": String(describing: value)]
 }
-private func styleRecord(_ o: Any) -> Any { ["class": String(describing: type(of: o)), "description": String(describing: o)] }
 private func accessibilityRecords() -> [[String: Any]] {
     let app = AXUIElementCreateApplication(ProcessInfo.processInfo.processIdentifier)
     var rows: [[String: Any]] = []
