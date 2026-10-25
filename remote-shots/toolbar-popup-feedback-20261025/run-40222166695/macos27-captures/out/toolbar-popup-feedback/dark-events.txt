@@ -1,0 +1,695 @@
+RUN appearance=dark displayPoints=(1024.0, 768.0) scale=1.0
+AX_POPUP id=toolbar-diagnostic-popup frame=x=810.0,y=39.0,w=200.0,h=36.0
+WINDOW active=true key=true visible=true frame={{80, 60}, {1280, 677}} backingScale=1.0 opaque=true
+CONFIG popup.controlSize=unspecified popup.glassBehavior=unspecified popup.variant=unspecified popup.subvariant=unspecified popup.subdued=unspecified popup.glassContext=unspecified viewer.controlSize=unspecified viewer.glassBehavior=unspecified viewer.variant=unspecified viewer.subvariant=unspecified viewer.subdued=unspecified viewer.glassContext=unspecified sourceModifiers=PickerStyle.menu,frame.width.200,labelsHidden
+UNAVAILABLE_KEYS source-level unspecified popup/viewer/platter: controlSize, glassBehavior, variant, subvariant, subdued, glassContext; runtime inspection follows
+AX role=AXApplication title=ToolbarPopupFeedback desc= id= frame=x=0.0,y=0.0,w=0.0,h=0.0
+AX role=AXWindow title= desc= id=SwiftUI.WindowGroup<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<ToolbarPopupFeedback.(unknown context at $1024eab3c).ProbeView, SwiftUI._FlexFrameLayout>, SwiftUI._PreferenceWritingModifier<SwiftUI.PreferredColorSchemeKey>>, SwiftUI._BackgroundModifier<ToolbarPopupFeedback.(unknown context at $1024eab18).Driver>>>-1-AppWindow-1 frame=x=80.0,y=31.0,w=1280.0,h=677.0
+AX role=AXGroup title= desc= id= frame=x=80.0,y=31.0,w=1280.0,h=677.0
+AX role=AXSplitGroup title= desc= id=SwiftUI.WindowGroup<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<ToolbarPopupFeedback.(unknown context at $1024eab3c).ProbeView, SwiftUI._FlexFrameLayout>, SwiftUI._PreferenceWritingModifier<SwiftUI.PreferredColorSchemeKey>>, SwiftUI._BackgroundModifier<ToolbarPopupFeedback.(unknown context at $1024eab18).Driver>>>-1-AppWindow-1, SidebarNavigationSplitView frame=x=80.0,y=31.0,w=1280.0,h=677.0
+AX role=AXGroup title= desc= id= frame=x=80.0,y=31.0,w=260.0,h=677.0
+AX role=AXScrollArea title= desc= id= frame=x=80.0,y=83.0,w=260.0,h=625.0
+AX role=AXOutline title= desc=Sidebar id= frame=x=80.0,y=83.0,w=260.0,h=625.0
+AX role=AXRow title= desc= id= frame=x=80.0,y=83.0,w=260.0,h=19.0
+AX role=AXCell title= desc= id= frame=x=90.0,y=83.0,w=240.0,h=19.0
+AX role=AXGroup title= desc= id= frame=x=94.0,y=83.0,w=244.0,h=19.0
+AX role=AXHeading title= desc=Images id= frame=x=94.0,y=85.5,w=40.0,h=14.0
+AX role=AXRow title= desc= id= frame=x=80.0,y=102.0,w=260.0,h=32.0
+AX role=AXCell title= desc= id= frame=x=90.0,y=102.0,w=240.0,h=32.0
+AX role=AXStaticText title= desc= id= frame=x=99.0,y=110.0,w=105.0,h=16.079833984375
+AX role=AXRow title= desc= id= frame=x=80.0,y=134.0,w=260.0,h=32.0
+AX role=AXCell title= desc= id= frame=x=90.0,y=134.0,w=240.0,h=32.0
+AX role=AXStaticText title= desc= id= frame=x=99.0,y=142.0,w=123.0,h=16.079833984375
+AX role=AXRow title= desc= id= frame=x=80.0,y=166.0,w=260.0,h=32.0
+AX role=AXCell title= desc= id= frame=x=90.0,y=166.0,w=240.0,h=32.0
+AX role=AXStaticText title= desc= id= frame=x=99.0,y=174.0,w=90.0,h=16.079833984375
+AX role=AXRow title= desc= id= frame=x=80.0,y=198.0,w=260.0,h=32.0
+AX role=AXCell title= desc= id= frame=x=90.0,y=198.0,w=240.0,h=32.0
+AX role=AXStaticText title= desc= id= frame=x=99.0,y=206.0,w=109.0,h=16.079833984375
+AX role=AXRow title= desc= id= frame=x=80.0,y=230.0,w=260.0,h=32.0
+AX role=AXCell title= desc= id= frame=x=90.0,y=230.0,w=240.0,h=32.0
+AX role=AXStaticText title= desc= id= frame=x=99.0,y=238.0,w=108.0,h=16.079833984375
+AX role=AXColumn title= desc= id=ListColumn frame=x=90.0,y=83.0,w=240.0,h=625.0
+AX role=AXSplitter title= desc= id= frame=x=340.0,y=83.0,w=1.0,h=625.0
+AX role=AXGroup title= desc= id= frame=x=80.0,y=31.0,w=1280.0,h=677.0
+AX role=AXSplitGroup title= desc= id= frame=x=80.0,y=31.0,w=1280.0,h=677.0
+AX role=AXGroup title= desc= id= frame=x=80.0,y=31.0,w=1280.0,h=677.0
+AX role=AXSplitter title= desc= id= frame=x=1059.0,y=83.0,w=1.0,h=625.0
+AX role=AXGroup title= desc= id= frame=x=1060.0,y=31.0,w=300.0,h=677.0
+AX role=AXScrollArea title= desc= id= frame=x=1060.0,y=83.0,w=300.0,h=625.0
+AX role=AXHeading title= desc=Liquid Glass id= frame=x=1080.0,y=93.0,w=67.0,h=14.0
+AX role=AXGroup title= desc= id= frame=x=1070.0,y=113.0,w=280.0,h=110.0
+AX role=AXStaticText title= desc= id= frame=x=1080.0,y=123.0,w=25.0,h=16.0
+AX role=AXSlider title= desc= id= frame=x=1197.0,y=122.0,w=143.0,h=16.0
+AX role=AXValueIndicator title= desc= id= frame=x=1246.0,y=122.0,w=20.0,h=16.0
+AX role=AXStaticText title= desc= id= frame=x=1080.0,y=160.0,w=63.0,h=16.0
+AX role=AXSlider title= desc= id= frame=x=1197.0,y=159.0,w=143.0,h=16.0
+AX role=AXValueIndicator title= desc= id= frame=x=1271.0,y=159.0,w=20.0,h=16.0
+AX role=AXStaticText title= desc= id= frame=x=1080.0,y=197.0,w=24.0,h=16.0
+AX role=AXCheckBox title= desc= id= frame=x=1304.0,y=197.0,w=36.0,h=16.0
+AX role=AXHeading title= desc=Edges id= frame=x=1080.0,y=233.0,w=34.0,h=14.0
+AX role=AXGroup title= desc= id= frame=x=1070.0,y=253.0,w=280.0,h=73.0
+AX role=AXStaticText title= desc= id= frame=x=1080.0,y=263.0,w=184.0,h=16.0
+AX role=AXStaticText title= desc= id= frame=x=1080.0,y=300.0,w=151.0,h=16.0
+AX role=AXToolbar title= desc= id= frame=x=80.0,y=31.0,w=1280.0,h=52.0
+AX role=AXButton title= desc=Hide Sidebar id= frame=x=296.0,y=31.0,w=40.0,h=52.0
+AX role=AXGroup title= desc= id= frame=x=585.0,y=31.0,w=217.0,h=52.0
+AX role=AXRadioGroup title= desc= id= frame=x=589.0,y=39.0,w=213.0,h=36.0
+AX role=AXRadioButton title= desc=Material id= frame=x=589.0,y=39.0,w=71.0,h=36.0
+AX role=AXRadioButton title= desc=Optics id= frame=x=660.0,y=39.0,w=71.0,h=36.0
+AX role=AXRadioButton title= desc=Motion id= frame=x=731.0,y=39.0,w=71.0,h=36.0
+AX role=AXGroup title= desc= id= frame=x=810.0,y=31.0,w=200.0,h=52.0
+AX role=AXPopUpButton title= desc=Glass diagnostic view id=toolbar-diagnostic-popup frame=x=810.0,y=39.0,w=200.0,h=36.0
+AX role=AXButton title= desc=Undo image edit id= frame=x=344.0,y=31.0,w=40.0,h=52.0
+AX role=AXButton title= desc=Redo image edit id= frame=x=384.0,y=31.0,w=41.0,h=52.0
+AX role=AXGroup title= desc= id= frame=x=1210.0,y=31.0,w=46.0,h=52.0
+AX role=AXMenuButton title=More image actions desc= id=ellipsis frame=x=1210.0,y=39.0,w=42.0,h=36.0
+AX role=AXButton title= desc=Compare id= frame=x=1256.0,y=31.0,w=100.0,h=52.0
+AX role=AXButton title= desc= id= frame=x=98.0,y=49.0,w=16.0,h=16.0
+AX role=AXButton title= desc= id= frame=x=144.0,y=49.0,w=16.0,h=16.0
+AX role=AXGroup title= desc= id= frame=x=145.0,y=50.0,w=14.0,h=14.0
+AX role=AXButton title= desc= id= frame=x=121.0,y=49.0,w=16.0,h=16.0
+AX role=AXStaticText title= desc= id= frame=x=425.0,y=31.0,w=160.0,h=52.0
+AX role=AXMenuBar title= desc= id= frame=x=0.0,y=0.0,w=1024.0,h=30.0
+AX role=AXMenuBarItem title=Apple desc= id= frame=x=10.0,y=0.0,w=34.0,h=30.0
+AX role=AXMenu title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=About This Mac desc= id=_aboutThisMacRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=System Information desc= id=_systemInformationRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=System Settings… desc= id=_systemSettingsRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=App Store desc= id=_appStoreRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Recent Items desc= id=_recentsRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenu title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Applications desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Installer desc= id=_recentItemRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Show “Installer” in Finder desc= id=_recentItemRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=System Settings desc= id=_recentItemRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Show “System Settings” in Finder desc= id=_recentItemRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=ToolbarPopupFeedback desc= id=_recentItemRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Show “ToolbarPopupFeedback” in Finder desc= id=_recentItemRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Documents desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=AnkaGuestAddons.pkg desc= id=_recentItemRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Show “AnkaGuestAddons.pkg” in Finder desc= id=_recentItemRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Servers desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Clear Menu desc= id=_clearRecentItemsRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Force Quit… desc= id=_forceQuitPanelRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Force Quit ToolbarPopupFeedback desc= id=_forceQuitRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Sleep desc= id=_sleepRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Restart… desc= id=_restartRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Restart desc= id=_restartNowRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Shut Down… desc= id=_shutDownRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Shut Down desc= id=_shutDownNowRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Lock Screen desc= id=_lockScreenRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Log Out Anka… desc= id=_logOutRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Log Out Anka desc= id=_logOutNowRequested: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuBarItem title=ToolbarPopupFeedback desc= id= frame=x=43.0,y=0.0,w=174.0,h=30.0
+AX role=AXMenu title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=About ToolbarPopupFeedback desc= id=orderFrontStandardAboutPanel: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Services desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenu title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Activity Monitor desc= id=_processRequest: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Allocations & Leaks desc= id=_processRequest: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=File Activity desc= id=_processRequest: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=System Trace desc= id=_processRequest: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Time Profile Active Application desc= id=_processRequest: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Time Profile App Under Mouse desc= id=_processRequest: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Time Profile Entire System desc= id=_processRequest: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Toggle Instruments Recording desc= id=_processRequest: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Services Settings… desc= id=_configureServicesMenu: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Hide ToolbarPopupFeedback desc= id=hide: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Hide Others desc= id=hideOtherApplications: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Show All desc= id=unhideAllApplications: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Quit ToolbarPopupFeedback desc= id=terminate: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Quit and Keep Windows desc= id=NSAlternateQuitMenuItem frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuBarItem title=File desc= id= frame=x=216.0,y=0.0,w=42.0,h=30.0
+AX role=AXMenu title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=New Window desc= id=menuAction: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Close desc= id=performClose: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Close All desc= id=closeAll: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuBarItem title=Edit desc= id= frame=x=257.0,y=0.0,w=44.0,h=30.0
+AX role=AXMenu title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Undo desc= id=undo: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Redo desc= id=redo: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Cut desc= id=cut: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Copy desc= id=copy: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Paste desc= id=paste: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Delete desc= id=delete: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Select All desc= id=selectAll: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=AutoFill desc= id=_NSMenuItemAutoFillIdentifier frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenu title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Contact… desc= id=_handleInsertFromContactsCommand: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Passwords… desc= id=_handleInsertFromPasswordsCommand: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Credit Card… desc= id=_handleInsertFromCreditCardsCommand: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Start Dictation… desc= id=startDictation: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Emoji & Symbols desc= id=orderFrontCharacterPalette: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuBarItem title=View desc= id= frame=x=300.0,y=0.0,w=50.0,h=30.0
+AX role=AXMenu title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Show Tab Bar desc= id=toggleTabBar: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Show All Tabs desc= id=toggleTabOverview: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Enter Full Screen desc= id=toggleFullScreen: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuBarItem title=Window desc= id= frame=x=349.0,y=0.0,w=70.0,h=30.0
+AX role=AXMenu title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Minimize desc= id=performMiniaturize: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Minimize All desc= id=miniaturizeAll: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Zoom desc= id=performZoom: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Zoom All desc= id=zoomAll: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Fill desc= id=_zoomFill: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Center desc= id=_zoomCenter: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Move & Resize desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenu title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Halves desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Left desc= id=_zoomLeft: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Right desc= id=_zoomRight: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Top desc= id=_zoomTop: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Bottom desc= id=_zoomBottom: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Quarters desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Top Left desc= id=_zoomTopLeft: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Top Right desc= id=_zoomTopRight: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Bottom Left desc= id=_zoomBottomLeft: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Bottom Right desc= id=_zoomBottomRight: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Arrange desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Left & Right desc= id=_zoomLeftAndRight: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Left & Quarters desc= id=_zoomLeftThreeUp: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Right & Left desc= id=_zoomRightAndLeft: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Right & Quarters desc= id=_zoomRightThreeUp: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Top & Bottom desc= id=_zoomTopAndBottom: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Top & Quarters desc= id=_zoomTopThreeUp: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Bottom & Top desc= id=_zoomBottomAndTop: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Bottom & Quarters desc= id=_zoomBottomThreeUp: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Quarters desc= id=_zoomQuarters: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Return to Previous Size desc= id=_zoomUntile: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Full Screen Tile desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenu title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Left of Screen desc= id=_tileLeft: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Right of Screen desc= id=_tileRight: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Bring All to Front desc= id=arrangeInFront: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Arrange in Front desc= id=alternateArrangeInFront: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Remove Window from Set desc= id=_removeWindowFromStageManagerSet: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Show Previous Tab desc= id=selectPreviousTab: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Show Next Tab desc= id=selectNextTab: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Move Tab to New Window desc= id=moveTabToNewWindow: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=Merge All Windows desc= id=mergeAllWindows: frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuBarItem title=Help desc= id= frame=x=418.0,y=0.0,w=49.0,h=30.0
+AX role=AXMenu title= desc= id= frame=x=0.0,y=768.0,w=0.0,h=0.0
+AX role=AXMenuItem title=ToolbarPopupFeedback Help desc= id=showHelp: frame=x=0.0,y=768.0,w=0.0,h=0.0
+VIEW type=AppKitWindowHostingView<ModifiedContent<LazyView<ModifiedContent<ModifiedContent<ModifiedContent<ProbeView, _FlexFrameLayout>, _PreferenceWritingModifier<PreferredColorSchemeKey>>, _BackgroundModifier<Driver>>>, RootModifier>> frame={{0, 0}, {1280, 677}} bounds={{0, 0}, {1280, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=2
+KVC key=controlSize available=true value=Optional(0)
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW   type=AppKitPlatformViewHost<PlatformViewRepresentableAdaptor<Driver>> frame={{0, 52}, {1280, 625}} bounds={{0, 0}, {1280, 625}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW     type=NSView frame={{0, 0}, {1280, 625}} bounds={{0, 0}, {1280, 625}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=0
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW   type=AppKitPlatformViewHost<PlatformViewRepresentableAdaptor<NavigationSplitRepresentable>> frame={{0, 0}, {1280, 677}} bounds={{0, 0}, {1280, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW     type=NSView frame={{0, 0}, {1280, 677}} bounds={{0, 0}, {1280, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW       type=NSSplitView frame={{0, 0}, {1280, 677}} bounds={{0, 0}, {1280, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=7
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW         type=_NSSplitViewItemViewWrapper frame={{0, 0}, {1280, 677}} bounds={{0, 0}, {1280, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW           type=NSHostingView<ModifiedContent<ColumnView, NavigationPaneModifier<ContainerStyleContext>>> frame={{0, 0}, {1280, 677}} bounds={{0, 0}, {1280, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=true value=Optional(0)
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW             type=AppKitPlatformViewHost<PlatformViewRepresentableAdaptor<SystemSplitView>> frame={{0, 0}, {1280, 677}} bounds={{0, 0}, {1280, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW               type=NSView frame={{0, 0}, {1280, 677}} bounds={{0, 0}, {1280, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                 type=NSSplitView frame={{0, 0}, {1280, 677}} bounds={{0, 0}, {1280, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=6
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                   type=_NSSplitViewItemViewWrapper frame={{0, 0}, {1280, 677}} bounds={{0, 0}, {1280, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                     type=NSHostingView<ModifiedContent<_ViewList_View, NavigationPaneModifier<ContainerStyleContext>>> frame={{0, 0}, {1280, 677}} bounds={{0, 0}, {1280, 677}} visible=true intrinsic={570, 62} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=2
+KVC key=controlSize available=true value=Optional(0)
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                   type=NSTitlebarBackgroundView frame={{260, 0}, {719, 52}} bounds={{0, 0}, {719, 52}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                     type=NSScrollPocket frame={{0, 0}, {719, 52}} bounds={{0, 0}, {719, 52}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=5
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                   type=NSTitlebarBackgroundView frame={{979, 0}, {301, 52}} bounds={{0, 0}, {301, 52}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=0
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                   type=_NSSplitViewShadowView frame={{968, 0}, {12, 677}} bounds={{0, 0}, {12, 677}} visible=true intrinsic={12, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=0
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                   type=_NSSplitViewItemViewWrapper frame={{980, 0}, {300, 677}} bounds={{0, 0}, {300, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                     type=NSGlassEffectView frame={{0, 0}, {300, 677}} bounds={{0, 0}, {300, 677}} visible=true intrinsic={-1, -1} layer=BackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=2
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                   type=NSSplitDividerView frame={{980, 0}, {0, 677}} bounds={{0, 0}, {0, 677}} visible=true intrinsic={0.5, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW         type=NSTitlebarBackgroundView frame={{0, 0}, {260, 52}} bounds={{0, 0}, {260, 52}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=0
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW         type=_NSSplitViewShadowView frame={{260, 0}, {12, 677}} bounds={{0, 0}, {12, 677}} visible=true intrinsic={12, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=0
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW         type=_NSSplitViewItemViewWrapper frame={{0, 0}, {260, 677}} bounds={{0, 0}, {260, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW           type=NSGlassEffectView frame={{0, 0}, {260, 677}} bounds={{0, 0}, {260, 677}} visible=true intrinsic={-1, -1} layer=BackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=2
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW             type=ContentHolderView frame={{0, 0}, {260, 677}} bounds={{0, 0}, {260, 677}} visible=true intrinsic={-1, -1} layer=CALayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW               type=NSView frame={{0, 0}, {260, 677}} bounds={{0, 0}, {260, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                 type=NSHostingView<ModifiedContent<ColumnView, NavigationPaneModifier<SidebarStyleContext>>> frame={{0, 0}, {260, 677}} bounds={{0, 0}, {260, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=true value=Optional(0)
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                   type=AppKitPlatformViewHost<OutlineListRepresentable<SelectionManagerBox<Int>>> frame={{0, 0}, {260, 677}} bounds={{0, 0}, {260, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                     type=ListCoreScrollView frame={{0, 0}, {260, 677}} bounds={{0, 0}, {260, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=4
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW             type=_NSCoreHostingView<RootView> frame={{0, 0}, {260, 677}} bounds={{0, 0}, {260, 677}} visible=true intrinsic={10, 10} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=true value=Optional(0)
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW         type=NSSplitDividerView frame={{260, 0}, {0, 677}} bounds={{0, 0}, {0, 677}} visible=true intrinsic={0.5, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW         type=_NSSplitViewCollapsedInteractionsView frame={{0, 0}, {15, 677}} bounds={{0, 0}, {15, 677}} visible=true intrinsic={15, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=0
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW         type=_NSSplitViewCollapsedInteractionsView frame={{1265, 0}, {15, 677}} bounds={{0, 0}, {15, 677}} visible=true intrinsic={15, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=0
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+CGWINDOW id=35 layer=0 bounds={
+    Height = 677;
+    Width = 1280;
+    X = 80;
+    Y = 31;
+} alpha=1
+MENU_WINDOW_VIEW level=0 frame={{80, 60}, {1280, 677}} visible=true key=true
+VIEW type=AppKitWindowHostingView<ModifiedContent<LazyView<ModifiedContent<ModifiedContent<ModifiedContent<ProbeView, _FlexFrameLayout>, _PreferenceWritingModifier<PreferredColorSchemeKey>>, _BackgroundModifier<Driver>>>, RootModifier>> frame={{0, 0}, {1280, 677}} bounds={{0, 0}, {1280, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=2
+KVC key=controlSize available=true value=Optional(0)
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW   type=AppKitPlatformViewHost<PlatformViewRepresentableAdaptor<Driver>> frame={{0, 52}, {1280, 625}} bounds={{0, 0}, {1280, 625}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW     type=NSView frame={{0, 0}, {1280, 625}} bounds={{0, 0}, {1280, 625}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=0
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW   type=AppKitPlatformViewHost<PlatformViewRepresentableAdaptor<NavigationSplitRepresentable>> frame={{0, 0}, {1280, 677}} bounds={{0, 0}, {1280, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW     type=NSView frame={{0, 0}, {1280, 677}} bounds={{0, 0}, {1280, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW       type=NSSplitView frame={{0, 0}, {1280, 677}} bounds={{0, 0}, {1280, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=7
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW         type=_NSSplitViewItemViewWrapper frame={{0, 0}, {1280, 677}} bounds={{0, 0}, {1280, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW           type=NSHostingView<ModifiedContent<ColumnView, NavigationPaneModifier<ContainerStyleContext>>> frame={{0, 0}, {1280, 677}} bounds={{0, 0}, {1280, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=true value=Optional(0)
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW             type=AppKitPlatformViewHost<PlatformViewRepresentableAdaptor<SystemSplitView>> frame={{0, 0}, {1280, 677}} bounds={{0, 0}, {1280, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW               type=NSView frame={{0, 0}, {1280, 677}} bounds={{0, 0}, {1280, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                 type=NSSplitView frame={{0, 0}, {1280, 677}} bounds={{0, 0}, {1280, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=6
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                   type=_NSSplitViewItemViewWrapper frame={{0, 0}, {1280, 677}} bounds={{0, 0}, {1280, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                     type=NSHostingView<ModifiedContent<_ViewList_View, NavigationPaneModifier<ContainerStyleContext>>> frame={{0, 0}, {1280, 677}} bounds={{0, 0}, {1280, 677}} visible=true intrinsic={570, 62} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=2
+KVC key=controlSize available=true value=Optional(0)
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                   type=NSTitlebarBackgroundView frame={{260, 0}, {719, 52}} bounds={{0, 0}, {719, 52}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                     type=NSScrollPocket frame={{0, 0}, {719, 52}} bounds={{0, 0}, {719, 52}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=5
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                   type=NSTitlebarBackgroundView frame={{979, 0}, {301, 52}} bounds={{0, 0}, {301, 52}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=0
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                   type=_NSSplitViewShadowView frame={{968, 0}, {12, 677}} bounds={{0, 0}, {12, 677}} visible=true intrinsic={12, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=0
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                   type=_NSSplitViewItemViewWrapper frame={{980, 0}, {300, 677}} bounds={{0, 0}, {300, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                     type=NSGlassEffectView frame={{0, 0}, {300, 677}} bounds={{0, 0}, {300, 677}} visible=true intrinsic={-1, -1} layer=BackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=2
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                   type=NSSplitDividerView frame={{980, 0}, {0, 677}} bounds={{0, 0}, {0, 677}} visible=true intrinsic={0.5, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW         type=NSTitlebarBackgroundView frame={{0, 0}, {260, 52}} bounds={{0, 0}, {260, 52}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=0
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW         type=_NSSplitViewShadowView frame={{260, 0}, {12, 677}} bounds={{0, 0}, {12, 677}} visible=true intrinsic={12, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=0
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW         type=_NSSplitViewItemViewWrapper frame={{0, 0}, {260, 677}} bounds={{0, 0}, {260, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW           type=NSGlassEffectView frame={{0, 0}, {260, 677}} bounds={{0, 0}, {260, 677}} visible=true intrinsic={-1, -1} layer=BackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=2
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW             type=ContentHolderView frame={{0, 0}, {260, 677}} bounds={{0, 0}, {260, 677}} visible=true intrinsic={-1, -1} layer=CALayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW               type=NSView frame={{0, 0}, {260, 677}} bounds={{0, 0}, {260, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                 type=NSHostingView<ModifiedContent<ColumnView, NavigationPaneModifier<SidebarStyleContext>>> frame={{0, 0}, {260, 677}} bounds={{0, 0}, {260, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=true value=Optional(0)
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                   type=AppKitPlatformViewHost<OutlineListRepresentable<SelectionManagerBox<Int>>> frame={{0, 0}, {260, 677}} bounds={{0, 0}, {260, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW                     type=ListCoreScrollView frame={{0, 0}, {260, 677}} bounds={{0, 0}, {260, 677}} visible=true intrinsic={-1, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=4
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW             type=_NSCoreHostingView<RootView> frame={{0, 0}, {260, 677}} bounds={{0, 0}, {260, 677}} visible=true intrinsic={10, 10} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=true value=Optional(0)
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW         type=NSSplitDividerView frame={{260, 0}, {0, 677}} bounds={{0, 0}, {0, 677}} visible=true intrinsic={0.5, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=1
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW         type=_NSSplitViewCollapsedInteractionsView frame={{0, 0}, {15, 677}} bounds={{0, 0}, {15, 677}} visible=true intrinsic={15, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=0
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+VIEW         type=_NSSplitViewCollapsedInteractionsView frame={{1265, 0}, {15, 677}} bounds={{0, 0}, {15, 677}} visible=true intrinsic={15, -1} layer=NSViewBackingLayer opacity=1.0 filters=nil backgroundFilters=nil sublayers=0
+KVC key=controlSize available=false value=UNAVAILABLE
+KVC key=glassBehavior available=false value=UNAVAILABLE
+KVC key=variant available=false value=UNAVAILABLE
+KVC key=subvariant available=false value=UNAVAILABLE
+KVC key=subdued available=false value=UNAVAILABLE
+KVC key=glassContext available=false value=UNAVAILABLE
+MOUSE event=moved label=idle-pointer-away point=24.0,24.0
+SCREEN_CAPTUREKIT_ERROR screen-recording-access-unavailable (preflight; no prompt requested)
+SCREEN_CAPTUREKIT_ERROR screen-recording-access-unavailable (preflight; no prompt requested)
+SCREEN_CAPTUREKIT_ERROR screen-recording-access-unavailable (preflight; no prompt requested)
+SETTLED state=idle gate=three-consecutive-identical-popup-crops hover=false
+SCREEN_CAPTUREKIT_ERROR screen-recording-access-unavailable (preflight; no prompt requested)
+SCREENSHOT_FAIL state=idle error=CGDisplayCreateImage-nil
+MOUSE event=moved label=hover-target point=910.0,57.0
+GATE_FAIL hover-signal expected=true actual=false

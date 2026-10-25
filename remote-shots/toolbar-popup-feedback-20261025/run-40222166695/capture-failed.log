@@ -1,0 +1,10 @@
+capture	Capture	﻿2026-10-25T18:39:07.0642460Z ##[group]Run if [[ 'toolbar-popup-feedback' == toolbar-popup-feedback ]]; then
+capture	Capture	2026-10-25T18:39:07.0643420Z ^[[36;1mif [[ 'toolbar-popup-feedback' == toolbar-popup-feedback ]]; then^[[0m
+capture	Capture	2026-10-25T18:39:07.0643800Z ^[[36;1m  bash scripts/run-toolbar-popup-feedback.sh^[[0m
+capture	Capture	2026-10-25T18:39:07.0644140Z ^[[36;1melse^[[0m
+capture	Capture	2026-10-25T18:39:07.0644410Z ^[[36;1m  bash scripts/run-captures.sh 'toolbar-popup-feedback'^[[0m
+capture	Capture	2026-10-25T18:39:07.0644780Z ^[[36;1mfi^[[0m
+capture	Capture	2026-10-25T18:39:07.0862610Z shell: /bin/bash -e {0}
+capture	Capture	2026-10-25T18:39:07.0863060Z ##[endgroup]
+capture	Capture	2026-10-25T18:39:19.9043170Z dark state gate failed: hover
+capture	Capture	2026-10-25T18:39:19.9114150Z ##[error]Process completed with exit code 1.

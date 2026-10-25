@@ -1,0 +1,50 @@
+capture	Build toolbar popup feedback probe	﻿2026-10-25T18:36:26.3063850Z ##[group]Run mkdir -p out && swiftc -O -framework AppKit -framework SwiftUI -framework ApplicationServices -framework ImageIO -framework UniformTypeIdentifiers Sources/ToolbarPopupFeedback/main.swift -o out/ToolbarPopupFeedback
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:26.3065820Z ^[[36;1mmkdir -p out && swiftc -O -framework AppKit -framework SwiftUI -framework ApplicationServices -framework ImageIO -framework UniformTypeIdentifiers Sources/ToolbarPopupFeedback/main.swift -o out/ToolbarPopupFeedback^[[0m
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:26.3306290Z shell: /bin/bash -e {0}
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:26.3306710Z ##[endgroup]
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3268270Z Sources/ToolbarPopupFeedback/main.swift:84:1: error: 'main' attribute cannot be used in a module that contains top-level code
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3269660Z   1 | import AppKit
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3270340Z     | |- note: top-level code defined in this source file
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3271090Z     | `- note: pass '-parse-as-library' to compiler invocation if this is intentional
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3271710Z   2 | import SwiftUI
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3272290Z   3 | import ApplicationServices
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3272740Z     :
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3272980Z  82 | }
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3273310Z  83 | 
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3273630Z  84 | @main struct ToolbarPopupFeedbackApp: App {
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3274220Z     | `- error: 'main' attribute cannot be used in a module that contains top-level code
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3274810Z  85 |     var body: some Scene {
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3275210Z  86 |         WindowGroup {
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3275540Z 
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3276100Z Sources/ToolbarPopupFeedback/main.swift:105:202: error: use of 'frame' refers to instance method rather than global function 'frame' in module 'ToolbarPopupFeedback'
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3277350Z 103 |         NSApp.setActivationPolicy(.regular); NSApp.activate(ignoringOtherApps: true); window.makeKeyAndOrderFront(nil)
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3278390Z 104 |         log("RUN appearance=\(lightRun ? "light" : "dark") displayPoints=\(screen.frame.size) scale=\(screen.backingScaleFactor)")
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3279880Z 105 |         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { guard let popup = findPopup() else { log("GATE_FAIL popup-ax-identifier-not-found"); dumpAX(); NSApp.terminate(nil); return }; axFrame = frame(popup); log("AX_POPUP id=\(popupID) frame=\(rect(axFrame))")
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3281840Z     |                                                                                                                                                                                                          |- error: use of 'frame' refers to instance method rather than global function 'frame' in module 'ToolbarPopupFeedback'
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3284270Z     |                                                                                                                                                                                                          `- note: use 'ToolbarPopupFeedback.' to reference the global function in module 'ToolbarPopupFeedback'
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3286420Z 106 |             guard axFrame.width > 0, axFrame.height > 0 else { log("GATE_FAIL popup-empty-frame"); NSApp.terminate(nil); return }
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3287050Z 107 |             dumpState(window)
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3287300Z     :
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3287630Z 192 | 
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3288320Z 193 | private func findPopup() -> AXUIElement? { find(AXUIElementCreateApplication(ProcessInfo.processInfo.processIdentifier)) { str($0, "AXIdentifier") == popupID } }
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3290870Z 194 | private func frame(_ e: AXUIElement) -> CGRect { var p: CFTypeRef?, s: CFTypeRef?; AXUIElementCopyAttributeValue(e, kAXPositionAttribute as CFString, &p); AXUIElementCopyAttributeValue(e, kAXSizeAttribute as CFString, &s); var point = CGPoint.zero, size = CGSize.zero; if let p { AXValueGetValue(p as! AXValue, .cgPoint, &point) }; if let s { AXValueGetValue(s as! AXValue, .cgSize, &size) }; return CGRect(origin: point, size: size) }
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3292520Z     |              `- note: 'frame' declared here
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3295190Z 195 | private func str(_ e: AXUIElement, _ a: String) -> String { var v: CFTypeRef?; guard AXUIElementCopyAttributeValue(e, a as CFString, &v) == .success else { return "" }; return v as? String ?? "" }
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3296630Z 196 | private func children(_ e: AXUIElement) -> [AXUIElement] { var v: CFTypeRef?; guard AXUIElementCopyAttributeValue(e, kAXChildrenAttribute as CFString, &v) == .success else { return [] }; return v as? [AXUIElement] ?? [] }
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3297430Z 
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3297930Z Sources/ToolbarPopupFeedback/main.swift:164:36: error: 'CGDisplayCreateImage' is unavailable in macOS: Please use ScreenCaptureKit instead.
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3299900Z 162 | private func mouse(_ type: CGEventType, at p: CGPoint, label: String) { if let e = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: p, mouseButton: .left) { e.post(tap: .cghidEventTap) }; log("MOUSE event=\(type == .leftMouseDown ? "down" : "up") label=\(label) point=\(p.x),\(p.y)") }
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3301010Z 163 | 
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3301330Z 164 | private func image() -> CGImage? { CGDisplayCreateImage(CGMainDisplayID()) }
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3302030Z     |                                    `- error: 'CGDisplayCreateImage' is unavailable in macOS: Please use ScreenCaptureKit instead.
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3302590Z 165 | private func imageFile(_ cg: CGImage, _ url: URL) -> Bool {
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3303250Z 166 |     guard let dst = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil) else { return false }
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3303740Z 
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3304500Z /Applications/Xcode_27.1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/CoreGraphics.framework/Headers/CGDirectDisplay.h:383:33: note: 'CGDisplayCreateImage' was obsoleted in macOS 15.0
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3305350Z 381 |    `displayID'. */
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3305650Z 382 | 
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3306000Z 383 | CG_EXTERN CGImageRef __nullable CGDisplayCreateImage(CGDirectDisplayID displayID)
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3306570Z     |                                 `- note: 'CGDisplayCreateImage' was obsoleted in macOS 15.0
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3306970Z 384 |     SCREEN_CAPTURE_OBSOLETE(10.6,14.4,15.0);
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3307380Z 385 | 
+capture	Build toolbar popup feedback probe	2026-10-25T18:36:39.3317570Z ##[error]Process completed with exit code 1.
