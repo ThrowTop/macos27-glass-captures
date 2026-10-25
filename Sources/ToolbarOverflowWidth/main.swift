@@ -126,7 +126,7 @@ private struct ProbeRunner {
     }
 
     private func measure(_ width: Int, window: NSWindow, screen: NSScreen, capture: Bool, state: ProbeState) -> (membership: Set<String>, object: [String: Any])? {
-        window.setFrame(NSRect(x: 70, y: screen.frame.maxY - 480, width: width, height: 440), display: true)
+        window.setFrame(NSRect(x: 70, y: screen.frame.maxY - 480, width: CGFloat(width), height: 440), display: true)
         RunLoop.current.run(until: Date().addingTimeInterval(0.13))
         let ax = AXUIElementCreateApplication(ProcessInfo.processInfo.processIdentifier)
         let all = flatten(ax)
@@ -134,7 +134,7 @@ private struct ProbeRunner {
         let visible = toolbar?.visibleItems ?? []
         let nativeItems = (toolbar?.items ?? []).enumerated().map { index, item in itemDump(item, index: index, visible: visible.contains(item)) }
         let membership = Set(all.compactMap { id($0) }.filter { !$0.isEmpty })
-            .union(visible.compactMap { $0.view?.accessibilityIdentifier }.filter { !$0.isEmpty })
+            .union(visible.compactMap { $0.view?.accessibilityIdentifier() }.filter { !$0.isEmpty })
         let bounds = all.first { role($0) == "AXToolbar" }.map(frame) ?? "unavailable"
         let titleFrame = all.first { title($0).contains("Ordinary Window Title") || title($0).contains("Toolbar") }.map(frame) ?? "unavailable"
         let sample: [String: Any] = [
@@ -143,6 +143,8 @@ private struct ProbeRunner {
             "applicationActive": NSApp.isActive, "windowVisible": window.occlusionState.contains(.visible),
             "windowScale": window.backingScaleFactor, "screenFrame": rect(screen.frame), "screenScale": screen.backingScaleFactor,
             "toolbarAXFrame": bounds, "titleAXFrame": titleFrame,
+            "availableSectionWidths": "unavailable",
+            "overflowViewerFrame": all.first { role($0) == "AXPopover" || role($0) == "AXMenu" }.map(frame) ?? "unavailable",
             "toolbarItems": nativeItems, "ax": all.map(axDump),
             "swiftSelection": ["tools": state.tool, "diagnostic": state.mode, "exportFormat": state.format, "compare": state.compare],
             "actionCounts": state.actionCounts
@@ -157,16 +159,17 @@ private struct ProbeRunner {
     private func itemDump(_ item: NSToolbarItem, index: Int, visible: Bool) -> [String: Any] {
         let view = item.view
         return ["sourceOrder": index, "identifier": item.itemIdentifier.rawValue,
-                "accessibilityIdentifier": view?.accessibilityIdentifier ?? "unavailable", "label": item.label,
+                "accessibilityIdentifier": view?.accessibilityIdentifier() ?? "unavailable", "label": item.label,
                 "priority": item.visibilityPriority.rawValue, "minSize": size(item.minSize), "maxSize": size(item.maxSize),
                 "currentSize": view.map { size($0.frame.size) } ?? "unavailable", "visible": visible,
                 "partition": guarded(item, "partition"), "priorityIndex": guarded(item, "priorityIndex"),
-                "participation": guarded(item, "participation"), "menuFormRepresentation": item.menuFormRepresentation.map { $0.title } ?? "unavailable",
+                "participation": guarded(item, "participation"), "selection": guarded(item, "selection"),
+                "menuFormRepresentation": item.menuFormRepresentation.map { $0.title } ?? "unavailable",
                 "layoutRect": guarded(view ?? item, "layoutRect"), "defaultItemPadding": guarded(item, "defaultItemPadding")]
     }
 
     private func guarded(_ object: AnyObject, _ key: String) -> String {
-        guard let value = SafeValueForKey(object, key as NSString) else { return "unavailable" }
+        guard let value = SafeValueForKey(object, key) else { return "unavailable" }
         return String(describing: value)
     }
 
@@ -182,7 +185,7 @@ private struct ProbeRunner {
             dumpAX(main, tag: "overflow-main-rows")
             captureFrame(window: window, screen: screen, name: "overflow-\(appearance)")
             let rows = flatten(main).filter { role($0) == "AXMenuItem" }
-            for row in rows { print("OVERFLOW_ROW title=\(title(row)) disabled=\(disabled(row)) selected=\(selected(row)) frame=\(frame(row))") }
+            for row in rows { print("OVERFLOW_ROW title=\(title(row)) enabled=\(enabled(row)) selected=\(selected(row)) frame=\(frame(row))") }
             inspectPicker(window: window, screen: screen, state: state)
         }
     }
@@ -197,7 +200,7 @@ private struct ProbeRunner {
         guard let row = flatten(app).first(where: { role($0) == "AXMenuItem" && title($0).contains("Glass diagnostic") }) else {
             print("MENU_UNAVAILABLE form=diagnostic-picker row=unavailable"); inspectMoreMenu(window: window, screen: screen, state: state); return
         }
-        print("MENU_ROW form=diagnostic-picker title=\(title(row)) disabled=\(disabled(row)) selected=\(selected(row))")
+        print("MENU_ROW form=diagnostic-picker title=\(title(row)) enabled=\(enabled(row)) selected=\(selected(row))")
         let status = AXUIElementPerformAction(row, kAXPressAction as CFString)
         print("MENU_OPEN form=diagnostic-picker axStatus=\(status.rawValue)")
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
@@ -205,7 +208,7 @@ private struct ProbeRunner {
             dumpAX(tree, tag: "submenu-diagnostic-picker")
             captureFrame(window: window, screen: screen, name: "submenu-diagnostic-picker-\(appearance)")
             let options = flatten(tree).filter { role($0) == "AXMenuItem" }
-            for option in options { print("PICKER_OPTION form=diagnostic-picker title=\(title(option)) disabled=\(disabled(option)) selected=\(selected(option))") }
+            for option in options { print("PICKER_OPTION form=diagnostic-picker title=\(title(option)) enabled=\(enabled(option)) selected=\(selected(option))") }
             if let choice = options.first(where: { title($0) == "Shape field" }) { print("PICKER_ACTION form=diagnostic-picker value=Shape field axStatus=\(AXUIElementPerformAction(choice, kAXPressAction as CFString).rawValue)") }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 print("MENU_SELECTION form=diagnostic-picker tools=\(state.tool) diagnostic=\(state.mode) actions=\(state.actionCounts)")
@@ -227,7 +230,7 @@ private struct ProbeRunner {
         guard let row = flatten(app).first(where: { role($0) == "AXMenuItem" && title($0).contains("More image actions") }) else {
             print("MENU_UNAVAILABLE form=More image actions row=unavailable actions=\(state.actionCounts)"); NSApp.terminate(nil); return
         }
-        print("MENU_ROW form=More image actions title=\(title(row)) disabled=\(disabled(row)) selected=\(selected(row))")
+        print("MENU_ROW form=More image actions title=\(title(row)) enabled=\(enabled(row)) selected=\(selected(row))")
         let status = AXUIElementPerformAction(row, kAXPressAction as CFString)
         print("MENU_OPEN form=More image actions axStatus=\(status.rawValue)")
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
@@ -235,7 +238,7 @@ private struct ProbeRunner {
             dumpAX(tree, tag: "submenu-more-actions")
             captureFrame(window: window, screen: screen, name: "submenu-more-actions-\(appearance)")
             for option in flatten(tree).filter({ role($0) == "AXMenuItem" }) {
-                print("MENU_OPTION form=More image actions title=\(title(option)) disabled=\(disabled(option)) selected=\(selected(option))")
+                print("MENU_OPTION form=More image actions title=\(title(option)) enabled=\(enabled(option)) selected=\(selected(option))")
             }
             if let export = flatten(tree).first(where: { role($0) == "AXMenuItem" && title($0).contains("Export format") }) {
                 _ = AXUIElementPerformAction(export, kAXPressAction as CFString)
@@ -244,7 +247,7 @@ private struct ProbeRunner {
                     dumpAX(submenu, tag: "submenu-export-format")
                     captureFrame(window: window, screen: screen, name: "submenu-export-format-\(appearance)")
                     let options = flatten(submenu).filter { role($0) == "AXMenuItem" }
-                    for option in options { print("PICKER_OPTION form=export-format title=\(title(option)) disabled=\(disabled(option)) selected=\(selected(option))") }
+                    for option in options { print("PICKER_OPTION form=export-format title=\(title(option)) enabled=\(enabled(option)) selected=\(selected(option))") }
                     if let choice = options.first(where: { title($0) == "TIFF" }) { _ = AXUIElementPerformAction(choice, kAXPressAction as CFString) }
                     finishMenuActions(window: window, screen: screen, state: state)
                 }
@@ -261,7 +264,7 @@ private struct ProbeRunner {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                         let menu = AXUIElementCreateApplication(ProcessInfo.processInfo.processIdentifier)
                         if let reset = flatten(menu).first(where: { role($0) == "AXMenuItem" && title($0) == "Reset image" }) {
-                            print("MENU_ACTION action=Reset image disabled=\(disabled(reset)) axStatus=\(AXUIElementPerformAction(reset, kAXPressAction as CFString).rawValue)")
+                            print("MENU_ACTION action=Reset image enabled=\(enabled(reset)) axStatus=\(AXUIElementPerformAction(reset, kAXPressAction as CFString).rawValue)")
                         } else { print("MENU_ACTION unavailable=Reset image") }
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                             print("MENU_RESULTS tools=\(state.tool) diagnostic=\(state.mode) exportFormat=\(state.format) actionCounts=\(state.actionCounts)")
@@ -279,6 +282,7 @@ private func title(_ e: AXUIElement) -> String { axString(e, kAXTitleAttribute) 
 private func description(_ e: AXUIElement) -> String { axString(e, kAXDescriptionAttribute) }
 private func id(_ e: AXUIElement) -> String { axString(e, "AXIdentifier") }
 private func disabled(_ e: AXUIElement) -> Bool { var v: CFTypeRef?; return AXUIElementCopyAttributeValue(e, kAXEnabledAttribute as CFString, &v) == .success && (v as? Bool == false) }
+private func enabled(_ e: AXUIElement) -> String { var v: CFTypeRef?; guard AXUIElementCopyAttributeValue(e, kAXEnabledAttribute as CFString, &v) == .success, let v else { return "unavailable" }; return String(describing: v) }
 private func axString(_ e: AXUIElement, _ key: String) -> String { var v: CFTypeRef?; guard AXUIElementCopyAttributeValue(e, key as CFString, &v) == .success else { return "" }; return v as? String ?? "" }
 private func axChildren(_ e: AXUIElement) -> [AXUIElement] { var v: CFTypeRef?; guard AXUIElementCopyAttributeValue(e, kAXChildrenAttribute as CFString, &v) == .success else { return [] }; return v as? [AXUIElement] ?? [] }
 private func flatten(_ e: AXUIElement, depth: Int = 0) -> [AXUIElement] { guard depth < 16 else { return [e] }; return [e] + axChildren(e).flatMap { flatten($0, depth: depth + 1) } }
@@ -288,8 +292,8 @@ private func frame(_ e: AXUIElement) -> String {
     if let p { AXValueGetValue(p as! AXValue, .cgPoint, &point) }; if let s { AXValueGetValue(s as! AXValue, .cgSize, &size) }
     return "\(point.x),\(point.y),\(size.width),\(size.height)"
 }
-private func selected(_ e: AXUIElement) -> String { axString(e, "AXSelected") }
-private func axDump(_ e: AXUIElement) -> [String: Any] { ["role": role(e), "title": title(e), "description": description(e), "identifier": id(e), "frame": frame(e), "disabled": disabled(e), "selected": selected(e), "value": axString(e, kAXValueAttribute)] }
+private func selected(_ e: AXUIElement) -> String { var v: CFTypeRef?; guard AXUIElementCopyAttributeValue(e, "AXSelected" as CFString, &v) == .success, let v else { return "unavailable" }; return String(describing: v) }
+private func axDump(_ e: AXUIElement) -> [String: Any] { ["role": role(e), "title": title(e), "description": description(e), "identifier": id(e), "frame": frame(e), "enabled": enabled(e), "selected": selected(e), "value": axString(e, kAXValueAttribute)] }
 private func dumpAX(_ e: AXUIElement, tag: String) { appendJSON(["tag": tag, "tree": flatten(e).map(axDump)], name: "ax-\(tag)-\(scenario)-\(appearance).json"); print("AX_DUMP tag=\(tag) nodes=\(flatten(e).count)") }
 private func rect(_ r: CGRect) -> [Double] { [r.origin.x, r.origin.y, r.width, r.height] }
 private func size(_ s: CGSize) -> [Double] { [s.width, s.height] }
@@ -311,7 +315,10 @@ private func captureFrame(window: NSWindow, screen: NSScreen, name: String) {
     let scale = window.backingScaleFactor
     let top = Int((screen.frame.maxY - window.frame.maxY) * scale)
     let cropRect = CGRect(x: Int(window.frame.minX * scale), y: top, width: Int(window.frame.width * scale), height: Int(window.frame.height * scale))
-    if let crop = image.cropping(to: cropRect) { let dest = CGImageDestinationCreateWithURL(output.appendingPathComponent(name + "-window.png") as CFURL, "public.png" as CFString, 1, nil); CGImageDestinationAddImage(dest!, crop, nil); _ = CGImageDestinationFinalize(dest!) }
+    if let crop = image.cropping(to: cropRect), let dest = CGImageDestinationCreateWithURL(output.appendingPathComponent(name + "-window.png") as CFURL, "public.png" as CFString, 1, nil) {
+        CGImageDestinationAddImage(dest, crop, nil)
+        if !CGImageDestinationFinalize(dest) { print("CROP_WRITE_FAIL name=\(name)") }
+    } else { print("CROP_FAIL name=\(name) crop=\(cropRect) source=\(image.width)x\(image.height)") }
     print("CAPTURE_GATE_PASS name=\(name) active=true key=true visible=true frame=\(window.frame) scale=\(scale) exit=0 dimensions=\(image.width)x\(image.height)")
 }
 
