@@ -4,6 +4,7 @@ import ApplicationServices
 import ImageIO
 import UniformTypeIdentifiers
 import CryptoKit
+import ScreenCaptureKit
 
 private let out = URL(fileURLWithPath: CommandLine.arguments.first(where: { $0.hasPrefix("--out=") }).map { String($0.dropFirst(6)) } ?? "/tmp/toolbar-popup-feedback", isDirectory: true)
 private let lightRun = CommandLine.arguments.contains("--light")
@@ -102,7 +103,7 @@ private struct Driver: NSViewRepresentable {
         window.setFrame(NSRect(x: 80, y: screen.frame.maxY - 800, width: 1280, height: 760), display: true)
         NSApp.setActivationPolicy(.regular); NSApp.activate(ignoringOtherApps: true); window.makeKeyAndOrderFront(nil)
         log("RUN appearance=\(lightRun ? "light" : "dark") displayPoints=\(screen.frame.size) scale=\(screen.backingScaleFactor)")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { guard let popup = findPopup() else { log("GATE_FAIL popup-ax-identifier-not-found"); dumpAX(); NSApp.terminate(nil); return }; axFrame = frame(popup); log("AX_POPUP id=\(popupID) frame=\(rect(axFrame))")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { guard let popup = findPopup() else { log("GATE_FAIL popup-ax-identifier-not-found"); dumpAX(); NSApp.terminate(nil); return }; axFrame = axFrameOf(popup); log("AX_POPUP id=\(popupID) frame=\(rect(axFrame))")
             guard axFrame.width > 0, axFrame.height > 0 else { log("GATE_FAIL popup-empty-frame"); NSApp.terminate(nil); return }
             dumpState(window)
             let away = CGPoint(x: screen.frame.minX + 24, y: screen.frame.minY + 24)
@@ -161,7 +162,26 @@ private func rect(_ r: CGRect) -> String { "x=\(r.origin.x),y=\(r.origin.y),w=\(
 private func move(_ p: CGPoint, _ label: String) { if let e = CGEvent(mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: p, mouseButton: .left) { e.post(tap: .cghidEventTap) }; log("MOUSE event=moved label=\(label) point=\(p.x),\(p.y)") }
 private func mouse(_ type: CGEventType, at p: CGPoint, label: String) { if let e = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: p, mouseButton: .left) { e.post(tap: .cghidEventTap) }; log("MOUSE event=\(type == .leftMouseDown ? "down" : "up") label=\(label) point=\(p.x),\(p.y)") }
 
-private func image() -> CGImage? { CGDisplayCreateImage(CGMainDisplayID()) }
+private func image() -> CGImage? {
+    guard CGPreflightScreenCaptureAccess() else { log("SCREEN_CAPTUREKIT_ERROR screen-recording-access-unavailable (preflight; no prompt requested)"); return nil }
+    let semaphore = DispatchSemaphore(value: 0)
+    var result: CGImage?
+    var failure: String?
+    Task.detached(priority: .userInitiated) {
+        do {
+            let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+            guard let display = content.displays.first(where: { $0.displayID == CGMainDisplayID() }) else { failure = "main-display-not-listed"; semaphore.signal(); return }
+            let filter = SCContentFilter(display: display, excludingWindows: [])
+            let config = SCStreamConfiguration()
+            config.width = display.width; config.height = display.height; config.showsCursor = true
+            result = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
+        } catch { failure = String(describing: error) }
+        semaphore.signal()
+    }
+    if semaphore.wait(timeout: .now() + 8) == .timedOut { log("SCREEN_CAPTUREKIT_TIMEOUT") }
+    if let failure { log("SCREEN_CAPTUREKIT_ERROR \(failure)") }
+    return result
+}
 private func imageFile(_ cg: CGImage, _ url: URL) -> Bool {
     guard let dst = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil) else { return false }
     CGImageDestinationAddImage(dst, cg, nil); return CGImageDestinationFinalize(dst)
@@ -191,11 +211,11 @@ private func cropDigest() -> String {
 private func writeLog() { logLock.lock(); defer { logLock.unlock() }; try? FileManager.default.createDirectory(at: out, withIntermediateDirectories: true); try? (eventLines.joined(separator: "\n") + "\n").write(to: out.appendingPathComponent("\(lightRun ? "light" : "dark")-events.txt"), atomically: true, encoding: .utf8) }
 
 private func findPopup() -> AXUIElement? { find(AXUIElementCreateApplication(ProcessInfo.processInfo.processIdentifier)) { str($0, "AXIdentifier") == popupID } }
-private func frame(_ e: AXUIElement) -> CGRect { var p: CFTypeRef?, s: CFTypeRef?; AXUIElementCopyAttributeValue(e, kAXPositionAttribute as CFString, &p); AXUIElementCopyAttributeValue(e, kAXSizeAttribute as CFString, &s); var point = CGPoint.zero, size = CGSize.zero; if let p { AXValueGetValue(p as! AXValue, .cgPoint, &point) }; if let s { AXValueGetValue(s as! AXValue, .cgSize, &size) }; return CGRect(origin: point, size: size) }
+private func axFrameOf(_ e: AXUIElement) -> CGRect { var p: CFTypeRef?, s: CFTypeRef?; AXUIElementCopyAttributeValue(e, kAXPositionAttribute as CFString, &p); AXUIElementCopyAttributeValue(e, kAXSizeAttribute as CFString, &s); var point = CGPoint.zero, size = CGSize.zero; if let p { AXValueGetValue(p as! AXValue, .cgPoint, &point) }; if let s { AXValueGetValue(s as! AXValue, .cgSize, &size) }; return CGRect(origin: point, size: size) }
 private func str(_ e: AXUIElement, _ a: String) -> String { var v: CFTypeRef?; guard AXUIElementCopyAttributeValue(e, a as CFString, &v) == .success else { return "" }; return v as? String ?? "" }
 private func children(_ e: AXUIElement) -> [AXUIElement] { var v: CFTypeRef?; guard AXUIElementCopyAttributeValue(e, kAXChildrenAttribute as CFString, &v) == .success else { return [] }; return v as? [AXUIElement] ?? [] }
 private func find(_ e: AXUIElement, _ predicate: (AXUIElement) -> Bool) -> AXUIElement? { if predicate(e) { return e }; for c in children(e) { if let f = find(c, predicate) { return f } }; return nil }
-private func dumpAX() { func walk(_ e: AXUIElement, _ d: Int) { if d > 10 { return }; log("AX role=\(str(e, "AXRole")) title=\(str(e, "AXTitle")) desc=\(str(e, "AXDescription")) id=\(str(e, "AXIdentifier")) frame=\(rect(frame(e)))"); for c in children(e) { walk(c, d + 1) } }; walk(AXUIElementCreateApplication(ProcessInfo.processInfo.processIdentifier), 0) }
+private func dumpAX() { func walk(_ e: AXUIElement, _ d: Int) { if d > 10 { return }; log("AX role=\(str(e, "AXRole")) title=\(str(e, "AXTitle")) desc=\(str(e, "AXDescription")) id=\(str(e, "AXIdentifier")) frame=\(rect(axFrameOf(e)))"); for c in children(e) { walk(c, d + 1) } }; walk(AXUIElementCreateApplication(ProcessInfo.processInfo.processIdentifier), 0) }
 
 private func dumpState(_ window: NSWindow) {
     log("WINDOW active=\(NSApp.isActive) key=\(window.isKeyWindow) visible=\(window.isVisible) frame=\(NSStringFromRect(window.frame)) backingScale=\(window.backingScaleFactor) opaque=\(window.isOpaque)")

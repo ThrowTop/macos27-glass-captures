@@ -24,7 +24,7 @@ jobs:
       - name: Build
         run: swift build -c release > build.log 2>&1 || { cat build.log; exit 1; }
       - name: Build toolbar popup feedback probe
-        run: mkdir -p out && swiftc -O -framework AppKit -framework SwiftUI -framework ApplicationServices -framework ImageIO -framework UniformTypeIdentifiers Sources/ToolbarPopupFeedback/main.swift -o out/ToolbarPopupFeedback
+        run: mkdir -p out && swiftc -parse-as-library -O -framework AppKit -framework SwiftUI -framework ApplicationServices -framework ImageIO -framework UniformTypeIdentifiers -framework ScreenCaptureKit Sources/ToolbarPopupFeedback/main.swift -o out/ToolbarPopupFeedback
       - name: Capture
         run: |
           if [[ '${{ inputs.scenarios }}' == toolbar-popup-feedback ]]; then
