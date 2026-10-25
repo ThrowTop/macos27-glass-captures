@@ -22,14 +22,14 @@ jobs:
           uname -a
           xcodebuild -version
       - name: Build
-        run: swift build -c release > build.log 2>&1 || { cat build.log; exit 1; }
+        run: swift build -c release --product ToolbarOverflowWidth > build.log 2>&1 || { cat build.log; exit 1; }
       - name: Capture
-        run: bash scripts/run-captures.sh '${{ inputs.scenarios }}'
+        run: bash scripts/run-toolbar-overflow-width.sh
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: macos27-captures
+          name: toolbar-overflow-width-20261025
           path: |
             out/
             build.log

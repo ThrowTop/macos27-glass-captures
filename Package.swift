@@ -6,6 +6,7 @@ let package = Package(
     platforms: [.macOS("27.0")],
     targets: [
         .target(name: "SafeKVC", path: "Sources/SafeKVC", publicHeadersPath: "include"),
-        .executableTarget(name: "GlassCaptures", dependencies: ["SafeKVC"], path: "Sources/GlassCaptures")
+        .executableTarget(name: "GlassCaptures", dependencies: ["SafeKVC"], path: "Sources/GlassCaptures"),
+        .executableTarget(name: "ToolbarOverflowWidth", dependencies: ["SafeKVC"], path: "Sources/ToolbarOverflowWidth")
     ]
 )
