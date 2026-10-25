@@ -1,37 +1,111 @@
-name: macOS 27 glass captures
+name: toolbar inactive platter layers
 
 on:
   workflow_dispatch:
-    inputs:
-      scenarios:
-        description: "Comma-separated scenario IDs, smoke, or all"
-        required: false
-        default: all
+
+permissions:
+  contents: read
 
 jobs:
   capture:
     runs-on: xcode-27
-    timeout-minutes: 180
-    permissions:
-      contents: read
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - name: Environment
+
+      - name: Record runner and source provenance
+        shell: bash
         run: |
-          sw_vers
-          uname -a
-          xcodebuild -version
-      - name: Build
-        run: swift build -c release > build.log 2>&1 || { cat build.log; exit 1; }
-      - name: Capture
-        run: bash scripts/run-captures.sh '${{ inputs.scenarios }}'
-      - name: Upload results
+          set -euo pipefail
+          mkdir -p out/toolbar-inactive-layers
+          {
+            sw_vers
+            uname -a
+            xcodebuild -version
+            echo "runner_os=$RUNNER_OS"
+            echo "runner_arch=$RUNNER_ARCH"
+            echo "commit=$(git rev-parse HEAD)"
+            shasum -a 256 Sources/ToolbarInactiveLayers/main.swift Sources/ToolbarInactiveLayers/SafeReadKey.h Sources/ToolbarInactiveLayers/SafeReadKey.m
+          } > out/toolbar-inactive-layers/environment.txt 2>&1
+
+      - name: Build dedicated probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP="$RUNNER_TEMP/ToolbarInactiveLayers.app"
+          mkdir -p "$APP/Contents/MacOS"
+          cat > "$APP/Contents/Info.plist" <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>CFBundleExecutable</key><string>ToolbarInactiveLayers</string>
+            <key>CFBundleIdentifier</key><string>com.throwtop.toolbar-inactive-layers</string>
+            <key>CFBundleName</key><string>ToolbarInactiveLayers</string>
+            <key>CFBundlePackageType</key><string>APPL</string>
+            <key>LSMinimumSystemVersion</key><string>27.0</string>
+            <key>NSHighResolutionCapable</key><true/>
+          </dict></plist>
+          PLIST
+          clang -fobjc-arc -c Sources/ToolbarInactiveLayers/SafeReadKey.m -o "$RUNNER_TEMP/SafeReadKey.o"
+          if ! swiftc -parse-as-library -O -import-objc-header Sources/ToolbarInactiveLayers/SafeReadKey.h \
+            -framework AppKit -framework SwiftUI -framework ApplicationServices -framework ScreenCaptureKit \
+            -framework ImageIO -framework UniformTypeIdentifiers -framework CoreImage \
+            Sources/ToolbarInactiveLayers/main.swift "$RUNNER_TEMP/SafeReadKey.o" \
+            -o "$APP/Contents/MacOS/ToolbarInactiveLayers" \
+            > out/toolbar-inactive-layers/build.log 2>&1; then
+            cat out/toolbar-inactive-layers/build.log
+            exit 1
+          fi
+          codesign --force --deep --sign - "$APP"
+          echo "$APP" > "$RUNNER_TEMP/toolbar-inactive-layers-app-path"
+
+      - name: Capture dark and light state sequences
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP="$(cat "$RUNNER_TEMP/toolbar-inactive-layers-app-path")"
+          ROOT="$GITHUB_WORKSPACE/out/toolbar-inactive-layers"
+          mkdir -p "$ROOT/dark" "$ROOT/light"
+          open -n -W "$APP" --args --out="$ROOT/dark" > "$ROOT/dark/process.log" 2>&1
+          open -n -W "$APP" --args --light --out="$ROOT/light" > "$ROOT/light/process.log" 2>&1
+
+      - name: Validate state records and capture outputs
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, sys
+          root = pathlib.Path('out/toolbar-inactive-layers')
+          states = ['target-active-before', 'finder-active', 'target-active-after']
+          failures = []
+          for appearance in ['dark', 'light']:
+              frames = []
+              for state in states:
+                  record = root / appearance / f'{appearance}-{state}.json'
+                  image = root / appearance / f'{appearance}-{state}-display.png'
+                  if not record.exists(): failures.append(f'missing {record}')
+                  else:
+                      data = json.loads(record.read_text())
+                      frames.append(data.get('window', {}).get('frame'))
+                      if data.get('window', {}).get('backingScale') != 1: failures.append(f'non-1x window in {record}')
+                      if not data.get('screen', {}).get('status') == 'captured': failures.append(f'screen capture unavailable in {record}: {data.get("screen")}')
+                      if not data.get('window', {}).get('visible'): failures.append(f'target not visible in {record}')
+                      if state != 'finder-active' and not (data.get('app', {}).get('active') and data.get('window', {}).get('key') and data.get('window', {}).get('main')): failures.append(f'active/key/main gate failed in {record}')
+                      if state == 'finder-active' and (data.get('app', {}).get('active') or data.get('app', {}).get('frontmostBundleIdentifier') != 'com.apple.finder'): failures.append(f'Finder active gate failed in {record}')
+                  if not image.exists(): failures.append(f'missing {image}')
+              if len(frames) == 3 and len(set(frames)) != 1: failures.append(f'{appearance} frame changed across states: {frames}')
+          if failures:
+              print('\n'.join(failures), file=sys.stderr)
+              sys.exit(1)
+          print('All six state JSON records and lossless full-display PNGs passed capture gates.')
+          PY
+
+      - name: Upload raw state records and images
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: macos27-captures
+          name: toolbar-inactive-layers
           path: |
-            out/
-            build.log
+            out/toolbar-inactive-layers/
+            ${{ runner.temp }}/ToolbarInactiveLayers.app/Contents/Info.plist
           if-no-files-found: warn
           retention-days: 30
