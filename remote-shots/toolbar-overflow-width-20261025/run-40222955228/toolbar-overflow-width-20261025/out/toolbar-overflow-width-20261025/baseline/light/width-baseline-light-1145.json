@@ -1,0 +1,1940 @@
+{
+  "actionCounts" : {
+
+  },
+  "appearance" : "light",
+  "applicationActive" : true,
+  "availableSectionWidths" : "unavailable",
+  "ax" : [
+    {
+      "description" : "",
+      "enabled" : "unavailable",
+      "frame" : "0.0,0.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXApplication",
+      "selected" : "unavailable",
+      "title" : "ToolbarOverflowWidth",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "unavailable",
+      "frame" : "70.0,40.0,1145.0,440.0",
+      "identifier" : "SwiftUI.WindowGroup<ToolbarOverflowWidth.(unknown context at $102705b48).ProbeView>-1-AppWindow-1",
+      "role" : "AXWindow",
+      "selected" : "unavailable",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "unavailable",
+      "frame" : "70.0,40.0,1145.0,440.0",
+      "identifier" : "",
+      "role" : "AXGroup",
+      "selected" : "unavailable",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "527.5,275.5,230.0,21.0",
+      "identifier" : "",
+      "role" : "AXStaticText",
+      "selected" : "unavailable",
+      "title" : "",
+      "value" : "Toolbar width allocation probe"
+    },
+    {
+      "description" : "",
+      "enabled" : "unavailable",
+      "frame" : "70.0,40.0,1145.0,52.0",
+      "identifier" : "",
+      "role" : "AXToolbar",
+      "selected" : "unavailable",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "unavailable",
+      "frame" : "428.0,40.0,217.0,52.0",
+      "identifier" : "",
+      "role" : "AXGroup",
+      "selected" : "unavailable",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "Tools",
+      "enabled" : "1",
+      "frame" : "432.0,48.0,213.0,36.0",
+      "identifier" : "tools-segmented",
+      "role" : "AXRadioGroup",
+      "selected" : "unavailable",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "Material",
+      "enabled" : "1",
+      "frame" : "432.0,48.0,71.0,36.0",
+      "identifier" : "",
+      "role" : "AXRadioButton",
+      "selected" : "unavailable",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "Optics",
+      "enabled" : "1",
+      "frame" : "503.0,48.0,71.0,36.0",
+      "identifier" : "",
+      "role" : "AXRadioButton",
+      "selected" : "unavailable",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "Motion",
+      "enabled" : "1",
+      "frame" : "574.0,48.0,71.0,36.0",
+      "identifier" : "",
+      "role" : "AXRadioButton",
+      "selected" : "unavailable",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "unavailable",
+      "frame" : "653.0,40.0,204.0,52.0",
+      "identifier" : "",
+      "role" : "AXGroup",
+      "selected" : "unavailable",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "Glass diagnostic view",
+      "enabled" : "1",
+      "frame" : "653.0,48.0,200.0,36.0",
+      "identifier" : "diagnostic-picker",
+      "role" : "AXPopUpButton",
+      "selected" : "unavailable",
+      "title" : "",
+      "value" : "Composite"
+    },
+    {
+      "description" : "Back",
+      "enabled" : "1",
+      "frame" : "162.0,40.0,40.0,52.0",
+      "identifier" : "toolbar-back",
+      "role" : "AXButton",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "Forward",
+      "enabled" : "1",
+      "frame" : "202.0,40.0,41.0,52.0",
+      "identifier" : "toolbar-forward",
+      "role" : "AXButton",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "unavailable",
+      "frame" : "1065.0,40.0,46.0,52.0",
+      "identifier" : "",
+      "role" : "AXGroup",
+      "selected" : "unavailable",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "1065.0,48.0,42.0,36.0",
+      "identifier" : "more-actions",
+      "role" : "AXMenuButton",
+      "selected" : "unavailable",
+      "title" : "More image actions",
+      "value" : ""
+    },
+    {
+      "description" : "Compare",
+      "enabled" : "1",
+      "frame" : "1111.0,40.0,100.0,52.0",
+      "identifier" : "compare-button",
+      "role" : "AXButton",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "more toolbar items",
+      "enabled" : "1",
+      "frame" : "1114.0,47.0,38.0,38.0",
+      "identifier" : "",
+      "role" : "AXPopUpButton",
+      "selected" : "unavailable",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "88.0,58.0,16.0,16.0",
+      "identifier" : "",
+      "role" : "AXButton",
+      "selected" : "unavailable",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "134.0,58.0,16.0,16.0",
+      "identifier" : "",
+      "role" : "AXButton",
+      "selected" : "unavailable",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "unavailable",
+      "frame" : "135.0,59.0,14.0,14.0",
+      "identifier" : "",
+      "role" : "AXGroup",
+      "selected" : "unavailable",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "unavailable",
+      "frame" : "0.0,0.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "",
+      "selected" : "unavailable",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "111.0,58.0,16.0,16.0",
+      "identifier" : "",
+      "role" : "AXButton",
+      "selected" : "unavailable",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "243.0,40.0,185.0,52.0",
+      "identifier" : "",
+      "role" : "AXStaticText",
+      "selected" : "unavailable",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,0.0,1024.0,30.0",
+      "identifier" : "",
+      "role" : "AXMenuBar",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "10.0,0.0,34.0,30.0",
+      "identifier" : "",
+      "role" : "AXMenuBarItem",
+      "selected" : "0",
+      "title" : "Apple",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenu",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_aboutThisMacRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "About This Mac",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_systemInformationRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "System Information",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_systemSettingsRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "System Settings…",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_appStoreRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "App Store",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_recentsRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Recent Items",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenu",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Applications",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_recentItemRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Installer",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_recentItemRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Show “Installer” in Finder",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_recentItemRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "System Settings",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_recentItemRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Show “System Settings” in Finder",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_recentItemRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "ToolbarOverflowWidth",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_recentItemRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Show “ToolbarOverflowWidth” in Finder",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Documents",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_recentItemRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "AnkaGuestAddons.pkg",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_recentItemRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Show “AnkaGuestAddons.pkg” in Finder",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Servers",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_clearRecentItemsRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Clear Menu",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_forceQuitPanelRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Force Quit…",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_forceQuitRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Force Quit ToolbarOverflowWidth",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_sleepRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Sleep",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_restartRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Restart…",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_restartNowRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Restart",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_shutDownRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Shut Down…",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_shutDownNowRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Shut Down",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_lockScreenRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Lock Screen",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_logOutRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Log Out Anka…",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_logOutNowRequested:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Log Out Anka",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "43.0,0.0,167.0,30.0",
+      "identifier" : "",
+      "role" : "AXMenuBarItem",
+      "selected" : "0",
+      "title" : "ToolbarOverflowWidth",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenu",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "orderFrontStandardAboutPanel:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "About ToolbarOverflowWidth",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Services",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenu",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_processRequest:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Activity Monitor",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_processRequest:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Allocations & Leaks",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_processRequest:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "File Activity",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_processRequest:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "System Trace",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_processRequest:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Time Profile Active Application",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_processRequest:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Time Profile App Under Mouse",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_processRequest:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Time Profile Entire System",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_processRequest:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Toggle Instruments Recording",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_configureServicesMenu:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Services Settings…",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "hide:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Hide ToolbarOverflowWidth",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "hideOtherApplications:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Hide Others",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "unhideAllApplications:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Show All",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "terminate:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Quit ToolbarOverflowWidth",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "NSAlternateQuitMenuItem",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Quit and Keep Windows",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "209.0,0.0,42.0,30.0",
+      "identifier" : "",
+      "role" : "AXMenuBarItem",
+      "selected" : "0",
+      "title" : "File",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenu",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "menuAction:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "New Window",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "performClose:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Close",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "closeAll:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Close All",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "250.0,0.0,44.0,30.0",
+      "identifier" : "",
+      "role" : "AXMenuBarItem",
+      "selected" : "0",
+      "title" : "Edit",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenu",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "undo:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Undo",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "redo:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Redo",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "cut:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Cut",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "copy:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Copy",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "paste:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Paste",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "delete:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Delete",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "selectAll:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Select All",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_NSMenuItemAutoFillIdentifier",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "AutoFill",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenu",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_handleInsertFromContactsCommand:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Contact…",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_handleInsertFromPasswordsCommand:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Passwords…",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_handleInsertFromCreditCardsCommand:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Credit Card…",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "startDictation:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Start Dictation…",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "orderFrontCharacterPalette:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Emoji & Symbols",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "293.0,0.0,50.0,30.0",
+      "identifier" : "",
+      "role" : "AXMenuBarItem",
+      "selected" : "0",
+      "title" : "View",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenu",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "toggleTabBar:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Show Tab Bar",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "toggleTabOverview:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Show All Tabs",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "toggleFullScreen:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Enter Full Screen",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "342.0,0.0,70.0,30.0",
+      "identifier" : "",
+      "role" : "AXMenuBarItem",
+      "selected" : "0",
+      "title" : "Window",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenu",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "performMiniaturize:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Minimize",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "miniaturizeAll:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Minimize All",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "performZoom:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Zoom",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "zoomAll:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Zoom All",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_zoomFill:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Fill",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_zoomCenter:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Center",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Move & Resize",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenu",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Halves",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_zoomLeft:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Left",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_zoomRight:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Right",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_zoomTop:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Top",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_zoomBottom:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Bottom",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Quarters",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_zoomTopLeft:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Top Left",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_zoomTopRight:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Top Right",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_zoomBottomLeft:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Bottom Left",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_zoomBottomRight:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Bottom Right",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Arrange",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_zoomLeftAndRight:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Left & Right",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_zoomLeftThreeUp:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Left & Quarters",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_zoomRightAndLeft:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Right & Left",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_zoomRightThreeUp:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Right & Quarters",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_zoomTopAndBottom:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Top & Bottom",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_zoomTopThreeUp:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Top & Quarters",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_zoomBottomAndTop:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Bottom & Top",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_zoomBottomThreeUp:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Bottom & Quarters",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_zoomQuarters:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Quarters",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_zoomUntile:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Return to Previous Size",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Full Screen Tile",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenu",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_tileLeft:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Left of Screen",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_tileRight:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Right of Screen",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "arrangeInFront:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Bring All to Front",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "alternateArrangeInFront:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Arrange in Front",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "_removeWindowFromStageManagerSet:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Remove Window from Set",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "selectPreviousTab:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Show Previous Tab",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "selectNextTab:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Show Next Tab",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "moveTabToNewWindow:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Move Tab to New Window",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "mergeAllWindows:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "Merge All Windows",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "0",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "411.0,0.0,49.0,30.0",
+      "identifier" : "",
+      "role" : "AXMenuBarItem",
+      "selected" : "0",
+      "title" : "Help",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "",
+      "role" : "AXMenu",
+      "selected" : "0",
+      "title" : "",
+      "value" : ""
+    },
+    {
+      "description" : "",
+      "enabled" : "1",
+      "frame" : "0.0,768.0,0.0,0.0",
+      "identifier" : "showHelp:",
+      "role" : "AXMenuItem",
+      "selected" : "0",
+      "title" : "ToolbarOverflowWidth Help",
+      "value" : ""
+    }
+  ],
+  "overflowViewerFrame" : "0.0,768.0,0.0,0.0",
+  "scenario" : "baseline",
+  "screenFrame" : [
+    0,
+    0,
+    1024,
+    768
+  ],
+  "screenScale" : 1,
+  "swiftSelection" : {
+    "compare" : false,
+    "diagnostic" : 0,
+    "exportFormat" : 0,
+    "tools" : 0
+  },
+  "titleAXFrame" : "0.0,0.0,0.0,0.0",
+  "toolbarAXFrame" : "70.0,40.0,1145.0,52.0",
+  "toolbarItems" : [
+    {
+      "accessibilityIdentifier" : "",
+      "currentSize" : [
+        213,
+        36
+      ],
+      "defaultItemPadding" : "unavailable",
+      "identifier" : "48FDE5F3-1F1D-4637-8FBA-37D813712CB6",
+      "label" : "Tools",
+      "layoutRect" : "<_NSViewAlignmentLayoutRect: 0x78b5ef4a40>",
+      "maxSize" : [
+        213,
+        36
+      ],
+      "menuFormRepresentation" : "Tools",
+      "minSize" : [
+        213,
+        36
+      ],
+      "participation" : "unavailable",
+      "partition" : "unavailable",
+      "priority" : 0,
+      "priorityIndex" : "unavailable",
+      "selection" : "unavailable",
+      "sourceOrder" : 0,
+      "visible" : true
+    },
+    {
+      "accessibilityIdentifier" : "unavailable",
+      "currentSize" : "unavailable",
+      "defaultItemPadding" : "unavailable",
+      "identifier" : "NSToolbarSpaceItem",
+      "label" : "",
+      "layoutRect" : "unavailable",
+      "maxSize" : [
+        8,
+        36
+      ],
+      "menuFormRepresentation" : "",
+      "minSize" : [
+        8,
+        36
+      ],
+      "participation" : "unavailable",
+      "partition" : "unavailable",
+      "priority" : 0,
+      "priorityIndex" : "unavailable",
+      "selection" : "unavailable",
+      "sourceOrder" : 1,
+      "visible" : true
+    },
+    {
+      "accessibilityIdentifier" : "",
+      "currentSize" : [
+        200,
+        36
+      ],
+      "defaultItemPadding" : "unavailable",
+      "identifier" : "27F9D3AF-B159-4441-A605-08BA6C4786A7",
+      "label" : "",
+      "layoutRect" : "<_NSViewAlignmentLayoutRect: 0x78b5ef5140>",
+      "maxSize" : [
+        200,
+        36
+      ],
+      "menuFormRepresentation" : "Composite",
+      "minSize" : [
+        200,
+        36
+      ],
+      "participation" : "unavailable",
+      "partition" : "unavailable",
+      "priority" : 0,
+      "priorityIndex" : "unavailable",
+      "selection" : "unavailable",
+      "sourceOrder" : 2,
+      "visible" : true
+    },
+    {
+      "accessibilityIdentifier" : "unavailable",
+      "currentSize" : "unavailable",
+      "defaultItemPadding" : "unavailable",
+      "identifier" : "NSToolbarFlexibleSpaceItem",
+      "label" : "",
+      "layoutRect" : "unavailable",
+      "maxSize" : [
+        20000,
+        36
+      ],
+      "menuFormRepresentation" : "",
+      "minSize" : [
+        8,
+        36
+      ],
+      "participation" : "unavailable",
+      "partition" : "unavailable",
+      "priority" : 0,
+      "priorityIndex" : "unavailable",
+      "selection" : "unavailable",
+      "sourceOrder" : 3,
+      "visible" : true
+    },
+    {
+      "accessibilityIdentifier" : "",
+      "currentSize" : [
+        36,
+        36
+      ],
+      "defaultItemPadding" : "unavailable",
+      "identifier" : "28851906-DF7B-42D5-A8A8-7C98F13BCCF7",
+      "label" : "",
+      "layoutRect" : "<_NSViewAlignmentLayoutRect: 0x78b5ef5840>",
+      "maxSize" : [
+        36,
+        36
+      ],
+      "menuFormRepresentation" : "",
+      "minSize" : [
+        36,
+        36
+      ],
+      "participation" : "unavailable",
+      "partition" : "unavailable",
+      "priority" : 0,
+      "priorityIndex" : "unavailable",
+      "selection" : "unavailable",
+      "sourceOrder" : 4,
+      "visible" : true
+    },
+    {
+      "accessibilityIdentifier" : "",
+      "currentSize" : [
+        37,
+        36
+      ],
+      "defaultItemPadding" : "unavailable",
+      "identifier" : "D18875BB-D0D9-42C4-BE89-04389DFE0BBB",
+      "label" : "",
+      "layoutRect" : "<_NSViewAlignmentLayoutRect: 0x78b5ef5dc0>",
+      "maxSize" : [
+        37,
+        36
+      ],
+      "menuFormRepresentation" : "",
+      "minSize" : [
+        37,
+        36
+      ],
+      "participation" : "unavailable",
+      "partition" : "unavailable",
+      "priority" : 0,
+      "priorityIndex" : "unavailable",
+      "selection" : "unavailable",
+      "sourceOrder" : 5,
+      "visible" : true
+    },
+    {
+      "accessibilityIdentifier" : "",
+      "currentSize" : [
+        42,
+        36
+      ],
+      "defaultItemPadding" : "unavailable",
+      "identifier" : "228651E2-B049-412E-AE48-BC0611F86CA2",
+      "label" : "More image actions",
+      "layoutRect" : "<_NSViewAlignmentLayoutRect: 0x78b5ef6340>",
+      "maxSize" : [
+        42,
+        36
+      ],
+      "menuFormRepresentation" : "More image actions",
+      "minSize" : [
+        42,
+        36
+      ],
+      "participation" : "unavailable",
+      "partition" : "unavailable",
+      "priority" : 0,
+      "priorityIndex" : "unavailable",
+      "selection" : "unavailable",
+      "sourceOrder" : 6,
+      "visible" : true
+    },
+    {
+      "accessibilityIdentifier" : "",
+      "currentSize" : [
+        92,
+        36
+      ],
+      "defaultItemPadding" : "unavailable",
+      "identifier" : "058348E9-D9F1-4BF3-8EA7-BAFB1B240F9D",
+      "label" : "",
+      "layoutRect" : "<_NSViewAlignmentLayoutRect: 0x78b5ef68c0>",
+      "maxSize" : [
+        92,
+        36
+      ],
+      "menuFormRepresentation" : "Compare",
+      "minSize" : [
+        92,
+        36
+      ],
+      "participation" : "unavailable",
+      "partition" : "unavailable",
+      "priority" : 0,
+      "priorityIndex" : "unavailable",
+      "selection" : "unavailable",
+      "sourceOrder" : 7,
+      "visible" : true
+    }
+  ],
+  "width" : 1145,
+  "windowFrame" : [
+    70,
+    288,
+    1145,
+    440
+  ],
+  "windowKey" : true,
+  "windowScale" : 1,
+  "windowTitle" : "",
+  "windowVisible" : true
+}

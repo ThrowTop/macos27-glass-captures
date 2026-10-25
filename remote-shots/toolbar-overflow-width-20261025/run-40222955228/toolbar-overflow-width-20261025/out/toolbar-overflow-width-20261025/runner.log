@@ -1,0 +1,6 @@
+CASE scenario=baseline appearance=dark
+CASE scenario=window-title appearance=dark
+CASE scenario=single-button appearance=dark
+CASE scenario=baseline appearance=light
+CASE scenario=window-title appearance=light
+CASE scenario=single-button appearance=light
