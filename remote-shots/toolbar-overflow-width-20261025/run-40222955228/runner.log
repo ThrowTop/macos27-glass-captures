@@ -1,0 +1,179 @@
+capture	Set up job	﻿2026-10-25T18:48:01.4361710Z Current runner version: '2.338.0'
+capture	Set up job	2026-10-25T18:48:01.4377690Z ##[group]Runner Image Provisioner
+capture	Set up job	2026-10-25T18:48:01.4378230Z Hosted Compute Agent
+capture	Set up job	2026-10-25T18:48:01.4378610Z Version: 20261021.618
+capture	Set up job	2026-10-25T18:48:01.4379020Z Commit: 21505ad2541d5be6135ed84fc33697146cf75b8e
+capture	Set up job	2026-10-25T18:48:01.4379700Z Build Date: 2026-10-21T00:45:21Z
+capture	Set up job	2026-10-25T18:48:01.4380170Z Worker ID: {5186cb0b-f198-43d0-b46e-bf7a73045a8c}
+capture	Set up job	2026-10-25T18:48:01.4380640Z Region: westus
+capture	Set up job	2026-10-25T18:48:01.4381000Z Cloud: MacCloud
+capture	Set up job	2026-10-25T18:48:01.4381370Z ##[endgroup]
+capture	Set up job	2026-10-25T18:48:01.4382260Z ##[group]Operating System
+capture	Set up job	2026-10-25T18:48:01.4382650Z macOS
+capture	Set up job	2026-10-25T18:48:01.4382990Z 27.0.1
+capture	Set up job	2026-10-25T18:48:01.4383320Z 26A434
+capture	Set up job	2026-10-25T18:48:01.4383660Z ##[endgroup]
+capture	Set up job	2026-10-25T18:48:01.4384010Z ##[group]Runner Image
+capture	Set up job	2026-10-25T18:48:01.4384390Z Image: xcode-27-arm64
+capture	Set up job	2026-10-25T18:48:01.4384760Z Version: 20261023.0307.1
+capture	Set up job	2026-10-25T18:48:01.4385470Z Included Software: https://github.com/actions/runner-images/blob/xcode-27-arm64/20261023.0307/images/macos/xcode-27-arm64-Readme.md
+capture	Set up job	2026-10-25T18:48:01.4386530Z Image Release: https://github.com/actions/runner-images/releases/tag/xcode-27-arm64%2F20261023.0307
+capture	Set up job	2026-10-25T18:48:01.4387250Z ##[endgroup]
+capture	Set up job	2026-10-25T18:48:01.4387990Z ##[group]GITHUB_TOKEN Permissions
+capture	Set up job	2026-10-25T18:48:01.4389010Z Contents: read
+capture	Set up job	2026-10-25T18:48:01.4389390Z Metadata: read
+capture	Set up job	2026-10-25T18:48:01.4389760Z ##[endgroup]
+capture	Set up job	2026-10-25T18:48:01.4391000Z Secret source: Actions
+capture	Set up job	2026-10-25T18:48:01.4391560Z Cache mode: write
+capture	Set up job	2026-10-25T18:48:01.4391980Z Prepare workflow directory
+capture	Set up job	2026-10-25T18:48:01.4588600Z Prepare all required actions
+capture	Set up job	2026-10-25T18:48:01.4618860Z Getting action download info
+capture	Set up job	2026-10-25T18:48:01.5970690Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+capture	Set up job	2026-10-25T18:48:01.8041800Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+capture	Set up job	2026-10-25T18:48:02.0987420Z Complete job name: capture
+capture	Run actions/checkout@v4	﻿2026-10-25T18:48:02.1480950Z ##[group]Run actions/checkout@v4
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.1481490Z with:
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.1481820Z   repository: ThrowTop/macos27-glass-captures
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.1484390Z   token: ***
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.1484690Z   ssh-strict: true
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.1484990Z   ssh-user: git
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.1485300Z   persist-credentials: true
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.1485640Z   clean: true
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.1485950Z   sparse-checkout-cone-mode: true
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.1486310Z   fetch-depth: 1
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.1486620Z   fetch-tags: false
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.1486920Z   show-progress: true
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.1487240Z   lfs: false
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.1487530Z   submodules: false
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.1487850Z   set-safe-directory: true
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.1488200Z   allow-unsafe-pr-checkout: false
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.1488650Z ##[endgroup]
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.5492730Z Syncing repository: ThrowTop/macos27-glass-captures
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.5495010Z ##[group]Getting Git version info
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.5495830Z Working directory is '/Users/runner/work/macos27-glass-captures/macos27-glass-captures'
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.5497150Z [command]/opt/homebrew/bin/git version
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6035200Z git version 2.56.0
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6049440Z ##[endgroup]
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6056180Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/a79c7b25-6c38-4827-b9c9-a1d64d37db8f/.gitconfig'
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6062890Z Temporarily overriding HOME='/Users/runner/work/_temp/a79c7b25-6c38-4827-b9c9-a1d64d37db8f' before making global git config changes
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6064030Z Adding repository directory to the temporary git global config as a safe directory
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6066540Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/macos27-glass-captures/macos27-glass-captures
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6217110Z Deleting the contents of '/Users/runner/work/macos27-glass-captures/macos27-glass-captures'
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6219000Z ##[group]Initializing the repository
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6221390Z [command]/opt/homebrew/bin/git init /Users/runner/work/macos27-glass-captures/macos27-glass-captures
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6445970Z hint: Using 'master' as the name for the initial branch. This default branch name
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6447310Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6448190Z hint: to use in all of your new repositories, which will suppress this warning,
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6448750Z hint: call:
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6449250Z hint:
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6449870Z hint: 	git config --global init.defaultBranch <name>
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6451070Z hint:
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6451700Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6452420Z hint: 'development'. The just-created branch can be renamed via this command:
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6453260Z hint:
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6453650Z hint: 	git branch -m <name>
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6454160Z hint:
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6454620Z hint: Disable this message with "git config set advice.defaultBranchName false"
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6457000Z Initialized empty Git repository in /Users/runner/work/macos27-glass-captures/macos27-glass-captures/.git/
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6465770Z [command]/opt/homebrew/bin/git remote add origin https://github.com/ThrowTop/macos27-glass-captures
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6550890Z ##[endgroup]
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6551600Z ##[group]Disabling automatic garbage collection
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6553740Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6647600Z ##[endgroup]
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6648440Z ##[group]Setting up auth
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6649520Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.6707030Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.7740940Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.7797840Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.8605170Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.8661730Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.9349650Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.9411590Z ##[endgroup]
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.9412270Z ##[group]Fetching the repository
+capture	Run actions/checkout@v4	2026-10-25T18:48:02.9416860Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +b0f0168c7d48158682809ee105afc7ba84a84181:refs/remotes/origin/luna/toolbar-overflow-width
+capture	Run actions/checkout@v4	2026-10-25T18:48:04.0612370Z From https://github.com/ThrowTop/macos27-glass-captures
+capture	Run actions/checkout@v4	2026-10-25T18:48:04.0614230Z  * [new ref]         b0f0168c7d48158682809ee105afc7ba84a84181 -> origin/luna/toolbar-overflow-width
+capture	Run actions/checkout@v4	2026-10-25T18:48:04.0753840Z ##[endgroup]
+capture	Run actions/checkout@v4	2026-10-25T18:48:04.0754950Z ##[group]Determining the checkout info
+capture	Run actions/checkout@v4	2026-10-25T18:48:04.0755940Z ##[endgroup]
+capture	Run actions/checkout@v4	2026-10-25T18:48:04.0756660Z [command]/opt/homebrew/bin/git sparse-checkout disable
+capture	Run actions/checkout@v4	2026-10-25T18:48:04.0758690Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+capture	Run actions/checkout@v4	2026-10-25T18:48:04.0781940Z ##[group]Checking out the ref
+capture	Run actions/checkout@v4	2026-10-25T18:48:04.0785110Z [command]/opt/homebrew/bin/git checkout --progress --force -B luna/toolbar-overflow-width refs/remotes/origin/luna/toolbar-overflow-width
+capture	Run actions/checkout@v4	2026-10-25T18:48:04.1075110Z Switched to a new branch 'luna/toolbar-overflow-width'
+capture	Run actions/checkout@v4	2026-10-25T18:48:04.1170460Z branch 'luna/toolbar-overflow-width' set up to track 'origin/luna/toolbar-overflow-width'.
+capture	Run actions/checkout@v4	2026-10-25T18:48:04.1184830Z ##[endgroup]
+capture	Run actions/checkout@v4	2026-10-25T18:48:04.1199750Z [command]/opt/homebrew/bin/git log -1 --format=%H
+capture	Run actions/checkout@v4	2026-10-25T18:48:04.1261500Z b0f0168c7d48158682809ee105afc7ba84a84181
+capture	Environment	﻿2026-10-25T18:48:04.1420270Z ##[group]Run sw_vers
+capture	Environment	2026-10-25T18:48:04.1420850Z ^[[36;1msw_vers^[[0m
+capture	Environment	2026-10-25T18:48:04.1421230Z ^[[36;1muname -a^[[0m
+capture	Environment	2026-10-25T18:48:04.1421640Z ^[[36;1mxcodebuild -version^[[0m
+capture	Environment	2026-10-25T18:48:04.1465480Z shell: /bin/bash -e {0}
+capture	Environment	2026-10-25T18:48:04.1465960Z ##[endgroup]
+capture	Environment	2026-10-25T18:48:04.1768680Z ProductName:		macOS
+capture	Environment	2026-10-25T18:48:04.1769590Z ProductVersion:		27.0.1
+capture	Environment	2026-10-25T18:48:04.1770090Z BuildVersion:		26A434
+capture	Environment	2026-10-25T18:48:04.1791290Z Darwin iad20-fj919-20c5324b-9eb3-4e2b-8edf-57a68b0cb03d-56AA836521CC.local 27.0.0 Darwin Kernel Version 27.0.0: Tue Aug 11 21:00:07 PDT 2026; root:xnu-13432.1.9~1/RELEASE_ARM64_VMAPPLE arm64
+capture	Environment	2026-10-25T18:48:04.3185570Z Xcode 27.1
+capture	Environment	2026-10-25T18:48:04.3192010Z Build version 27A9275
+capture	Build	﻿2026-10-25T18:48:04.3254570Z ##[group]Run swift build -c release --product ToolbarOverflowWidth > build.log 2>&1 || { cat build.log; exit 1; }
+capture	Build	2026-10-25T18:48:04.3256630Z ^[[36;1mswift build -c release --product ToolbarOverflowWidth > build.log 2>&1 || { cat build.log; exit 1; }^[[0m
+capture	Build	2026-10-25T18:48:04.3293840Z shell: /bin/bash -e {0}
+capture	Build	2026-10-25T18:48:04.3294430Z ##[endgroup]
+capture	Capture	﻿2026-10-25T18:48:34.3086740Z ##[group]Run bash scripts/run-toolbar-overflow-width.sh
+capture	Capture	2026-10-25T18:48:34.3087460Z ^[[36;1mbash scripts/run-toolbar-overflow-width.sh^[[0m
+capture	Capture	2026-10-25T18:48:34.3311710Z shell: /bin/bash -e {0}
+capture	Capture	2026-10-25T18:48:34.3312120Z ##[endgroup]
+capture	Capture	2026-10-25T18:48:34.9254640Z CASE scenario=baseline appearance=dark
+capture	Capture	2026-10-25T18:50:23.3128920Z CASE scenario=window-title appearance=dark
+capture	Capture	2026-10-25T18:52:09.3363160Z CASE scenario=single-button appearance=dark
+capture	Capture	2026-10-25T18:52:11.2378310Z CASE scenario=baseline appearance=light
+capture	Capture	2026-10-25T18:53:57.8817650Z CASE scenario=window-title appearance=light
+capture	Capture	2026-10-25T18:55:43.4746060Z CASE scenario=single-button appearance=light
+capture	Capture	2026-10-25T18:55:47.2344570Z membership samples: 2240
+capture	Upload results	﻿2026-10-25T18:55:47.2826680Z ##[group]Run actions/upload-artifact@v4
+capture	Upload results	2026-10-25T18:55:47.2827060Z with:
+capture	Upload results	2026-10-25T18:55:47.2827300Z   name: toolbar-overflow-width-20261025
+capture	Upload results	2026-10-25T18:55:47.2827600Z   path: out/
+capture	Upload results	build.log
+capture	Upload results	
+capture	Upload results	2026-10-25T18:55:47.2827890Z   if-no-files-found: warn
+capture	Upload results	2026-10-25T18:55:47.2828150Z   retention-days: 30
+capture	Upload results	2026-10-25T18:55:47.2828440Z   compression-level: 6
+capture	Upload results	2026-10-25T18:55:47.2828690Z   overwrite: false
+capture	Upload results	2026-10-25T18:55:47.2828950Z   include-hidden-files: false
+capture	Upload results	2026-10-25T18:55:47.2829200Z ##[endgroup]
+capture	Upload results	2026-10-25T18:55:47.5707230Z (node:28108) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+capture	Upload results	2026-10-25T18:55:47.5708340Z (Use `node --trace-deprecation ...` to show where the warning was created)
+capture	Upload results	2026-10-25T18:55:47.7652400Z Multiple search paths detected. Calculating the least common ancestor of all paths
+capture	Upload results	2026-10-25T18:55:47.7653540Z The least common ancestor is /Users/runner/work/macos27-glass-captures/macos27-glass-captures. This will be the root directory of the artifact
+capture	Upload results	2026-10-25T18:55:47.7654400Z With the provided path, there will be 2252 files uploaded
+capture	Upload results	2026-10-25T18:55:47.7654810Z Artifact name is valid!
+capture	Upload results	2026-10-25T18:55:47.7655020Z Root directory input is valid!
+capture	Upload results	2026-10-25T18:55:47.9952720Z Beginning upload of artifact content to blob storage
+capture	Upload results	2026-10-25T18:55:49.5147290Z (node:28108) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+capture	Upload results	2026-10-25T18:55:49.6790630Z Uploaded bytes 8256900
+capture	Upload results	2026-10-25T18:55:49.6963130Z Finished uploading artifact content to blob storage!
+capture	Upload results	2026-10-25T18:55:49.6965280Z SHA256 digest of uploaded artifact zip is 05c8433a4bd5df885f6f174eb055b7d588ceaea33d3e5978aef80ffee24a2e55
+capture	Upload results	2026-10-25T18:55:49.6965760Z Finalizing artifact upload
+capture	Upload results	2026-10-25T18:55:50.0755830Z Artifact toolbar-overflow-width-20261025.zip successfully finalized. Artifact ID 12610396537
+capture	Upload results	2026-10-25T18:55:50.0761000Z Artifact toolbar-overflow-width-20261025 has been successfully uploaded! Final size is 8256900 bytes. Artifact ID is 12610396537
+capture	Upload results	2026-10-25T18:55:50.0769000Z Artifact download URL: https://github.com/ThrowTop/macos27-glass-captures/actions/runs/40222955228/artifacts/12610396537
+capture	Post Run actions/checkout@v4	﻿2026-10-25T18:55:50.0945360Z Post job cleanup.
+capture	Post Run actions/checkout@v4	2026-10-25T18:55:50.1892260Z [command]/opt/homebrew/bin/git version
+capture	Post Run actions/checkout@v4	2026-10-25T18:55:50.2076270Z git version 2.56.0
+capture	Post Run actions/checkout@v4	2026-10-25T18:55:50.2093660Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/e472951e-7e7a-4797-a7a7-6962f4953d53/.gitconfig'
+capture	Post Run actions/checkout@v4	2026-10-25T18:55:50.2101140Z Temporarily overriding HOME='/Users/runner/work/_temp/e472951e-7e7a-4797-a7a7-6962f4953d53' before making global git config changes
+capture	Post Run actions/checkout@v4	2026-10-25T18:55:50.2102120Z Adding repository directory to the temporary git global config as a safe directory
+capture	Post Run actions/checkout@v4	2026-10-25T18:55:50.2103810Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/macos27-glass-captures/macos27-glass-captures
+capture	Post Run actions/checkout@v4	2026-10-25T18:55:50.2199580Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+capture	Post Run actions/checkout@v4	2026-10-25T18:55:50.2262610Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+capture	Post Run actions/checkout@v4	2026-10-25T18:55:50.3128420Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+capture	Post Run actions/checkout@v4	2026-10-25T18:55:50.3180380Z http.https://github.com/.extraheader
+capture	Post Run actions/checkout@v4	2026-10-25T18:55:50.3187210Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
+capture	Post Run actions/checkout@v4	2026-10-25T18:55:50.3249210Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+capture	Post Run actions/checkout@v4	2026-10-25T18:55:50.4232640Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+capture	Post Run actions/checkout@v4	2026-10-25T18:55:50.4253410Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+capture	Complete job	﻿2026-10-25T18:55:50.4988470Z Cleaning up orphan processes
+capture	Complete job	2026-10-25T18:55:50.9026710Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
