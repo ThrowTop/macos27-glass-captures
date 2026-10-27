@@ -134,7 +134,9 @@ private func save(_ image: CGImage, _ url: URL) throws {
     CGImageDestinationAddImage(destination, image, nil)
     guard CGImageDestinationFinalize(destination) else { throw CocoaError(.fileWriteUnknown) }
 }
-let app = NSApplication.shared
-let delegate = Capture()
-app.delegate = delegate
-app.run()
+MainActor.assumeIsolated {
+    let app = NSApplication.shared
+    let delegate = Capture()
+    app.delegate = delegate
+    app.run()
+}
