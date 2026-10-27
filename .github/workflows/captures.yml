@@ -16,6 +16,11 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+      - name: Configure HiDPI virtual display
+        if: inputs.mode == 'contexts'
+        run: |
+          "$HOME/work/hidpi" 1920 1080 60
+          sleep 8
       - name: Environment
         run: |
           sw_vers
