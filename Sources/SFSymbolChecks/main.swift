@@ -135,7 +135,7 @@ if symbolDefaultsMode {
            let value = glyph.perform(defaultsSelector)?.takeUnretainedValue() as? [String: Any] {
             defaults = value
         }
-        try emit(["name": name, "defaults": defaults], defaultsFile)
+        try emit(["name": name, "defaults": defaults.mapValues(json)], defaultsFile)
     }
     try defaultsFile.close()
     print("DONE mode=\(mode) symbols=\(symbols.count)")
