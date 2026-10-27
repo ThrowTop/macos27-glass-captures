@@ -12,12 +12,16 @@ let weightValues: [CGFloat] = [-0.80, -0.60, -0.40, 0.00, 0.23, 0.30, 0.40, 0.56
 let sizeNames = ["small", "medium", "large"]
 let sizeValues: [CGFloat] = [1.0, 1.276, 1.647]
 let pointSizes = [9, 13, 17, 20, 28, 100]
-let smoke = CommandLine.arguments.dropFirst().first == "smoke"
-let symbols = smoke ? ["checkmark", "plus"] : baseSymbols
+let mode = CommandLine.arguments.dropFirst().first ?? "full"
+let allSymbols = mode == "all-symbols"
+let smoke = mode == "smoke"
+let symbols: [String] = allSymbols
+    ? try String(contentsOfFile: "Resources/symbol-names.txt", encoding: .utf8).split(whereSeparator: \.isNewline).map(String.init)
+    : (smoke ? ["checkmark", "plus"] : baseSymbols)
 let v1Weights = smoke ? [4] : [1, 4, 9]
 let sizes = smoke ? [2] : [1, 2, 3]
 let points = smoke ? [100] : pointSizes
-let root = URL(fileURLWithPath: "out/sf-symbol-checks", isDirectory: true)
+let root = URL(fileURLWithPath: allSymbols ? "out" : "out/sf-symbol-checks", isDirectory: true)
 try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
 func writer(_ name: String) throws -> FileHandle {
     let url = root.appendingPathComponent(name)
@@ -117,12 +121,12 @@ func lookupContinuous(_ name: String, _ size: CGFloat, _ weight: CGFloat, _ pt: 
     continuous(catalog, continuousSel, name as NSString, 1.0, 7, 5, size, weight, pt, "NSAppearanceNameSystem" as NSString, Locale(identifier: "en_US") as NSLocale) as? NSObject
 }
 
-let v1 = try writer("v1.jsonl")
-for name in symbols { for size in sizes { for weight in v1Weights { for pt in points {
+let v1 = allSymbols ? FileHandle.nullDevice : try writer("v1.jsonl")
+if !allSymbols { for name in symbols { for size in sizes { for weight in v1Weights { for pt in points {
     guard let g = lookup(name, size, weight, CGFloat(pt)) else { continue }
     let layerPaths = paths(g).mapValues { $0.map { ["path": $0] } }
     try emit(["schemaVersion": 2, "name": name, "idiom": "mac", "appearance": "default", "weightCode": weight, "sizeCode": size, "pointSize": pt, "layers": layerPaths, "metrics": metrics(g)], v1)
-}}}}
+}}}} }
 try v1.close()
 
 func nsWeight(_ code: Int) -> NSFont.Weight { NSFont.Weight(rawValue: weightValues[code - 1]) }
@@ -135,23 +139,27 @@ func optionalSelector(_ image: NSImage, _ name: String) -> Any {
     guard image.responds(to: sel) else { return "absent" }
     return json(image.value(forKey: name))
 }
-let v2 = try writer("v2.jsonl")
-let v3 = try writer("v3.jsonl")
+let v2 = allSymbols ? FileHandle.nullDevice : try writer("v2.jsonl")
+let v3 = try writer(allSymbols ? "all.jsonl" : "v3.jsonl")
 let appWeights = smoke ? [4] : [4, 7]
 let layoutPoints = smoke ? [13] : [13, 20]
 let layoutScales = smoke ? [1] : [0, 1, 2]
-let rasterWeights = smoke ? [4] : [1, 4, 7, 9]
-let rasterScales = smoke ? [1] : [0, 1, 2]
-let rasterPoints = smoke ? [13] : [13, 20]
+let rasterWeights = allSymbols ? [4] : (smoke ? [4] : [1, 4, 7, 9])
+let rasterScales = allSymbols ? [1] : (smoke ? [1] : [0, 1, 2])
+let rasterPoints = allSymbols ? [20] : (smoke ? [13] : [13, 20])
+let missing = allSymbols ? try writer("all-missing.txt") : FileHandle.nullDevice
 for name in symbols {
-    for pt in layoutPoints { for w in appWeights { for sc in layoutScales {
+    if !allSymbols { for pt in layoutPoints { for w in appWeights { for sc in layoutScales {
         guard let image = configured(name, pt, w, sc) else { continue }
         let app: [String: Any] = ["size": [image.size.width, image.size.height], "alignmentRect": json(NSValue(rect: image.alignmentRect)), "baselineOffsetFromBottom": optionalSelector(image, "baselineOffsetFromBottom"), "capInsets": optionalSelector(image, "capInsets"), "alignmentInsets": optionalSelector(image, "alignmentInsets")]
         let swift = SwiftUILayoutProbe.measure(name: name, pt: pt, weight: w, scale: sc)
         try emit(["name": name, "pointSize": pt, "weightCode": w, "scale": sizeNames[sc], "appKit": app, "swiftUI": swift], v2)
-    }}}
+    }}} }
     for pt in rasterPoints { for w in rasterWeights { for sc in rasterScales {
-        guard let image = configured(name, pt, w, sc) else { continue }
+        guard let image = configured(name, pt, w, sc) else {
+            if allSymbols { missing.write(Data((name + "\n").utf8)) }
+            continue
+        }
         for backing in 1...2 {
             let width = max(1, Int(ceil(image.size.width * CGFloat(backing))))
             let height = max(1, Int(ceil(image.size.height * CGFloat(backing))))
@@ -166,25 +174,25 @@ for name in symbols {
             ctx.compositingOperation = .sourceAtop
             NSColor.black.setFill(); rect.fill()
             NSGraphicsContext.restoreGraphicsState()
-            let filename = "\(weightNames[w - 1])-\(sizeNames[sc])-\(pt)pt@\(backing)x.png"
-            let dir = root.appendingPathComponent("v3/\(name)", isDirectory: true)
+            let filename = allSymbols ? "regular-medium-20pt@\(backing)x.png" : "\(weightNames[w - 1])-\(sizeNames[sc])-\(pt)pt@\(backing)x.png"
+            let dir = root.appendingPathComponent("\(allSymbols ? "all" : "v3")/\(name)", isDirectory: true)
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
             try rep.representation(using: .png, properties: [:])?.write(to: dir.appendingPathComponent(filename))
             let rb = UserDefaults.standard.object(forKey: "_NSImageSymbolsAreRBLayerBacked")
-            try emit(["name": name, "weight": weightNames[w - 1], "scale": sizeNames[sc], "pointSize": pt, "backingScale": backing, "file": "v3/\(name)/\(filename)", "imageSizePoints": [image.size.width, image.size.height], "pixelSize": [width, height], "drawRect": [rect.origin.x, rect.origin.y, rect.width, rect.height], "rbLayerBacked": rb.map(json) ?? "absent"], v3)
+            try emit(["name": name, "weight": weightNames[w - 1], "scale": sizeNames[sc], "pointSize": pt, "backingScale": backing, "file": "\(allSymbols ? "all" : "v3")/\(name)/\(filename)", "imageSizePoints": [image.size.width, image.size.height], "pixelSize": [width, height], "drawRect": [rect.origin.x, rect.origin.y, rect.width, rect.height], "rbLayerBacked": rb.map(json) ?? "absent"], v3)
         }
     }}}
 }
-try v2.close(); try v3.close()
+try v2.close(); try v3.close(); try missing.close()
 
-let v4 = try writer("v4.jsonl")
-for name in symbols { for w in (smoke ? [4] : weightCodes) { for sc in (smoke ? [1] : [0, 1, 2]) {
+let v4 = allSymbols ? FileHandle.nullDevice : try writer("v4.jsonl")
+if !allSymbols { for name in symbols { for w in (smoke ? [4] : weightCodes) { for sc in (smoke ? [1] : [0, 1, 2]) {
     let sizeCode = sc + 1
     guard let d = lookup(name, sizeCode, w, 20), let c = lookupContinuous(name, sizeValues[sc], weightValues[w - 1], 20) else { continue }
     try emit(["name": name, "weightCode": w, "scale": sizeNames[sc], "discretePaths": paths(d), "continuousPaths": paths(c), "discreteMetrics": metrics(d), "continuousMetrics": metrics(c)], v4)
-}}}
+}}} }
 try v4.close()
-print("DONE mode=\(smoke ? "smoke" : "full") symbols=\(symbols.count)")
+print("DONE mode=\(mode) symbols=\(symbols.count)")
 
 private struct FramePreference: PreferenceKey {
     static var defaultValue: [String: CGRect] = [:]

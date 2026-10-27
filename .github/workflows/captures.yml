@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "smoke, full, s9, or s10-overflow"
+        description: "smoke, full, s9, s10-overflow, contexts, or all-symbols"
         required: false
         default: smoke
 
@@ -25,6 +25,8 @@ jobs:
         run: |
           if [ '${{ inputs.mode }}' = 's10-overflow' ]; then
             swiftc -O Sources/SFSymbolChecks/s10-overflow.swift -o sf-symbol-checks -framework AppKit -framework SwiftUI -framework CoreGraphics
+          elif [ '${{ inputs.mode }}' = 'contexts' ]; then
+            swiftc -O Sources/SFSymbolChecks/contexts.swift -o sf-symbol-checks -framework AppKit -framework SwiftUI -framework ScreenCaptureKit -framework ImageIO
           elif [ '${{ inputs.mode }}' = 's9' ] || [ '${{ inputs.mode }}' = 's9-variable' ]; then
             swiftc -O Sources/SFSymbolChecks/s9.swift -o sf-symbol-checks -framework AppKit -framework SwiftUI -framework CoreGraphics -framework CoreText
           else
