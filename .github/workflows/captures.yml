@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "smoke, full, s9, s10-overflow, contexts, or all-symbols"
+        description: "smoke, full, s9, s10-overflow, contexts, or all-symbols, or symbol-defaults"
         required: false
         default: smoke
 

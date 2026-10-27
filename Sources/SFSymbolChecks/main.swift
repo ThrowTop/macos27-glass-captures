@@ -17,7 +17,8 @@ let review = mode == "review"
 // matrix: the base symbols at every weight and scale over a range of point sizes, written to matrix/.
 let matrix = mode == "matrix"
 // review: the names in Resources/review-names.txt at black weight, large scale, 64 pt, written like all-symbols.
-let allSymbols = mode == "all-symbols" || review
+let symbolDefaultsMode = mode == "symbol-defaults"
+let allSymbols = mode == "all-symbols" || review || symbolDefaultsMode
 let smoke = mode == "smoke"
 let symbols: [String] = allSymbols
     ? try String(contentsOfFile: review ? "Resources/review-names.txt" : "Resources/symbol-names.txt", encoding: .utf8).split(whereSeparator: \.isNewline).map(String.init)
@@ -123,6 +124,22 @@ func lookup(_ name: String, _ size: Int, _ weight: Int, _ pt: CGFloat) -> NSObje
 }
 func lookupContinuous(_ name: String, _ size: CGFloat, _ weight: CGFloat, _ pt: CGFloat) -> NSObject? {
     continuous(catalog, continuousSel, name as NSString, 1.0, 7, 5, size, weight, pt, "NSAppearanceNameSystem" as NSString, Locale(identifier: "en_US") as NSLocale) as? NSObject
+}
+
+if symbolDefaultsMode {
+    let defaultsFile = try writer("symbol-defaults.jsonl")
+    let defaultsSelector = NSSelectorFromString("symbolDefaults")
+    for name in symbols {
+        var defaults: [String: Any] = [:]
+        if let glyph = lookup(name, 2, 4, 13), glyph.responds(to: defaultsSelector),
+           let value = glyph.perform(defaultsSelector)?.takeUnretainedValue() as? [String: Any] {
+            defaults = value
+        }
+        try emit(["name": name, "defaults": defaults], defaultsFile)
+    }
+    try defaultsFile.close()
+    print("DONE mode=\(mode) symbols=\(symbols.count)")
+    exit(0)
 }
 
 let v1 = allSymbols ? FileHandle.nullDevice : try writer("v1.jsonl")
