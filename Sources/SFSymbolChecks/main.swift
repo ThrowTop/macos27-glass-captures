@@ -14,6 +14,8 @@ let sizeValues: [CGFloat] = [1.0, 1.276, 1.647]
 let pointSizes = [9, 13, 17, 20, 28, 100]
 let mode = CommandLine.arguments.dropFirst().first ?? "full"
 let review = mode == "review"
+// matrix: the base symbols at every weight and scale over a range of point sizes, written to matrix/.
+let matrix = mode == "matrix"
 // review: the names in Resources/review-names.txt at black weight, large scale, 64 pt, written like all-symbols.
 let allSymbols = mode == "all-symbols" || review
 let smoke = mode == "smoke"
@@ -141,17 +143,18 @@ func optionalSelector(_ image: NSImage, _ name: String) -> Any {
     guard image.responds(to: sel) else { return "absent" }
     return json(image.value(forKey: name))
 }
-let v2 = allSymbols ? FileHandle.nullDevice : try writer("v2.jsonl")
-let v3 = try writer(allSymbols ? "all.jsonl" : "v3.jsonl")
+let v2 = allSymbols || matrix ? FileHandle.nullDevice : try writer("v2.jsonl")
+let v3 = try writer(matrix ? "matrix.jsonl" : allSymbols ? "all.jsonl" : "v3.jsonl")
+let outputDir = matrix ? "matrix" : allSymbols ? "all" : "v3"
 let appWeights = smoke ? [4] : [4, 7]
 let layoutPoints = smoke ? [13] : [13, 20]
 let layoutScales = smoke ? [1] : [0, 1, 2]
-let rasterWeights = review ? [9] : allSymbols ? [4] : (smoke ? [4] : [1, 4, 7, 9])
-let rasterScales = review ? [2] : allSymbols ? [1] : (smoke ? [1] : [0, 1, 2])
-let rasterPoints = review ? [64] : allSymbols ? [20] : (smoke ? [13] : [13, 20])
+let rasterWeights = matrix ? Array(1...9) : review ? [9] : allSymbols ? [4] : (smoke ? [4] : [1, 4, 7, 9])
+let rasterScales = matrix ? [0, 1, 2] : review ? [2] : allSymbols ? [1] : (smoke ? [1] : [0, 1, 2])
+let rasterPoints = matrix ? [9, 11, 13, 15, 17, 20, 24, 28, 34, 44, 64] : review ? [64] : allSymbols ? [20] : (smoke ? [13] : [13, 20])
 let missing = allSymbols ? try writer("all-missing.txt") : FileHandle.nullDevice
 for name in symbols {
-    if !allSymbols { for pt in layoutPoints { for w in appWeights { for sc in layoutScales {
+    if !allSymbols && !matrix { for pt in layoutPoints { for w in appWeights { for sc in layoutScales {
         guard let image = configured(name, pt, w, sc) else { continue }
         let app: [String: Any] = ["size": [image.size.width, image.size.height], "alignmentRect": json(NSValue(rect: image.alignmentRect)), "baselineOffsetFromBottom": optionalSelector(image, "baselineOffsetFromBottom"), "capInsets": optionalSelector(image, "capInsets"), "alignmentInsets": optionalSelector(image, "alignmentInsets")]
         let swift = SwiftUILayoutProbe.measure(name: name, pt: pt, weight: w, scale: sc)
@@ -176,12 +179,12 @@ for name in symbols {
             ctx.compositingOperation = .sourceAtop
             NSColor.black.setFill(); rect.fill()
             NSGraphicsContext.restoreGraphicsState()
-            let filename = review ? "black-large-64pt@\(backing)x.png" : allSymbols ? "regular-medium-20pt@\(backing)x.png" : "\(weightNames[w - 1])-\(sizeNames[sc])-\(pt)pt@\(backing)x.png"
-            let dir = root.appendingPathComponent("\(allSymbols ? "all" : "v3")/\(name)", isDirectory: true)
+            let filename = review ? "black-large-64pt@\(backing)x.png" : allSymbols && !matrix ? "regular-medium-20pt@\(backing)x.png" : "\(weightNames[w - 1])-\(sizeNames[sc])-\(pt)pt@\(backing)x.png"
+            let dir = root.appendingPathComponent("\(outputDir)/\(name)", isDirectory: true)
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
             try rep.representation(using: .png, properties: [:])?.write(to: dir.appendingPathComponent(filename))
             let rb = UserDefaults.standard.object(forKey: "_NSImageSymbolsAreRBLayerBacked")
-            try emit(["name": name, "weight": weightNames[w - 1], "scale": sizeNames[sc], "pointSize": pt, "backingScale": backing, "file": "\(allSymbols ? "all" : "v3")/\(name)/\(filename)", "imageSizePoints": [image.size.width, image.size.height], "pixelSize": [width, height], "drawRect": [rect.origin.x, rect.origin.y, rect.width, rect.height], "rbLayerBacked": rb.map(json) ?? "absent"], v3)
+            try emit(["name": name, "weight": weightNames[w - 1], "scale": sizeNames[sc], "pointSize": pt, "backingScale": backing, "file": "\(outputDir)/\(name)/\(filename)", "imageSizePoints": [image.size.width, image.size.height], "pixelSize": [width, height], "drawRect": [rect.origin.x, rect.origin.y, rect.width, rect.height], "rbLayerBacked": rb.map(json) ?? "absent"], v3)
         }
     }}}
 }
