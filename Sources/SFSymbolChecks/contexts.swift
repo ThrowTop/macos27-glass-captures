@@ -28,11 +28,11 @@ private func measuredButton(_ label: some View, id: String, style: Int?) -> some
 private struct ContextView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            row("1 Image", id: "1", style: nil, label: { symbol, key in measuredImage(symbol, id: key) })
-            row("2 Glass", id: "2", style: 1, label: { symbol, key in measuredImage(symbol, id: key) })
-            row("3 Glass prominent", id: "3", style: 2, label: { symbol, key in measuredImage(symbol, id: key) })
-            row("4 Bordered", id: "4", style: 3, label: { symbol, key in measuredImage(symbol, id: key) })
-            row("5 Glass Label", id: "5", style: 1, label: { symbol, key in Label { Text("Label") } icon: { measuredImage(symbol, id: key) } })
+            row("1 Image", id: "1", style: nil, label: { symbol, key in AnyView(measuredImage(symbol, id: key)) })
+            row("2 Glass", id: "2", style: 1, label: { symbol, key in AnyView(measuredImage(symbol, id: key)) })
+            row("3 Glass prominent", id: "3", style: 2, label: { symbol, key in AnyView(measuredImage(symbol, id: key)) })
+            row("4 Bordered", id: "4", style: 3, label: { symbol, key in AnyView(measuredImage(symbol, id: key)) })
+            row("5 Glass Label", id: "5", style: 1, label: { symbol, key in AnyView(Label { Text("Label") } icon: { measuredImage(symbol, id: key) }) })
         }
         .padding(20)
         .frame(width: 1060, alignment: .leading)
@@ -48,7 +48,7 @@ private struct ContextView: View {
             }
         }
     }
-    @ViewBuilder private func row(_ title: String, id: String, style: Int?, label: (String, String) -> some View) -> some View {
+    @ViewBuilder private func row(_ title: String, id: String, style: Int?, label: @escaping (String, String) -> AnyView) -> some View {
         HStack(spacing: 12) {
             Text(title).frame(width: 140, alignment: .leading)
             ForEach(symbols, id: \.self) { symbol in
