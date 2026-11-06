@@ -1,37 +1,53 @@
-name: macOS 27 glass captures
+name: SwiftUI animation probe
 
 on:
   workflow_dispatch:
-    inputs:
-      scenarios:
-        description: "Comma-separated scenario IDs, smoke, or all"
-        required: false
-        default: all
+
+permissions:
+  contents: read
 
 jobs:
-  capture:
+  probe:
     runs-on: xcode-27
-    timeout-minutes: 180
-    permissions:
-      contents: read
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+
       - name: Environment
         run: |
           sw_vers
-          uname -a
           xcodebuild -version
-      - name: Build
-        run: swift build -c release > build.log 2>&1 || { cat build.log; exit 1; }
-      - name: Capture
-        run: bash scripts/run-captures.sh '${{ inputs.scenarios }}'
+
+      - name: Run probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          swiftc -parse-as-library Sources/SwiftUIAnimationProbe/main.swift -o "$RUNNER_TEMP/probe" \
+            > out/build.log 2>&1 || { cat out/build.log; exit 1; }
+          "$RUNNER_TEMP/probe" > out/animation-values.txt 2>&1
+          cat out/animation-values.txt
+
+      # Only the declarations that define the presets' values are printed; the SDK files themselves
+      # are not uploaded.
+      - name: Preset declarations
+        shell: bash
+        run: |
+          SDK="$(xcrun --sdk macosx --show-sdk-path)"
+          for module in SwiftUICore SwiftUI; do
+            for f in "$SDK"/System/Library/Frameworks/$module.framework/Modules/$module.swiftmodule/arm64e-apple-macos.swiftinterface; do
+              [ -f "$f" ] || continue
+              echo "### $module"
+              grep -n -E -A6 'static (var|func) (smooth|snappy|bouncy|spring|interactiveSpring)\b|public init\(duration: .*bounce|static var default: SwiftUICore.Animation' "$f" \
+                | grep -v '^\s*$' | head -400
+            done
+          done > out/preset-declarations.txt
+          cat out/preset-declarations.txt
+
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: macos27-captures
-          path: |
-            out/
-            build.log
-          if-no-files-found: warn
-          retention-days: 30
+          name: swiftui-animation-probe
+          path: out/
+          retention-days: 7
