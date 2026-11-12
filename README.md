@@ -1,6 +1,6 @@
 # macOS 27 glass captures
 
-This private repository runs a native AppKit and SwiftUI capture harness on GitHub's `xcode-27` hosted runner. It does not depend on MacUIKit.
+This repository runs a native AppKit and SwiftUI capture harness on GitHub's `xcode-27` hosted runner. It does not depend on MacUIKit.
 
 Open **Actions → macOS 27 glass captures → Run workflow**. Use `smoke` first for the four required NSSwitch combinations, or `all` for the broader matrix. A comma-separated list of scenario IDs limits the optional matrix; the required switch cases always run first. The job uploads the `macos27-captures` artifact even when capture fails.
 
